@@ -1,4 +1,6 @@
-masterthesis
-============
+DIKU Master thesis
+==================
 
-Master thesis
+GPUs, DSLs, vectorization, financial applications and functional programming.
+
+

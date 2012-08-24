@@ -1,0 +1,108 @@
+\documentclass[10pt,a4paper,final,oneside,openany,article]{memoir}
+
+\input{prelude.tex}
+
+\title{Vector languages for financial algorithms \\
+      \small{Master thesis project description}
+}
+\author{
+  Martin Dybdal -- \texttt{dybber@dybber.dk} -- \texttt{dpr964} \\
+  Philip Lykke Carlsen -- \texttt{plcplc@gmail.com} -- \texttt{jhg363}
+\\
+University of Copenhagen}
+
+\date{\today}
+
+\bibliography{../bibliography/bibliography}
+
+
+\begin{document}
+\maketitle
+
+\chapter{Motivation}
+% What is the over all subject matter and why is it interesting to do
+% further research in this subject
+
+Banks have a lot of money, and thus large computers and large graphics
+cards. For a long time they haven't been able to figure out how to use
+all these resources...
+
+\todo{explain pricing algorithms, high performance computing in the
+  financial sector, etc.}
+
+The improvements in parallel vector languages and tools for general
+purpose GPU programming will not be restricted to the financial
+sector, as high performance computing has a wide audience in the
+scientific community, the methods are useful in for example weather
+forecasting, bioinformatics and simulation of chemical
+reactions\todo{name other applications}.
+
+
+\chapter{Project goals}
+% In short describe the experiment we are going to make
+In this project we will first seek to find the extend to which
+current parallel vector languages are applicable for the financial
+domain, by implementing a set of predetermined pricing algorithms in
+existing languages.
+
+We will then determine how we can improve the state-of-the-art of
+vector languages in the context of pricing algorithms. We will do so
+in terms of expressiveness, safety and efficiency, by implementing
+enhancements for one or more of the existing languages.
+
+\chapter{Elaboration}
+% Elaborate on the experiment, e.g. how it should be conducted and
+% what others have done previously
+
+\todo{mention GPU programming and highly parallel computer architecture}
+
+As the first task in our project, we will conduct a survey among
+existing vector languages, such as
+Accelerate\cite{chakravarty2011accelerating}, Nikola
+\cite{mainland2010nikola}, Repa \cite{keller2010regular}, Feldspar
+\cite{axelsson2010feldspar}, Obsidian, Single-assignment C (SAC) and
+\textsc{Nesl} (tentative list). These languages take different
+approaches to leveraging the parallel computing power of contemporary
+computer architectures, and have different limitations and advantages.
+
+The survey will consist of writing a set of realistic example programs
+from the financial domain, specifically option pricing
+algorithms. Example algorithms includes \textit{Longstaff and
+  Schwartz}, \textit{Black-Scholes}, \textit{Binomial option pricing}
+and \textit{Brownian Bridge-method for Monte Carlo simulation}.
+
+
+
+\todo{What limitations do we already know of, and which optimisations
+  do we wish to implement: Memory coalescing, distributed vs. fusion
+  of maps and fold, branch divergence, }
+
+\chapter{Learning objectives}
+% What are we (as students) going to learn from performing this
+% project
+After completing this master thesis we will be able to:
+\begin{itemize}
+%\item Explain the financial applications of the pricing algorithms
+%  mentioned above, and the basics of financial contracts.
+\item Describe the different classes of options and how option pricing
+  is performed.
+\item Describe current vector languages and present relevant criteria
+  for their comparison and empirical evaluation.
+\item Perform empirical evaluation of vector languages according to
+  the criteria developed above.
+\item Write programs for GPUs and apply optimisations.
+\end{itemize}
+
+% \chapter{Scope}
+% % What are we NOT doing. That is, which limitations do we make
+% \begin{itemize}
+% \item 
+% \end{itemize}
+
+\newpage
+\defbibheading{bibliography}{\chapter{References}} 
+\printbibliography
+
+%\printbibliography[keyword=dsls,heading=subbibliography,
+%  title={Domain specific language infrastructure}]
+\end{document}
