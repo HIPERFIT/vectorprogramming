@@ -25,3 +25,13 @@
 *.maf
 *.mtc
 *.mtc0
+*.el
+auto/*
+tex/synopsis/*.pdf
+tex/synopsis/*.thm
+tex/synopsis/*.xml
+tex/synopsis/*.bib
+tex/report/*.pdf
+tex/report/*.thm
+tex/report/*.xml
+tex/report/*.bib
