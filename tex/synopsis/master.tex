@@ -19,23 +19,34 @@ University of Copenhagen}
 \begin{document}
 \maketitle
 
+\chapter{Introduction}
+This is the project description of our joint master thesis work. The
+master thesis will be supervised by Ken Friis Larsen and Cosmin
+Oaneca.
+
 \chapter{Motivation}
 % What is the over all subject matter and why is it interesting to do
 % further research in this subject
+Finance is the subfield of economics that has to with valuing assets,
+making investment decisions and measuring risk. The analysis used to
+take decisions and performing risk management are complex and
+computational intensive, what is more is that these problems has to be
+solved in close to real time to still be relevant when done.
 
-Banks have a lot of money, and thus large computers and large graphics
-cards. For a long time they haven't been able to figure out how to use
-all these resources...
+Many algorithms used for pricing financial contracts and performing
+risk analysis are based on Monte Carlo simulation, a method of
+approximating stochastic processes.
 
-\todo{explain pricing algorithms, high performance computing in the
-  financial sector, etc.}
+\todo{high performance computing in the financial sector, etc.}
 
 The improvements in parallel vector languages and tools for general
-purpose GPU programming will not be restricted to the financial
-sector, as high performance computing has a wide audience in the
-scientific community, the methods are useful in for example weather
-forecasting, bioinformatics and simulation of chemical
-reactions\todo{name other applications}.
+purpose programming of GPUs will not only be applicable to financial
+problems. High performance computing has a wide audience in the
+scientific community, and improving the infrastructure for computation
+will be useful in for example weather forecasting, bioinformatics and
+simulation of chemical reactions\todo{name other applications}. The
+real time requirements of certain financial applications are not that
+important in these fields.
 
 
 \chapter{Project goals}
@@ -72,7 +83,6 @@ algorithms. Example algorithms includes \textit{Longstaff and
 and \textit{Brownian Bridge-method for Monte Carlo simulation}.
 
 
-
 \todo{What limitations do we already know of, and which optimisations
   do we wish to implement: Memory coalescing, distributed vs. fusion
   of maps and fold, branch divergence, }
@@ -84,13 +94,15 @@ After completing this master thesis we will be able to:
 \begin{itemize}
 %\item Explain the financial applications of the pricing algorithms
 %  mentioned above, and the basics of financial contracts.
-\item Describe the different classes of options and how option pricing
-  is performed.
+\item Describe the different types of financial products (options) and
+  how option pricing is performed, with different classes of methods.
 \item Describe current vector languages and present relevant criteria
   for their comparison and empirical evaluation.
 \item Perform empirical evaluation of vector languages according to
-  the criteria developed above.
+  the criteria developed above,by implementing various pricing
+  methods.
 \item Write programs for GPUs and apply optimisations.
+\item Implement extensions/enhancements of current vector languages.
 \end{itemize}
 
 % \chapter{Scope}
