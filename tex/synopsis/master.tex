@@ -25,29 +25,38 @@ master thesis will be supervised by Ken Friis Larsen and Cosmin
 Oaneca.
 
 \chapter{Motivation}
-% What is the over all subject matter and why is it interesting to do
+% What is the overall subject matter and why is it interesting to do
 % further research in this subject
-Finance is the subfield of economics that has to with valuing assets,
-making investment decisions and measuring risk. The analysis used to
-take decisions and performing risk management are complex and
-computational intensive, what is more is that these problems has to be
-solved in close to real time to still be relevant when done.
+Finance is the subfield of economics that has to do with valuing
+assets, making investment decisions and measuring the risk incurred by
+such decisions. The analyses used to make decisions and performing
+risk management are complex and computationally intensive. What is
+more, is that some of these problems have to be solved very
+efficiently such that results are still relevant when the computation
+is complete.
 
-Many algorithms used for pricing financial contracts and performing
-risk analysis are based on Monte Carlo simulation, a method of
-approximating stochastic processes.
+The current understanding of mathematics does not yet permit
+closed-form analytical solutions for most of the problems that
+financial institutions need to solve. Thus they turn to numerical
+approximation algorithms where the Monte Carlo method is a popular
+tool for its versatility and ease of parallelization.
 
-\todo{high performance computing in the financial sector, etc.}
+To meet this end, the computational model employed by \textit{vector
+  languages} also known as \textit{collection-oriented languages}
+\cite{blelloch1990vector} appears to be a promising fit. Operations in
+vector languages are naturally lifted to apply directly on vector
+elements in bulk, and this allows for a parallel implementation that
+fits well into modern SIMD computer architectures, such as graphics
+processing units (GPUs).
 
 The improvements in parallel vector languages and tools for general
 purpose programming of GPUs will not only be applicable to financial
 problems. High performance computing has a wide audience in the
 scientific community, and improving the infrastructure for computation
 will be useful in for example weather forecasting, bioinformatics and
-simulation of chemical reactions\todo{name other applications}. The
-real time requirements of certain financial applications are not that
-important in these fields.
-
+simulation of experiments such as chemical reactions. A difference is
+that the real-time requirements of certain financial applications are
+not that important in these fields.
 
 \chapter{Project goals}
 % In short describe the experiment we are going to make
@@ -65,16 +74,15 @@ enhancements for one or more of the existing languages.
 % Elaborate on the experiment, e.g. how it should be conducted and
 % what others have done previously
 
-\todo{mention GPU programming and highly parallel computer architecture}
+%\todo{mention GPU programming and highly parallel computer architecture}
 
 As the first task in our project, we will conduct a survey among
 existing vector languages, such as
 Accelerate\cite{chakravarty2011accelerating}, Nikola
 \cite{mainland2010nikola}, Repa \cite{keller2010regular}, Feldspar
-\cite{axelsson2010feldspar}, Obsidian, Single-assignment C (SAC) and
-\textsc{Nesl} (tentative list). These languages take different
-approaches to leveraging the parallel computing power of contemporary
-computer architectures, and have different limitations and advantages.
+\cite{axelsson2010feldspar}, Obsidian and \textsc{Nesl} (tentative
+list). These vector languages take different approaches and have
+different limitations and advantages.
 
 The survey will consist of writing a set of realistic example programs
 from the financial domain, specifically option pricing
@@ -82,10 +90,24 @@ algorithms. Example algorithms includes \textit{Longstaff and
   Schwartz}, \textit{Black-Scholes}, \textit{Binomial option pricing}
 and \textit{Brownian Bridge-method for Monte Carlo simulation}.
 
+The ultimate goal of the project is to get an overview of existing
+languages and libraries, and improve the most promising candidate
+towards more efficient execution of our example applications on
+GPUs. We intend the improvements to be general enough that they will
+also benefit other applications. Some of the libraries mentioned above
+do not target graphics processing units (\textit{Repa} and
+\textit{Feldspar}), but are included to provide a more complete
+pictore of the current directions of vector languages.
 
-\todo{What limitations do we already know of, and which optimisations
-  do we wish to implement: Memory coalescing, distributed vs. fusion
-  of maps and fold, branch divergence, }
+The improvements fall in two categories, improvements in terms of
+expressivity and in terms of execution efficiency. For example, the
+language Accelerate goes a long way to ensure efficiency, but does so
+by restricting the set of language primitives, which makes it
+impossible to write many real world programs. If we were to improve
+Accelerate it would thus primarily be in the direction of
+expressivity. For other languages we might go in the other direction,
+and focus on optimizations such as memory coalescing, stream fusion
+and limiting the number of divergent branches.
 
 \chapter{Learning objectives}
 % What are we (as students) going to learn from performing this
@@ -105,13 +127,15 @@ After completing this master thesis we will be able to:
 \item Implement extensions/enhancements of current vector languages.
 \end{itemize}
 
-% \chapter{Scope}
-% % What are we NOT doing. That is, which limitations do we make
-% \begin{itemize}
-% \item 
-% \end{itemize}
+\chapter{Scope}
+% What are we NOT doing. That is, which limitations do we make
+\begin{itemize}
+\item The financial applications are only used as examples, and we
+  will only superficially sketch their theory and industry usage.
+%\item We will only look at example applications from the financial domain
+\end{itemize}
 
-\newpage
+%\newpage
 \defbibheading{bibliography}{\chapter{References}} 
 \printbibliography
 
