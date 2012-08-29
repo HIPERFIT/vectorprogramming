@@ -60,7 +60,7 @@ not that important in these fields.
 
 \chapter{Project goals}
 % In short describe the experiment we are going to make
-In this project we will first seek to find the extend to which
+In this project we will first seek to find the extent to which
 current parallel vector languages are applicable for the financial
 domain, by implementing a set of predetermined pricing algorithms in
 existing languages.
@@ -80,15 +80,17 @@ As the first task in our project, we will conduct a survey among
 existing vector languages, such as
 Accelerate\cite{chakravarty2011accelerating}, Nikola
 \cite{mainland2010nikola}, Repa \cite{keller2010regular}, Feldspar
-\cite{axelsson2010feldspar}, Obsidian and \textsc{Nesl} (tentative
-list). These vector languages take different approaches and have
-different limitations and advantages.
+\cite{axelsson2010feldspar}, Obsidian \cite{svensson2011obsidian} and
+\textsc{Nesl} \cite{nesl} (tentative list). These vector languages
+take different approaches and have different limitations and
+advantages.
 
 The survey will consist of writing a set of realistic example programs
-from the financial domain, specifically option pricing
-algorithms. Example algorithms includes \textit{Longstaff and
-  Schwartz}, \textit{Black-Scholes}, \textit{Binomial option pricing}
-and \textit{Brownian Bridge-method for Monte Carlo simulation}.
+from the financial domain, specifically option pricing algorithms, and
+comparing against handcrafted OpenCL code. Example algorithms includes
+basic algorithms such as \textit{Longstaff and Schwartz},
+\textit{Black-Scholes}, \textit{Binomial option pricing} and a real
+world financial application (provided by the company LexiFi).
 
 The ultimate goal of the project is to get an overview of existing
 languages and libraries, and improve the most promising candidate
@@ -97,7 +99,7 @@ GPUs. We intend the improvements to be general enough that they will
 also benefit other applications. Some of the libraries mentioned above
 do not target graphics processing units (\textit{Repa} and
 \textit{Feldspar}), but are included to provide a more complete
-pictore of the current directions of vector languages.
+picture of the current directions of vector languages.
 
 The improvements fall in two categories, improvements in terms of
 expressivity and in terms of execution efficiency. For example, the
