@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# usage: $0 programname hsenv logtag
+
+# make every non-zero exitcode fatal
+set +e
+
+# fetching arguments
+
+# The main directory of the test program
+PROGRAM=$1
+# (note the underscore to avoid variable capture when sourcing!)
+HSENV_=$2
+LOGTAG=$3
+
+# source local definition of HSENVROOT
+hostname=`hostname`
+conffile=$hostname-env.sh
+
+if [ -f $conffile ]; then
+  source ./$conffile
+else
+  echo "Please make file $conffile, containing HSENVROOT variable definition"
+  exit -1
+fi
+
+SUMMARYDIR=summaries/$LOGTAG
+SUMMARYFILE=$SUMMARYDIR/$PROGRAM.csv
+
+mkdir $SUMMARYDIR
+
+LOGFILE=logs/$LOGTAG-$PROGRAM
+
+(
+source $HSENVROOT/.hsenv_$HSENV_/bin/activate
+
+# run configure and build
+cd Instances/$PROGRAM
+cabal install --only-dependencies
+cabal configure
+cabal build
+
+cd ..
+
+deactivate_hsenv
+) > $LOGFILE
+
+# run the result
+Instances/$PROGRAM/dist_$HSENV_/build/${PROGRAM}Binomial/${PROGRAM}Binomial --summary $SUMMARYFILE
+

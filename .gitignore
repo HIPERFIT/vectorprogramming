@@ -35,3 +35,5 @@ tex/report/*.pdf
 tex/report/*.thm
 tex/report/*.xml
 tex/report/*.bib
+dist_*/
+dist/
