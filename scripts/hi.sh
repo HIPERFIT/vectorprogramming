@@ -107,9 +107,19 @@ installNikola() {
   init_hsenv "nikola" "7.4.2"
 
     installCUDAFromHackage
+    cabal install test-framework-quickcheck2 test-framework-hunit
 
     git clone git://github.com/mainland/nikola.git
     cd nikola
+
+    cabal configure \
+        --disable-library-profiling \
+        --enable-tests \
+        --flags=examples \
+        --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc" \
+        --configure-option="--with-nvcc-cc=/usr/bin/gcc-4.5"
+
+    cabal build
     cabal install
 
   deactivate_hsenv
