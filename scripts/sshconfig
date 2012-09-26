@@ -1,0 +1,7 @@
+# Makes it possible to access napoleon from your own machine, simply
+# as "ssh napoleon".
+#
+# To be placed as ~/.ssh/config
+
+Host napoleon
+    ProxyCommand ssh -q ask.diku.dk nc -q0 localhost 20023
