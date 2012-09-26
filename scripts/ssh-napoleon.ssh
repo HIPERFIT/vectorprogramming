@@ -1,0 +1,12 @@
+#/bin/zsh
+
+# assumes the username is the same as current user.
+# otherwise just add <user>@host at leisure.
+
+# ssh to napoleon
+ssh -L 20023:localhost:20023 -N ask.diku.dk &
+tunnelpid=$!
+sleep 1
+ssh -o StrictHostKeyChecking=no -p 20023 localhost
+
+kill $tunnelpid
