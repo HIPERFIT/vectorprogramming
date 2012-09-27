@@ -6,9 +6,9 @@
 #   cabal install c2hs alex happy
 
 # These path variables should be set in your .profile:
-#   PATH=~/.cabal/bin/:/usr/local/cuda-4.2/bin/:$PATH
-#   LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib64:$LD_LIBRARY_PATH
-#   LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib:$LD_LIBRARY_PATH
+#   PATH=~/.cabal/bin/:/usr/local/cuda/bin/:$PATH
+#   LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+#   LD_LIBRARY_PATH=/usr/local/cuda/lib:$LD_LIBRARY_PATH
 
 ROOT=`pwd`
 cd $ROOT
@@ -57,7 +57,7 @@ installCUDAFromHackage (){
   cd cuda-*
   sed -i -e "s/import Foreign.CUDA.Driver.Exec$/import Foreign.CUDA.Driver.Exec hiding \(Max\)/" Foreign/CUDA/Driver.hs 
   autoconf
-  cabal install --extra-include-dirs=/usr/local/cuda-4.2/include/
+  cabal install --extra-include-dirs=/usr/local/cuda/include/
   cd ..
 }
 
@@ -68,7 +68,7 @@ installAccelerateFromHackage(){
 
     installCUDAFromHackage
 
-    cabal install accelerate-cuda --extra-include-dirs=/usr/local/cuda-4.2/include/
+    cabal install accelerate-cuda --extra-include-dirs=/usr/local/cuda/include/
     cabal install accelerate-examples
   deactivate_hsenv
 }
@@ -98,7 +98,8 @@ installAccelerateFromGithub() {
     cabal install
     cd ../accelerate-cuda/
     autoconf
-    cabal install --extra-include-dirs=/usr/local/cuda/include/ --extra-lib-dirs=/usr/local/cuda/lib64/
+    cabal install --extra-include-dirs=/usr/local/cuda/include/ \
+                  --extra-lib-dirs=/usr/local/cuda/lib64/
     cd ../..
   deactivate_hsenv
 }
@@ -116,8 +117,7 @@ installNikola() {
         --disable-library-profiling \
         --enable-tests \
         --flags=examples \
-        --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc" \
-        --configure-option="--with-nvcc-cc=/usr/bin/gcc-4.5"
+        --configure-option="--with-nvcc=/usr/local/cuda/bin/nvcc"
 
     cabal build
     cabal install
@@ -146,9 +146,8 @@ installObsidian() {
   deactivate_hsenv
 }
 
-
-installObsidian
+#installObsidian
 #installFeldspar
 #installAccelerateFromHackage
-#installNikola
+installNikola
 #installAccelerateFromGithub
