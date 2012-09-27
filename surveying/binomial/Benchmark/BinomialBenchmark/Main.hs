@@ -1,4 +1,4 @@
-module BinomialTest(runTest)
+module BinomialBenchmark.Main(runTest)
 where
 
 import qualified Criterion.Main as C
