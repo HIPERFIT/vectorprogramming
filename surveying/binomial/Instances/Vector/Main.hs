@@ -6,7 +6,7 @@ import qualified Data.Vector.Unboxed as V
 import Data.List(foldl')
 import System.Environment(getArgs)
 
-import BinomialTest(runTest)
+import BinomialBenchmark.Main(runTest)
 
 
 -- Pointwise manipulation of vectors and scalars

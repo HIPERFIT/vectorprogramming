@@ -9,7 +9,7 @@ module BinomialBenchmark.External(
 --
 -- Benchmark :=
 --   (write :) [0-9]+  // the test to run
---   (read  :) "OK"    // blocking read, done when finished.
+--   (read  :) "RESULT"    // blocking read, done when finished.
 --
 -- Exit :=
 --   (write :) "EXIT"
@@ -32,6 +32,9 @@ data ExternalProcess = ExternalProcess{
 
 -- | start an external process, wait for "OK"
 initialiseExt cmd args = do
+  -- stuff to debug our current directory
+  -- readProcess "pwd" [] "" >>= putStrLn
+  -- readProcess "ls" [] "" >>= putStrLn
   (Just hIn, Just hOut, _, ph) <- createProcess
     CreateProcess{
       cmdspec = RawCommand cmd args,
@@ -46,15 +49,18 @@ initialiseExt cmd args = do
       error $ cmd ++ show args ++ " outputted " ++ res ++ ", expected OK."
 
 benchmarkExt (ExternalProcess hIn hOut _) benchArg = do
-  hPutStrLn hOut $ show benchArg
-  res <- hGetLine hIn
+  hPutStrLn hIn $ show benchArg
+  hFlush hIn
+  res <- hGetLine hOut
   case res of
-    'O':'K':_ -> return ()
-    _ -> error $ "external process outputted " ++ res ++ ", expected OK."
+    'R':'E':'S':'U':'L':'T':_ -> return ()
+    _ -> error $ "external process outputted " ++ res ++ ", expected RESULT."
 
 terminateExt (ExternalProcess hIn hOut ph) = do
-  hPutStrLn hOut $ "EXIT"
-  res <- hGetLine hIn
+  putStrLn "Terminating external process"
+  hPutStrLn hIn $ "EXIT"
+  hFlush hIn
+  res <- hGetLine hOut
   case res of
     'O':'K':_ -> return ()
     _ -> error $ "external process outputted " ++ res ++ ", expected OK."
