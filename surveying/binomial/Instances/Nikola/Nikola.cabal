@@ -8,3 +8,8 @@ executable NikolaBinomial
   main-is: Main.hs
   -- other-modules:
   build-depends:       base, nikola, vector, carlsen-dybdal-binomialtest
+
+executable NikolaPrecompiledBinomial
+  main-is: MainPrecompiled.hs
+  -- other-modules:
+  build-depends:       base, nikola, vector, carlsen-dybdal-binomialtest

@@ -4,8 +4,8 @@
 module American (
     Model(..),
     defaultModel,
-    binom --,
---    binomCompiled
+    binom,
+    binomCompiled
   ) where
 
 import Data.Int
