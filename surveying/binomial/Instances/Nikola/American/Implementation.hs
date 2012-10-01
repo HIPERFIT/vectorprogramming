@@ -38,30 +38,31 @@ finalPut' strike s0 uPow dPow = pmax (strike -^ st) 0
     st :: Vector D (Exp F)
     st = s0 *^ (uPow ^*^ dPow)
 
-
 prevPut :: Model
         -> Vector M (Exp F)
         -> Vector M (Exp F)
+        -> Exp Int32
         -> Vector M (Exp F)
         -> Exp Int32
         -> Vector D (Exp F)
-prevPut (Model{..}) = prevPut' (lift strike) (lift s0) 
-                               (liftInt expiry) (liftInt bankDays)
-                               (lift alpha) (lift sigma) (lift r)
+prevPut (Model{..}) = 
+  prevPut' (lift strike) (lift s0) 
+           (liftInt bankDays)
+           (lift alpha) (lift sigma) (lift r)
 
 prevPut' :: Exp F
          -> Exp F
          -> Exp Int32
+         -> Exp F
+         -> Exp F
+         -> Exp F
+         -> Vector M (Exp F)
+         -> Vector M (Exp F)
          -> Exp Int32
-         -> Exp F
-         -> Exp F
-         -> Exp F
-         -> Vector M (Exp F)
-         -> Vector M (Exp F)
          -> Vector M (Exp F)
          -> Exp Int32
          -> Vector D (Exp F)
-prevPut' strike s0 expiry bankDays alpha sigma r uPow dPow put i =
+prevPut' strike s0 bankDays alpha sigma r uPow dPow expiry put i =
     ppmax(strike -^ st) ((qUR *^ tail put) ^+^ (qDR *^ init put))
   where
     st = s0 *^ ((take i uPow) ^*^ (drop (n+1-i) dPow))

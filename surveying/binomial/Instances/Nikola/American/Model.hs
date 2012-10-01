@@ -5,7 +5,6 @@ type F = Double
 data Model = Model 
              {
                bankDays :: Int
-             , expiry :: Int
              , alpha :: F
              , sigma :: F
              , r :: F
@@ -17,7 +16,6 @@ data Model = Model
 defaultModel = Model
              {
                bankDays = 252
-             , expiry = 1
              , alpha = 0.07
              , sigma = 0.20
              , r = 0.03
