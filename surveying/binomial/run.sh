@@ -36,6 +36,7 @@ source $HSENVROOT/.hsenv_$HSENV_/bin/activate
 
 # run configure and build
 cd Instances/$PROGRAM
+cabal clean
 cabal install --only-dependencies
 cabal configure
 cabal build
@@ -46,5 +47,5 @@ deactivate_hsenv
 ) > $LOGFILE
 
 # run the result
-Instances/$PROGRAM/dist_$HSENV_/build/${PROGRAM}Binomial/${PROGRAM}Binomial --summary $SUMMARYFILE
+Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE
 

@@ -24,7 +24,7 @@ LOGFILE=logs/$LOGTAG-rebuild-$HSENV_
 
 source $HSENVROOT/.hsenv_$HSENV_/bin/activate
 
-cd TestRoutine/
+cd Benchmark/
 
 cabal clean
 cabal install --reinstall

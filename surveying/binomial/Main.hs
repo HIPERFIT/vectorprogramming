@@ -9,19 +9,20 @@ import System.Environment(getArgs, getProgName)
 import System.Exit
 import System.Process(rawSystem, readProcess)
 
-hsEnvs = [ ghcXX ]
+hsEnvs = [ ghc742 ]
 
-ghcXX = "ghc-7.4.2"
+ghc742 = "ghc-7.4.2"
 
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 benchmarks = [
-      ("Accelerate", ghcXX)
-    , ("DPH", ghcXX)
-    , ("Feldspar", ghcXX)
-    , ("Nikola", ghcXX)
-    , ("Obsidian", ghcXX)
-    , ("Repa", ghcXX)
-    , ("Vector", ghcXX)
+      ("Accelerate", ghc742)
+    , ("DPH", ghc742)
+    , ("Feldspar", ghc742)
+    , ("Nikola", ghc742)
+    , ("Obsidian", ghc742)
+    , ("R", ghc742)
+    , ("Repa", ghc742)
+    , ("Vector", ghc742)
     ]
 
 benchNames = map fst

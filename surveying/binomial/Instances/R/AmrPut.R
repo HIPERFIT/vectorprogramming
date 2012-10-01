@@ -30,8 +30,10 @@ cat("OK\n")
 
 while(TRUE) {
   str = readLines(con="stdin", 1)
-  if(str == "EXIT")
+  if(str == "EXIT") {
+    cat("OK\n");
     break;
+  }
 
   iterations = as.numeric(str)
   n <- expiry * iterations;
