@@ -1,7 +1,7 @@
 module BinomialBenchmark.External(
   initialiseExt,
-  externalBenchmark,
-  terminateExternal,
+  benchmarkExt,
+  terminateExt,
   ExternalProcess(..)) where
 
 -- This module allows for the benchmarking of external processes
@@ -45,14 +45,14 @@ initialiseExt cmd args = do
     else
       error $ cmd ++ show args ++ " outputted " ++ res ++ ", expected OK."
 
-externalBenchmark (ExternalProcess hIn hOut _) benchArg = do
+benchmarkExt (ExternalProcess hIn hOut _) benchArg = do
   hPutStrLn hOut $ show benchArg
   res <- hGetLine hIn
   case res of
     'O':'K':_ -> return ()
     _ -> error $ "external process outputted " ++ res ++ ", expected OK."
 
-terminateExternal (ExternalProcess hIn hOut ph) = do
+terminateExt (ExternalProcess hIn hOut ph) = do
   hPutStrLn hOut $ "EXIT"
   res <- hGetLine hIn
   case res of
