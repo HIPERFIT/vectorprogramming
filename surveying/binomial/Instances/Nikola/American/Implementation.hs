@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 module American.Implementation (
-    finalPut, prevPut
+    finalPut, prevPut, finalPut', prevPut'
   ) where
 
 import Data.Int
@@ -22,14 +22,22 @@ pmax v c = map (max c) v
 ppmax = zipWith max
 
 
-finalPut :: Model 
+finalPut :: Model
          -> Vector M (Exp F)
          -> Vector M (Exp F)
          -> Vector D (Exp F)
-finalPut (Model{..}) uPow dPow = pmax (lift strike -^ st) 0
+finalPut (Model{..}) = finalPut' (lift strike) (lift s0)
+
+finalPut' :: Exp F
+          -> Exp F
+          -> Vector M (Exp F)
+          -> Vector M (Exp F)
+          -> Vector D (Exp F)
+finalPut' strike s0 uPow dPow = pmax (strike -^ st) 0
   where
     st :: Vector D (Exp F)
-    st = lift s0 *^ (uPow ^*^ dPow)
+    st = s0 *^ (uPow ^*^ dPow)
+
 
 prevPut :: Model
         -> Vector M (Exp F)
@@ -37,14 +45,30 @@ prevPut :: Model
         -> Vector M (Exp F)
         -> Exp Int32
         -> Vector D (Exp F)
-prevPut (Model{..}) uPow dPow put i =
-    ppmax(lift strike -^ st) ((qUR *^ tail put) ^+^ (qDR *^ init put))
+prevPut (Model{..}) = prevPut' (lift strike) (lift s0) 
+                               (liftInt expiry) (liftInt bankDays)
+                               (lift alpha) (lift sigma) (lift r)
+
+prevPut' :: Exp F
+         -> Exp F
+         -> Exp Int32
+         -> Exp Int32
+         -> Exp F
+         -> Exp F
+         -> Exp F
+         -> Vector M (Exp F)
+         -> Vector M (Exp F)
+         -> Vector M (Exp F)
+         -> Exp Int32
+         -> Vector D (Exp F)
+prevPut' strike s0 expiry bankDays alpha sigma r uPow dPow put i =
+    ppmax(strike -^ st) ((qUR *^ tail put) ^+^ (qDR *^ init put))
   where
-    st = lift s0 *^ ((take i uPow) ^*^ (drop (n+1-i) dPow))
-    n = liftInt expiry * liftInt bankDays
-    dt = fromInt (liftInt expiry)/fromInt n
-    u = exp(lift alpha*dt + lift sigma*sqrt dt)
-    d = exp(lift alpha*dt - lift sigma*sqrt dt)
-    stepR = exp(lift r*dt)
+    st = s0 *^ ((take i uPow) ^*^ (drop (n+1-i) dPow))
+    n = expiry * bankDays
+    dt = fromInt expiry/fromInt n
+    u = exp(alpha*dt + sigma*sqrt dt)
+    d = exp(alpha*dt - sigma*sqrt dt)
+    stepR = exp(r*dt)
     q = (stepR-d)/(u-d)
     qUR = q/stepR; qDR = (1-q)/stepR
