@@ -10,6 +10,8 @@
 #   LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 #   LD_LIBRARY_PATH=/usr/local/cuda/lib:$LD_LIBRARY_PATH
 
+set +e
+
 ROOT=`pwd`
 cd $ROOT
 
@@ -53,11 +55,13 @@ init_hsenv() {
 
 installCUDAFromHackage (){
   # Fix and install cuda bindings
+  PATH=~/.cabal/bin/:/usr/local/cuda-4.2/bin/:$PATH
+  LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib:$LD_LIBRARY_PATH
   cabal unpack cuda
   cd cuda-*
   sed -i -e "s/import Foreign.CUDA.Driver.Exec$/import Foreign.CUDA.Driver.Exec hiding \(Max\)/" Foreign/CUDA/Driver.hs 
   autoconf
-  cabal install --extra-include-dirs=/usr/local/cuda/include/
+  cabal install --extra-include-dirs=/usr/local/cuda-4.2/include/
   cd ..
 }
 
