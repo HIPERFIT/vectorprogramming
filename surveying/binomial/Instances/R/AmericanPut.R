@@ -24,7 +24,7 @@ S0<-100;
 r<-0.03;
 alpha<-0.07;
 sigma<-0.20
-expiry<-1;
+bankDays <- 252;
 
 cat("OK\n")
 
@@ -33,8 +33,8 @@ while(TRUE) {
   if(str == "EXIT")
     break;
 
-  iterations = as.numeric(str)
-  n <- expiry * iterations;
+  expiry = as.numeric(str)
+  n <- expiry * bankDays;
   result = AmericanPutOptionPricer(S0, r, alpha, sigma, expiry, n)
 
   cat("RESULT ")
