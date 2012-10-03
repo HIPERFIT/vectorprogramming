@@ -18,3 +18,4 @@ executable binomialbenchmark-Vector
   main-is: Main.hs
   -- other-modules:
   build-depends:       base, vector, binomialbenchmark
+  ghc-options: -O3 -threaded
