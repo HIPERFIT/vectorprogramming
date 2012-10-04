@@ -10,7 +10,7 @@
 #   LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 #   LD_LIBRARY_PATH=/usr/local/cuda/lib:$LD_LIBRARY_PATH
 
-set +e
+set -e
 
 PATH=~/.cabal/bin/:/usr/local/cuda-4.2/bin/:$PATH
 LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib #:$LD_LIBRARY_PATH
@@ -22,10 +22,8 @@ cd $ROOT
 BASEPATH=$PATH
 BASEGHC=`ghc --version | awk -F' ' '{print $NF}'`
 
-which deactivate_hsenv
-if [ $? -eq 0 ]; then
-    deactivate_hsenv
-fi
+# deactivate current hsenv if possible
+deactivate_hsenv 2> /dev/null || true
 
 fetchGHC() {
   mkdir -p $GHC_DIR
@@ -159,6 +157,13 @@ installDPH() {
   deactivate_hsenv
 }
 
+
+installVanilla() {
+  init_hsenv "vanilla" $1
+  deactivate_hsenv
+}
+
+
 show_usage() {
   echo "This command installs GHC environments for different Haskell vector languages"
   echo ""
@@ -203,6 +208,12 @@ while [ $# -gt 0 ]; do
     ;;
   --obsidian)
     installObsidian
+    shift
+    continue
+    ;;
+  --vanilla)
+    installVanilla $2
+    shift
     shift
     continue
     ;;
