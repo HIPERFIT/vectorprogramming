@@ -22,7 +22,7 @@ LOGFILE=logs/$LOGTAG-rebuild-$HSENV_
 
 (
 
-source $HSENVROOT/.hsenv_$HSENV_/bin/activate
+source $HSENVROOT/$HSENV/.hsenv_$HSENV_/bin/activate
 
 cd Benchmark/
 

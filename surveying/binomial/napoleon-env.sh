@@ -1,0 +1,1 @@
+HSENVROOT=~/hsenvs
