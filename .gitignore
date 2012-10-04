@@ -39,3 +39,5 @@ dist_*/
 dist/
 logs/
 summaries/
+*.hi
+*.o
