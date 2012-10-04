@@ -5,6 +5,8 @@ module Main where
 import Control.Applicative
 import Control.Monad(when)
 
+import Data.List (nub)
+
 import System.Environment(getArgs, getProgName)
 import System.Exit
 import System.Process(rawSystem, readProcess)
@@ -12,14 +14,14 @@ import System.Process(rawSystem, readProcess)
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 benchmarks = [
       ("Accelerate", "accelerate-hackage-GHC7.4.1")
-    , ("Cuda", "ghc-7.4.2")
+    , ("Cuda", "vanilla-GHC7.4.2")
    -- , ("DPH", ghc742)
    -- , ("Feldspar", ghc742)
       , ("Nikola", "nikola-GHC7.4.2")
    -- , ("Obsidian", ghc742)
-    , ("R", "ghc-7.4.2")
+    , ("R", "vanilla-GHC7.4.2")
     , ("Repa", "accelerate-hackage-GHC7.4.1")
-    , ("Vector", "ghc-7.4.2")
+    , ("Vector", "vanilla-GHC7.4.2")
     ]
 
 hsEnvs = nub $ map snd benchmarks
