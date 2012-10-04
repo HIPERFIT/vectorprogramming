@@ -1,15 +1,10 @@
-name:                NikolaBinomial
+name:                binomialbenchmark-Nikola
 version:             0.1.0.0
 author:              Philip Carlsen, Martin Dybdal
 build-type:          Simple
 cabal-version:       >=1.8
 
-executable NikolaBinomial
+executable binomialbenchmark-Nikola
   main-is: Main.hs
-  -- other-modules:
-  build-depends:       base, nikola, vector, binomialbenchmark
-
-executable NikolaPrecompiledBinomial
-  main-is: MainPrecompiled.hs
   -- other-modules:
   build-depends:       base, nikola, vector, binomialbenchmark

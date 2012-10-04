@@ -15,11 +15,12 @@ ghc742 = "ghc-7.4.2"
 
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 benchmarks = [
-      ("Accelerate", ghc742)
-    , ("DPH", ghc742)
-    , ("Feldspar", ghc742)
-    , ("Nikola", ghc742)
-    , ("Obsidian", ghc742)
+   --   ("Accelerate", ghc742)
+      ("Cuda", ghc742)
+   -- , ("DPH", ghc742)
+   -- , ("Feldspar", ghc742)
+   -- , ("Nikola", ghc742)
+   -- , ("Obsidian", ghc742)
     , ("R", ghc742)
     , ("Repa", ghc742)
     , ("Vector", ghc742)
