@@ -1,7 +1,7 @@
 module Main where
 
 import American
-import BinomialTest (runTest)
+import BinomialBenchmark.Main(runTest)
 
 main = kernels `seq` runTest (binomRun kernels)
   where kernels = binom defaultModel

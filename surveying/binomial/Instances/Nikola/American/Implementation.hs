@@ -5,7 +5,7 @@ module American.Implementation (
 
 import Data.Int
 
-import Prelude hiding (drop, init, map, tail, take, zipWith)
+import Prelude hiding (drop, init, map, tail, take, zipWith, max)
 import Data.Array.Nikola.Backend.CUDA
 
 import American.Model

@@ -7,9 +7,9 @@ cabal-version:       >=1.8
 executable NikolaBinomial
   main-is: Main.hs
   -- other-modules:
-  build-depends:       base, nikola, vector, carlsen-dybdal-binomialtest
+  build-depends:       base, nikola, vector, binomialbenchmark
 
 executable NikolaPrecompiledBinomial
   main-is: MainPrecompiled.hs
   -- other-modules:
-  build-depends:       base, nikola, vector, carlsen-dybdal-binomialtest
+  build-depends:       base, nikola, vector, binomialbenchmark
