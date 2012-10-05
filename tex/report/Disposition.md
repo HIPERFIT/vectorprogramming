@@ -1,15 +1,16 @@
 Abstract
 
-Part I: Introduction and background 
+Introduction and background 
  - Overview
  - Necessary finance
  - GPU architectures
 
-Part II: Survey
-  - Expressiveness comparison
-  - Efficiency comparison
+Part I: Survey
+  - Qualitative comparison
+  - Quantitative comparison
   - Conclusion of survey
 
-Part III: Our developments
+Part II: Our developments
   - ??
-  - Conlusion
+
+Conclusion
