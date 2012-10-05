@@ -1,6 +1,6 @@
-#/bin/sh
+#!/bin/bash
 
-set +e
+set -e
 
 # (note the underscore to avoid variable capture when sourcing!)
 HSENV_=$1
@@ -22,7 +22,7 @@ LOGFILE=logs/$LOGTAG-rebuild-$HSENV_
 
 (
 
-source $HSENVROOT/.hsenv_$HSENV_/bin/activate
+ source $HSENVROOT/$HSENV_/.hsenv_$HSENV_/bin/activate
 
 cd Benchmark/
 

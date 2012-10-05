@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 # usage: $0 programname hsenv logtag
 
 # make every non-zero exitcode fatal
-set +e
+set -e
 
 # fetching arguments
 
@@ -32,7 +32,7 @@ mkdir $SUMMARYDIR
 LOGFILE=logs/$LOGTAG-$PROGRAM
 
 (
-source $HSENVROOT/.hsenv_$HSENV_/bin/activate
+source $HSENVROOT/$HSENV_/.hsenv_$HSENV_/bin/activate
 
 # run configure and build
 cd Instances/$PROGRAM
