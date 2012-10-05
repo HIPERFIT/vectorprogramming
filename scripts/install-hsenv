@@ -180,9 +180,8 @@ show_usage() {
   echo "  --dph"
   echo "  --accelereate-github"
   echo "  --accelereate-hackage"
-  echo "  --vanilla <ghc-version>"
+  echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\">"
 }
-
 
 if [ $# -lt 1 ]; then
     echo "No arguments given. Aborting."
@@ -219,8 +218,22 @@ while [ $# -gt 0 ]; do
     continue
     ;;
   --vanilla)
-    installVanilla $2
     shift
+    if [ $# -lt 1 ]; then
+      echo "Missing argument to --vanilla."
+      echo ""
+      show_usage
+      exit 1
+    fi
+
+    if [ `echo $1 | grep "[0-9]\.[0-9]\.[0-9]"` -ne 0 ]; then
+      echo "Parameter to --vanilla ($1) not formatted correctly."
+      echo ""
+      show_usage
+      exit 1
+    fi
+    
+    installVanilla $1
     shift
     continue
     ;;
