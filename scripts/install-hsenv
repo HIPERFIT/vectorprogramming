@@ -118,14 +118,20 @@ installNikola() {
     git clone git://github.com/mainland/nikola.git
     cd nikola
 
-    cabal configure \
+    # (configure fails because of missing dependencies, and install works just as well)
+    #cabal configure \
+    #   --disable-library-profiling \
+    #   --enable-tests \
+    #   --flags=examples \
+    #   --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
+    #
+    #cabal build
+    #cabal install
+    cabal install \
         --disable-library-profiling \
         --enable-tests \
         --flags=examples \
         --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
-
-    cabal build
-    cabal install
 
   deactivate_hsenv
 }
@@ -174,6 +180,7 @@ show_usage() {
   echo "  --dph"
   echo "  --accelereate-github"
   echo "  --accelereate-hackage"
+  echo "  --vanilla <ghc-version>"
 }
 
 

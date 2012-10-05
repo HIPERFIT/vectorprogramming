@@ -89,6 +89,7 @@ int main(int argc, char **argv)
     unsigned int useDoublePrecision;
 
     //shrQAStart(argc, argv);
+    //printf("Cuda benchmark started...\n");
 
     int devID = findCudaDevice(argc, (const char **)argv);
 

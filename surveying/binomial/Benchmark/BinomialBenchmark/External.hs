@@ -23,6 +23,7 @@ module BinomialBenchmark.External(
 
 import Criterion
 
+import System.Exit
 import System.Process
 import System.IO
 
@@ -42,11 +43,17 @@ initialiseExt cmd args = do
       std_in = CreatePipe, std_out = CreatePipe,
       std_err = Inherit, close_fds = True,
       create_group = False}
-  res <- hGetLine hOut
-  if res == "OK" then
-      return $ ExternalProcess hIn hOut ph
-    else
-      error $ cmd ++ show args ++ " outputted " ++ res ++ ", expected OK."
+  maybeExited <- getProcessExitCode ph
+  case maybeExited of
+    Just exitcode -> do
+      putStrLn ("command " ++ cmd ++ " exited with " ++ show exitcode)
+      exitWith exitcode
+    Nothing -> do
+       res <- hGetLine hOut
+       if res == "OK" then
+           return $ ExternalProcess hIn hOut ph
+         else
+           error $ cmd ++ show args ++ " outputted " ++ res ++ ", expected OK."
 
 benchmarkExt (ExternalProcess hIn hOut _) benchArg = do
   hPutStrLn hIn $ show benchArg
