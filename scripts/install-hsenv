@@ -182,8 +182,8 @@ show_usage() {
   echo "  --obsidian"
   echo "  --feldspar"
   echo "  --dph"
-  echo "  --accelereate-github"
-  echo "  --accelereate-hackage"
+  echo "  --accelerate-github"
+  echo "  --accelerate-hackage"
   echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\">"
 }
 
