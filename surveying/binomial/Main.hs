@@ -19,6 +19,7 @@ benchmarks = [
    -- , ("Feldspar", ghc742)
       , ("Nikola", "nikola-GHC7.4.2")
    -- , ("Obsidian", ghc742)
+    , ("OpenCL", "vanilla-GHC7.4.2")
     , ("R", "vanilla-GHC7.4.2")
     , ("Repa", "accelerate-hackage-GHC7.4.1")
     , ("Vector", "vanilla-GHC7.4.2")
