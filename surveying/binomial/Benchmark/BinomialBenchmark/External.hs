@@ -43,6 +43,8 @@ initialiseExt cmd args = do
       std_in = CreatePipe, std_out = CreatePipe,
       std_err = Inherit, close_fds = True,
       create_group = False}
+  hSetBuffering hIn LineBuffering
+  hSetBuffering hOut LineBuffering
   maybeExited <- getProcessExitCode ph
   case maybeExited of
     Just exitcode -> do
@@ -57,16 +59,15 @@ initialiseExt cmd args = do
 
 benchmarkExt (ExternalProcess hIn hOut _) benchArg = do
   hPutStrLn hIn $ show benchArg
-  hFlush hIn
+  -- hFlush hIn
   res <- hGetLine hOut
   case res of
     'R':'E':'S':'U':'L':'T':_ -> return ()
     _ -> error $ "external process outputted " ++ res ++ ", expected RESULT."
 
 terminateExt (ExternalProcess hIn hOut ph) = do
-  putStrLn "Terminating external process"
   hPutStrLn hIn $ "EXIT"
-  hFlush hIn
+  -- hFlush hIn
   res <- hGetLine hOut
   case res of
     'O':'K':_ -> return ()
