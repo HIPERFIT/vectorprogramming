@@ -5,7 +5,7 @@ TARGET=build
 all:
 	mkdir -p build
 	g++  -Wpointer-arith   -Wfloat-equal -g3 -ffor-scope $(INCLUDES) -o $(TARGET)/BinomialOption.o -c BinomialOption.cpp
-	g++ -o $(TARGET)/BinomialOption $(TARGET)/BinomialOption.o -lpthread -ldl -lSDKUtil -lOpenCL -L/home/dybber/AMD-APP/AMD-APP-SDK-v2.7-RC-lnx64/TempSDKUtil/lib/x86_64/
+	g++ -o $(TARGET)/BinomialOption $(TARGET)/BinomialOption.o -lpthread -ldl -lSDKUtil -lOpenCL -Llib64
 	cp BinomialOption_Kernels.cl build
 clean:
 	rm -r build
