@@ -709,26 +709,56 @@ main(int argc, char * argv[])
 
     if(clBinomialOption.parseCommandLine(argc, argv) != SDK_SUCCESS)
         return SDK_FAILURE;
+
+    if(clBinomialOption.setup() != SDK_SUCCESS)
+        return SDK_FAILURE;
+
     
-    if(clBinomialOption.isDumpBinaryEnabled())
-    {
-        return clBinomialOption.genBinaryImage();
+    char inBuf[200]; // ridiculously large input buffer.
+    int expiry = 0;
+    int bankDays = 252;
+    double result = 0;
+    printf("OK\n");
+    while (true) {
+
+      fgets(inBuf, 200, stdin);
+      
+      if (sscanf(inBuf, "%u", &expiry) == 0) 
+      {
+        // if input is not a number, it has to be "EXIT"
+        if (strncmp("EXIT",inBuf,4)==0) 
+        {
+          printf("OK\n");
+          break;
+        }
+        else
+        {
+          printf("ERROR. Bad input: %s\n", inBuf);
+          break;
+        }
+      }
+      /*
+      if(clBinomialOption.isDumpBinaryEnabled())
+      {
+          return clBinomialOption.genBinaryImage();
+      }
+      else
+      {
+      */
+          result = clBinomialOption.runCLKernels();
+          return SDK_FAILURE;
+
+          /*
+          if(clBinomialOption.verifyResults() != SDK_SUCCESS)
+          return SDK_FAILURE;
+
+          clBinomialOption.printStats();
+      }
+          */
     }
-    else
-    {
-        if(clBinomialOption.setup() != SDK_SUCCESS)
+
+    if(clBinomialOption.cleanup() != SDK_SUCCESS)
         return SDK_FAILURE;
 
-        if(clBinomialOption.run() != SDK_SUCCESS)
-        return SDK_FAILURE;
-
-        if(clBinomialOption.verifyResults() != SDK_SUCCESS)
-        return SDK_FAILURE;
-
-        if(clBinomialOption.cleanup() != SDK_SUCCESS)
-            return SDK_FAILURE;
-
-        clBinomialOption.printStats();
-    }
     return SDK_SUCCESS;
 }
