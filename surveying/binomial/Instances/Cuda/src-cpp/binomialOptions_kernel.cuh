@@ -82,7 +82,7 @@ static __global__ void binomialOptionsKernel()
     const int CACHE_DELTA = (2 * TIME_STEPS);
     const int CACHE_STEP  = (CACHE_SIZE - CACHE_DELTA);
 
-   
+
     // #if NUM_STEPS % CACHE_DELTA ==> bad constants
 
     real *const d_Call = &d_CallBuffer[blockIdx.x * (NUM_STEPS + 16)];
@@ -186,8 +186,8 @@ static void binomialOptionsGPU(
         h_OptionData[i].vDt    = (real)vDt;
         h_OptionData[i].puByDf = (real)puByDf;
         h_OptionData[i].pdByDf = (real)pdByDf;
-	//h_OptionData[i].n      = NUM_STEPS;
-	//h_OptionData[i].cBuf   = Arg_d_CallBuffer;
+        //h_OptionData[i].n      = NUM_STEPS;
+        //h_OptionData[i].cBuf   = Arg_d_CallBuffer;
     }
 
     void *d_CallBufferPtr;
