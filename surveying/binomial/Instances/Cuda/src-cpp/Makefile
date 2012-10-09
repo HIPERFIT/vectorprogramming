@@ -119,8 +119,8 @@ build: binomialOptions
 binomialOptions.o: binomialOptions.cpp
 	$(GCC) $(CCFLAGS) $(INCLUDES) -o $@ -c $<
 
-binomialOptions_gold.o: binomialOptions_gold.cpp
-	$(GCC) $(CCFLAGS) $(INCLUDES) -o $@ -c $<
+#binomialOptions_gold.o: binomialOptions_gold.cpp
+#	$(GCC) $(CCFLAGS) $(INCLUDES) -o $@ -c $<
 
 binomialOptions_SM10.o: binomialOptions_SM10.cu
 	$(NVCC) $(NVCCFLAGS) $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) $(INCLUDES) -o $@ -c $<
@@ -128,7 +128,8 @@ binomialOptions_SM10.o: binomialOptions_SM10.cu
 binomialOptions_SM13.o: binomialOptions_SM13.cu
 	$(NVCC) $(NVCCFLAGS) $(EXTRA_NVCCFLAGS) $(GENCODE_SM13) $(GENCODE_SM20) $(GENCODE_SM30) $(INCLUDES) -o $@ -c $<
 
-binomialOptions: binomialOptions.o binomialOptions_gold.o binomialOptions_SM10.o binomialOptions_SM13.o
+# depends also originally on: binomialOptions_gold.o
+binomialOptions: binomialOptions.o binomialOptions_SM10.o binomialOptions_SM13.o 
 	$(GCC) $(CCFLAGS) -o $@ $+ $(LDFLAGS) $(EXTRA_LDFLAGS)
 	mkdir -p ./bin
 	cp $@ ./bin

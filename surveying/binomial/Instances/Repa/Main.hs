@@ -30,20 +30,20 @@ main = runTest binom
 
 force :: (Target r2 e,
           Load r1 sh e) => Int -> Array r1 sh e -> Array r2 sh e
---force arr = arr `deepSeqArray` (suspendedComputeP arr) 
+--force arr = arr `deepSeqArray` (suspendedComputeP arr)
 --force = runIdentity . computeP
 force i | i < 1000 = computeS
         | otherwise = computeP'
 
-computeP' arr = arr `deepSeqArray` (suspendedComputeP arr) 
+computeP' arr = arr `deepSeqArray` (suspendedComputeP arr)
 
 binom :: Int -> F
 binom expiry = repa_head first
   where
     uPow, dPow :: Array U DIM1 F
     uPow = force n $ fromFunction (Z :. n+1) (\(Z:.i) -> u^i)
-    dPow = force n $ fromFunction (Z :. n+1) (\(Z:.i) -> d^(n+1-i))
-    
+    dPow = force n $ fromFunction (Z :. n+1) (\(Z:.i) -> d^(n-i))
+
     st :: Array D DIM1 F
     st = s0 *^ (uPow ^*^ dPow)
     finalPut = force n $ pmax (strike -^ st) 0
@@ -60,8 +60,8 @@ binom expiry = repa_head first
     bankDays = 252
     s0 = 100
     r = 0.03; alpha = 0.07; sigma = 0.20
+    n = expiry*bankDays
 
-    n = 30 * expiry*bankDays
     dt = fromIntegral expiry/fromIntegral n
     u = exp(alpha*dt+sigma*sqrt dt)
     d = exp(alpha*dt-sigma*sqrt dt)

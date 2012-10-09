@@ -18,9 +18,9 @@
 extern "C" void binomialOptions_SM13(
     float *callValue,
     TOptionData  *optionData,
-    int optN, int NUM_STEPS
+    int optN
 )
 {
-    binomialOptionsGPU(callValue, optionData, optN, NUM_STEPS);
+    binomialOptionsGPU(callValue, optionData, optN);
 }
 
