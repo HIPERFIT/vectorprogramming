@@ -20,13 +20,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-    float S; // Expiry market price
-    float X; // Strike price
-    float T; // Option duration
-    float R; // Interest rate
-    float V; // Volatility?
-    // int   n; // NUM_STEPS
-    // void *cBuf; // Adress on call buffer on device
+    float S_0;
+    float strike;
+    float expiry;
+    float bankDays;
+    float r;
+    float sigma; // Volatility
+    float alpha; // wtf?
 } TOptionData;
 
 
@@ -36,7 +36,7 @@ typedef struct
 //Number of time steps
 // #define   NUM_STEPS 2048
 //Max option batch size
-#define MAX_OPTIONS 1024
+#define MAX_OPTIONS 512
 
 
 

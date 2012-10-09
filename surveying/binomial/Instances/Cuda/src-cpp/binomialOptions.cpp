@@ -58,13 +58,13 @@ extern "C" void binomialOptionsCPU(
 extern "C" void binomialOptions_SM10(
     float *callValue,
     TOptionData  *optionData,
-    int optN, int NUM_STEPS
+    int optN
 );
 
 extern "C" void binomialOptions_SM13(
     float *callValue,
     TOptionData  *optionData,
-    int optN, int NUM_STEPS
+    int optN
 );
 
 
@@ -85,7 +85,7 @@ float randData(float low, float high)
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-    const unsigned int OPT_N_MAX = 512;
+    const unsigned int OPT_N_MAX = 1; // 512
     unsigned int useDoublePrecision;
 
     //shrQAStart(argc, argv);
@@ -123,9 +123,9 @@ int main(int argc, char **argv)
     }
 
     //printf(useDoublePrecision ? "Using double precision...\n" : "Using single precision...\n");
-    // const int OPT_N = OPT_N_MAX;
+    const int OPT_N = OPT_N_MAX;
     // Only do a single option
-    const int OPT_N = 1;
+    //const int OPT_N = 1;
 
     TOptionData optionData[OPT_N];
     /*
@@ -160,7 +160,6 @@ int main(int argc, char **argv)
 
     char inBuf[200]; // ridiculously large input buffer.
     int expiry = 0;
-    int bankDays = 252;
     printf("OK\n");
     while (true) {
 
@@ -196,17 +195,15 @@ int main(int argc, char **argv)
       qUR = q/stepR; qDR = (1-q)/stepR
       */
 
-      int NUM_STEPS = expiry * bankDays;
-
       for (i = 0; i < OPT_N; i++)
       {
-          optionData[i].S = 100.0f; // randData(5.0f, 30.0f);
-          optionData[i].X = 100.0f; // randData(1.0f, 100.0f);
-          optionData[i].T = (double) expiry;
-          optionData[i].R = 0.03f;
-          optionData[i].V = 0.10f;
-          //optionData[i].n = (int) bankDays * expiry;
-          //BlackScholesCall(callValueBS[i], optionData[i]);
+          optionData[i].S_0 = 100.0f; // randData(5.0f, 30.0f);
+          optionData[i].strike = 100.0f; // randData(1.0f, 100.0f);
+          optionData[i].r = 0.03f;
+          optionData[i].bankDays = 252;
+          optionData[i].expiry = expiry;
+          optionData[i].sigma = 0.20f;
+          optionData[i].alpha = 0.07f;
       }
 
       //printf("Running GPU binomial tree...\n");
@@ -216,11 +213,11 @@ int main(int argc, char **argv)
 
       if (useDoublePrecision)
       {
-          binomialOptions_SM13(callValueGPU, optionData, OPT_N, NUM_STEPS);
+          binomialOptions_SM13(callValueGPU, optionData, OPT_N);
       }
       else
       {
-          binomialOptions_SM10(callValueGPU, optionData, OPT_N, NUM_STEPS);
+          binomialOptions_SM10(callValueGPU, optionData, OPT_N);
       }
 
 
