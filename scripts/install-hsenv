@@ -79,11 +79,17 @@ installAccelerateFromHackage(){
 
 # This doesn't work currently
 installAccelerateFromGithub() {
-  init_hsenv "accelerate-git" "7.4.1"
+  init_hsenv "accelerate-github" "7.6.1"
 
-    PATH=~/.cabal/bin/:/usr/local/cuda/bin/:$BASEPATH
-    LD_LIBRARY_PATH=/usr/local/cuda/lib64
-
+    pushd /home/dybber/lib/
+    cd symbol
+    cabal install
+    cd ../mainland-pretty
+    cabal install
+    cd ../language-c-quote
+    cabal install
+    popd
+    
     
     git clone git://github.com/tmcdonell/cuda.git
     cd cuda
@@ -92,15 +98,16 @@ installAccelerateFromGithub() {
     cd ..
 
     git clone git://github.com/AccelerateHS/accelerate.git
-    cd accelerate
-    git submodule init accelerate-io
-    git submodule init accelerate-cuda
-    git submodule update
+    git clone git://github.com/AccelerateHS/accelerate-cuda.git
+    git clone git://github.com/AccelerateHS/accelerate-io.git
 
+    cd accelerate
     cabal install
-    cd accelerate-io
+
+    cd ../accelerate-io
     cabal install
-    cd ../accelerate-cuda/
+
+    cd ../accelerate-cuda
     autoconf
     cabal install --extra-include-dirs=/usr/local/cuda/include/ \
                   --extra-lib-dirs=/usr/local/cuda/lib64/
@@ -230,7 +237,7 @@ while [ $# -gt 0 ]; do
       exit 1
     fi
 
-    (echo $1 | grep "[0-9]\.[0-9]\.[0-9]") || 
+    (echo $1 | grep -P "[0-9]+\.[0-9]+\.[0-9]+" > /dev/null) || 
        (
         echo "Parameter to --vanilla ($1) not formatted correctly."
         echo ""
@@ -239,7 +246,7 @@ while [ $# -gt 0 ]; do
        )
     
     installVanilla $1 $2
-    shift
+    shift; shift
     continue
     ;;
   --dph)
