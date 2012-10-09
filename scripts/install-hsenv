@@ -169,7 +169,7 @@ installDPH() {
 
 
 installVanilla() {
-  init_hsenv "vanilla" $1
+  init_hsenv $2 $1
   deactivate_hsenv
 }
 
@@ -184,7 +184,7 @@ show_usage() {
   echo "  --dph"
   echo "  --accelerate-github"
   echo "  --accelerate-hackage"
-  echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\">"
+  echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\"> <name>"
 }
 
 if [ $# -lt 1 ]; then
@@ -223,21 +223,22 @@ while [ $# -gt 0 ]; do
     ;;
   --vanilla)
     shift
-    if [ $# -lt 1 ]; then
+    if [ $# -lt 2 ]; then
       echo "Missing argument to --vanilla."
       echo ""
       show_usage
       exit 1
     fi
 
-    if [ `echo $1 | grep "[0-9]\.[0-9]\.[0-9]"` -ne 0 ]; then
-      echo "Parameter to --vanilla ($1) not formatted correctly."
-      echo ""
-      show_usage
-      exit 1
-    fi
+    (echo $1 | grep "[0-9]\.[0-9]\.[0-9]") || 
+       (
+        echo "Parameter to --vanilla ($1) not formatted correctly."
+        echo ""
+        show_usage
+        exit 1
+       )
     
-    installVanilla $1
+    installVanilla $1 $2
     shift
     continue
     ;;
