@@ -57,7 +57,7 @@ init_hsenv() {
 
 installCUDAFromHackage (){
   # Fix and install cuda bindings
-  cabal unpack cuda
+  cabal unpack cuda || true
   cd cuda-*
   sed -i -e "s/import Foreign.CUDA.Driver.Exec$/import Foreign.CUDA.Driver.Exec hiding \(Max\)/" Foreign/CUDA/Driver.hs 
   autoconf
@@ -112,26 +112,30 @@ installNikola() {
   init_hsenv "nikola" "7.4.2"
 
     installCUDAFromHackage
-    cabal install repa-3.2.1.1
-    cabal install test-framework-quickcheck2 test-framework-hunit
+    cabal install --reinstall repa-3.2.1.1 test-framework-quickcheck2 test-framework-hunit
 
-    git clone git://github.com/mainland/nikola.git
-    cd nikola
+    if [ -d nikola ]; then
+      cd nikola
+      git pull
+    else
+      git clone git://github.com/mainland/nikola.git || true
+      cd nikola
+    fi
 
     # (configure fails because of missing dependencies, and install works just as well)
-    #cabal configure \
+    cabal configure \
+       --disable-library-profiling \
+       --enable-tests \
+       --flags=examples \
+       --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
+    #
+    #cabal build
+    #cabal install
+    cabal install # \
     #   --disable-library-profiling \
     #   --enable-tests \
     #   --flags=examples \
     #   --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
-    #
-    #cabal build
-    #cabal install
-    cabal install \
-        --disable-library-profiling \
-        --enable-tests \
-        --flags=examples \
-        --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
 
   deactivate_hsenv
 }
@@ -165,7 +169,7 @@ installDPH() {
 
 
 installVanilla() {
-  init_hsenv "vanilla" $1
+  init_hsenv $2 $1
   deactivate_hsenv
 }
 
@@ -178,9 +182,9 @@ show_usage() {
   echo "  --obsidian"
   echo "  --feldspar"
   echo "  --dph"
-  echo "  --accelereate-github"
-  echo "  --accelereate-hackage"
-  echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\">"
+  echo "  --accelerate-github"
+  echo "  --accelerate-hackage"
+  echo "  --vanilla <GHC versionnumber, e.g. \"7.4.2\"> <name>"
 }
 
 if [ $# -lt 1 ]; then
@@ -219,21 +223,22 @@ while [ $# -gt 0 ]; do
     ;;
   --vanilla)
     shift
-    if [ $# -lt 1 ]; then
+    if [ $# -lt 2 ]; then
       echo "Missing argument to --vanilla."
       echo ""
       show_usage
       exit 1
     fi
 
-    if [ `echo $1 | grep "[0-9]\.[0-9]\.[0-9]"` -ne 0 ]; then
-      echo "Parameter to --vanilla ($1) not formatted correctly."
-      echo ""
-      show_usage
-      exit 1
-    fi
+    (echo $1 | grep "[0-9]\.[0-9]\.[0-9]") || 
+       (
+        echo "Parameter to --vanilla ($1) not formatted correctly."
+        echo ""
+        show_usage
+        exit 1
+       )
     
-    installVanilla $1
+    installVanilla $1 $2
     shift
     continue
     ;;

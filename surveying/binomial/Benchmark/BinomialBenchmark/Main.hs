@@ -13,4 +13,4 @@ runTestIO binom = do
 
 benchmarkYears binomBench = [ C.bench (show years ++ " years simulated") $
                   binomBench years
-                 | years <- [1, 8]]
+                 | years <- [1, 2]]

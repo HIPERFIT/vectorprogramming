@@ -10,9 +10,7 @@ main = do
   -- Definitely not cosher paths
   exitcode <- runCommand "cd ./Instances/Cuda/src-cpp/;make" >>= waitForProcess
   if exitcode == ExitSuccess then do
-    putStrLn "initializing.."
     proc <- initialiseExt "./Instances/Cuda/src-cpp/bin/binomialOptions" []
-    putStrLn "initialized!"
     runTestIO $ benchmarkExt proc
     terminateExt proc
     else do
