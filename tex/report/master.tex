@@ -1,0 +1,43 @@
+\documentclass[10pt,a4paper,final,oneside,openany]{memoir}
+
+\input{defaultprelude.tex}
+
+\title{
+      Vector languages, GPUs 'n' stuff
+}
+\author{
+  Martin Dybdal -- \texttt{dybber@dybber.dk} \\
+  Philip Carlsen -- \texttt{plcplc@gmail.com}
+\\
+University of Copenhagen, DIKU}
+
+\date{\today}
+
+\bibliography{../bibliography/bibliography}
+
+\begin{document}
+% \maketitle
+% \begin{abstract}
+  
+% \end{abstract}
+
+\newpage
+\renewcommand*{\cftpartname}{Part\space}
+%\renewcommand*{\cftchaptername}{Chapter\space}
+%\renewcommand{\cftchapterindent}{1em}
+\tableofcontents*
+
+\input{intro.tex}
+% \input{orientation.tex}
+%   - introduction to finance, gpus and more could be moved here?
+\input{survey.tex}
+%\input{ourwork.tex}
+
+
+\newpage
+\defbibheading{bibliography}{\chapter*{Bibliography}} 
+\printbibliography
+
+
+\end{document}
+

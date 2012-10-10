@@ -1,0 +1,77 @@
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[british]{isodate}
+
+% Layout Fixes
+\usepackage{booktabs} % nicer spacing between table rulers
+\usepackage{microtype}
+\usepackage{fixltx2e} % To prevent the figures from being placed
+                      % out-of-order with respect to their
+                      % "non-starred" counterparts
+
+
+\usepackage{amsmath,amssymb, amsbsy}
+\usepackage[amsmath,amsthm,thmmarks]{ntheorem}
+\usepackage{semantic, stmaryrd}
+\usepackage{graphicx}
+\usepackage{todonotes}
+\presetkeys{todonotes}{inline}{}
+
+% Bibliography
+%\usepackage[style=alphabetic,natbib=true]{biblatex}
+\usepackage[style=numeric,natbib=true, defernumbers=true]{biblatex}
+
+% Fonts
+\usepackage{palatino}
+\linespread{1.05}
+\usepackage[scaled]{beramono}
+
+% customize chapter pages
+\makepagestyle{myheadings}
+\makepagestyle{myheadingschapterpage}
+\makeevenfoot{myheadingschapterpage}{}{\thepage}{}
+\makeoddfoot{myheadingschapterpage}{}{\thepage}{}
+\aliaspagestyle{chapter}{myheadingschapterpage}
+\aliaspagestyle{title}{myheadingschapterpage}
+\makeevenhead{myheadings}{}{\scshape \thetitle}{}
+\makeoddhead{myheadings}{}{\footnotesize\scshape \thetitle}{}
+\makeevenfoot{myheadings}{}{\thepage}{}
+\makeoddfoot{myheadings}{}{\thepage}{}
+\pagestyle{myheadings}
+
+\def\thefigure{\arabic{figure}}
+\setcounter{tocdepth}{0}
+
+
+\setcounter{secnumdepth}{1}
+\setcounter{chapter}{0}
+\setsecheadstyle{\large\bfseries\raggedright}
+\setsubsecheadstyle{\bfseries}
+
+
+
+% Figures
+\newsubfloat{figure}
+
+\usepackage{sidecap}
+\usepackage{caption}
+\captionsetup{margin=0pt, font=small, labelfont=bf, format=hang}
+\setlength{\abovecaptionskip}{0pt}
+\setlength{\belowcaptionskip}{0pt}
+
+
+% Default commands
+\newcommand{\subimgwidth}{.48\textwidth}
+\newcommand{\imgwidth}{.85\textwidth}
+
+%
+\theoremstyle{plain}
+\theoremsymbol{\tiny $\Box$}
+\newtheorem{Definition}[equation]{Definition}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 
