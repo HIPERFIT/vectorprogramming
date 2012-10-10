@@ -77,6 +77,25 @@ __device__ inline double expiryCallValue(double S0, double strike, double u, dou
 #endif
 
 
+// Just slice the input array into n bits, sync after each iteration.
+/*
+static __global__ void binomiaOptionsKernelNaive()
+{
+
+    const int     tid = threadIdx.x;
+    const real    S_0 = d_OptionData[tid].S_0;
+    const real strike = d_OptionData[tid].strike;
+    const real      u = d_OptionData[tid].u;
+    const real      d = d_OptionData[tid].d;
+    const real      q = d_OptionData[tid].q;
+    const real      R = d_OptionData[tid].R;
+    const int       n = d_OptionData[tid].n;
+    real *const d_Call = &d_CallBuffer[tid * (n + 16)];
+
+    // TODO...
+}
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 // GPU kernel
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,16 +129,25 @@ static __global__ void binomialOptionsKernel()
         d_Call[i] = expiryCallValue(S_0, strike, u, d, n, i);
     }
 
-    real S = 0.0f;
-    int t = n;
+    real S;
+    int t;
     //Walk down binomial tree
     //So double-buffer and synchronize to avoid read-after-write hazards.
+    // This loop is the start of the reduce primitive,
+    // (each iteraniot is a vertical step of the reduction)
     for (int i = n; i > 0; i -= CACHE_DELTA)
+    {
+        // 'i' is the last index to be treated in the reduction
+        // and also the 'time' at the start of the iteration.
+
+        // Each iteration of this loop is a horizontal application
+        // of the reduction.
         for (int c_base = 0; c_base < i; c_base += CACHE_STEP)
         {
             //Start and end positions within shared memory cache
             int c_start = min(CACHE_SIZE - 1, i - c_base);
             int c_end   = c_start - CACHE_DELTA;
+            t = i;
 
             //Read data(with apron) to shared memory
             __syncthreads();
@@ -130,19 +158,21 @@ static __global__ void binomialOptionsKernel()
             }
 
             //Calculations within shared memory
+            // Each step is an advancement inside the reduction primitive.
             for (int k = c_start - 1; k >= c_end;)
             {
                 //Compute discounted expected value
-                S = S_0 * powf(u, tid-1.0f) * powf(d, t-tid);
                 __syncthreads();
-                callB[tid] = fmaxf(fmaxf(0.0f, strike-S), (q * callA[tid + 1] + (1-q) * callA[tid])/R);
+                S = S_0 * powf(u, c_base+tid) * powf(d, t-(c_base+tid));
+                callB[tid] = fmaxf(strike-S, (q * callA[tid + 1] + (1-q) * callA[tid])/R);
                 t--;
                 k--;
 
                 //Compute discounted expected value
-                S = S_0 * powf(u, tid-1.0f) * powf(d, t-tid);
+                //S = S_0 * powf(u, tid-1.0f) * powf(d, t-tid);
                 __syncthreads();
-                callA[tid] = fmaxf(fmaxf(0.0f, strike-S), (q * callB[tid + 1] + (1-q) * callB[tid])/R);
+                S = S_0 * powf(u, c_base+tid) * powf(d, t-(c_base+tid));
+                callA[tid] = fmaxf(strike-S, (q * callB[tid + 1] + (1-q) * callB[tid])/R);
                 k--;
                 t--;
             }
@@ -155,6 +185,7 @@ static __global__ void binomialOptionsKernel()
                 d_Call[c_base + tid] = callA[tid];
             }
         }
+    }
 
     //Write the value at the top of the tree to destination buffer
     if (threadIdx.x == 0)
@@ -195,7 +226,7 @@ static void binomialOptionsGPU(
        h_OptionData[i].n      = n;
     }
 
-/*
+    /*
 printf("h_OptionData[i].S_0 = %f\n"
 "h_OptionData[0].strike = %f\n"
 "h_OptionData[0].u      = %f\n"

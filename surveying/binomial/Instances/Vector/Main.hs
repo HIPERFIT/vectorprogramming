@@ -37,11 +37,10 @@ binom expiry = V.head first
       where st = s0 *^ ((V.take i uPow) ^*^ (V.drop (n+1-i) dPow))
 
     -- standard econ parameters
-    strike = 100
-    bankDays = 252
-    s0 = 100
+    strike = 100 :: Double
+    bankDays = 252 :: Int
+    s0 = 100 :: Double
     r = 0.03; alpha = 0.07; sigma = 0.20
-
     n = expiry*bankDays
     dt = fromIntegral expiry/fromIntegral n
     u = exp(alpha*dt+sigma*sqrt dt)
