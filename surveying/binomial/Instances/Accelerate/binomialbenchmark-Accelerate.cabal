@@ -6,4 +6,4 @@ cabal-version:       >=1.8
 
 executable binomialbenchmark-Accelerate
   main-is: Main.hs
-  build-depends:       base, accelerate, accelerate-io, vector, binomialbenchmark
+  build-depends:       base, accelerate, accelerate-cuda, binomialbenchmark
