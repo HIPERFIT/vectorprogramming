@@ -1,14 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module American (binom, FloatRep) where
 import qualified Data.Array.Accelerate as A
-import qualified Data.Vector.Storable as V
-
-import Data.Array.Accelerate (Z(..), (:.)(..),(!))
-
-import qualified Data.Array.Accelerate.IO as AIO
-
 import Data.List(foldl')
-import System.Environment(getArgs)
 
 -- Pointwise manipulation of vectors an scalars
 v1 ^*^ v2 = A.zipWith (*) v1 v2
@@ -24,10 +17,6 @@ vinit = A.init
 vtake i v = A.take (A.constant i) v
 vdrop i v = A.drop (A.constant i) v
 
-vreverse v =
-  let len = A.unindex1 (A.shape v) in
-  A.backpermute (A.shape v) (\ix -> A.index1 $ len - (A.unindex1 ix) - 1) v
-
 type FloatRep = Float
 --type FloatRep = Double -- I would like to use Double, but then I get a large numbers of of ptxas errors like:
                           -- ptxas /tmp/tmpxft_00006c13_00000000-2_dragon26988.ptx, line 83; warning : Double is not supported. Demoting to float
@@ -38,12 +27,12 @@ binom :: Int -> A.Acc(A.Vector FloatRep)
 binom expiry = first --(first ! (A.constant 0))
   where
     uPow, dPow :: A.Acc(A.Vector FloatRep)
-    uPow = A.use $ AIO.fromVector $ V.generate (n+1) (u^)
-    dPow = A.use $ AIO.fromVector $ V.reverse $ V.generate (n+1) (d^)
+    uPow = generateWithPow (A.index1 . A.constant $ n+1) (A.constant u)
+    dPow = A.reverse $ generateWithPow (A.index1 . A.constant $ n+1) (A.constant d)
     
-    --uPow = A.generate (A.index1$ A.constant $ n+1) (\ix -> let i = A.unindex1 ix in u^i)
-    --dPow = vreverse $ A.generate (A.index1$ A.constant $ n+1) (\ix -> let i = A.unindex1 ix in d^i)
-    
+    generateWithPow :: A.Exp A.DIM1 -> A.Exp FloatRep -> A.Acc (A.Vector FloatRep)
+    generateWithPow m x = A.generate m $ \ix -> let i = A.unindex1 ix in x** (A.fromIntegral i)
+
     st = s0 *^ (uPow ^*^ dPow)
     finalPut = pmax (strike -^ st) 0
 
@@ -74,6 +63,3 @@ binom expiry = first --(first ! (A.constant 0))
     stepR = exp(r*dt)
     q = (stepR-d)/(u-d)
     qUR = A.constant$ q/stepR; qDR = A.constant$ (1-q)/stepR
-
-
-arun run x = head $ A.toList $ run x
