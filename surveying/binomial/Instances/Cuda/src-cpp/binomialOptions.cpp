@@ -122,6 +122,8 @@ int main(int argc, char **argv)
         }
     }
 
+    useDoublePrecision = 1;
+
     //printf(useDoublePrecision ? "Using double precision...\n" : "Using single precision...\n");
     const int OPT_N = OPT_N_MAX;
     // Only do a single option
@@ -200,7 +202,7 @@ int main(int argc, char **argv)
           optionData[i].S_0 = 100.0f; // randData(5.0f, 30.0f);
           optionData[i].strike = 100.0f; // randData(1.0f, 100.0f);
           optionData[i].r = 0.03f;
-          optionData[i].bankDays = 252;
+          optionData[i].bankDays = 256;
           optionData[i].expiry = expiry;
           optionData[i].sigma = 0.20f;
           optionData[i].alpha = 0.07f;
