@@ -9,13 +9,6 @@
  *
  */
 
-/*
- * This sample evaluates fair call price for a
- * given set of European options under binomial model.
- * See supplied whitepaper for more explanations.
- */
-
-
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,41 +19,12 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
-// #include <shrQATest.h>
 #include "binomialOptions_common.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Black-Scholes formula for binomial tree results validation
-////////////////////////////////////////////////////////////////////////////////
-/*
-extern "C" void BlackScholesCall(
-    float &callResult,
-    TOptionData optionData
-);
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-// Process single option on CPU
-// Note that CPU code is for correctness testing only and not for benchmarking.
-////////////////////////////////////////////////////////////////////////////////
-/*
-extern "C" void binomialOptionsCPU(
-    float &callResult,
-    TOptionData optionData
-);
-
-*/
-
-////////////////////////////////////////////////////////////////////////////////
 // Process an array of OptN options on GPU
 ////////////////////////////////////////////////////////////////////////////////
-extern "C" void binomialOptions_SM10(
-    float *callValue,
-    TOptionData  *optionData,
-    int optN
-);
-
 extern "C" void binomialOptions_SM13(
     float *callValue,
     TOptionData  *optionData,
@@ -86,9 +50,7 @@ float randData(float low, float high)
 int main(int argc, char **argv)
 {
     const unsigned int OPT_N_MAX = 1; // 512
-    unsigned int useDoublePrecision;
 
-    //shrQAStart(argc, argv);
     setlinebuf(stdout);
 
     int devID = findCudaDevice(argc, (const char **)argv);
@@ -103,62 +65,12 @@ int main(int argc, char **argv)
     cudaDeviceProp deviceProp;
     checkCudaErrors(cudaGetDeviceProperties(&deviceProp, devID));
 
-    char *precisionChoice;
-    getCmdLineArgumentString(argc, (const char **)argv, "type", &precisionChoice);
-
-    if (precisionChoice == NULL)
-    {
-        useDoublePrecision = 0;
-    }
-    else
-    {
-        if (!STRCASECMP(precisionChoice, "double"))
-        {
-            useDoublePrecision = 1;
-        }
-        else
-        {
-            useDoublePrecision = 0;
-        }
-    }
-
-    useDoublePrecision = 1;
-
-    //printf(useDoublePrecision ? "Using double precision...\n" : "Using single precision...\n");
     const int OPT_N = OPT_N_MAX;
-    // Only do a single option
-    //const int OPT_N = 1;
-
     TOptionData optionData[OPT_N];
-    /*
-    TOptionData optionData[OPT_N_MAX];
-    float
-    callValueBS[OPT_N_MAX],
-                callValueGPU[OPT_N_MAX],
-                callValueCPU[OPT_N_MAX];
 
-    double
-    sumDelta, sumRef, gpuTime, errorVal;
-
-    StopWatchInterface *hTimer = NULL;
-    */
     double errorVal;
     float callValueGPU[OPT_N_MAX];
     int i;
-
-    //sdkCreateTimer(&hTimer);
-
-    int version = deviceProp.major * 10 + deviceProp.minor;
-
-    if (useDoublePrecision && version < 13)
-    {
-        printf("Double precision is not supported.\n");
-        return 0;
-    }
-
-    //printf("Generating input data...\n");
-    //Generate options set
-    srand(123);
 
     char inBuf[200]; // ridiculously large input buffer.
     int expiry = 0;
@@ -208,27 +120,14 @@ int main(int argc, char **argv)
           optionData[i].alpha = 0.07f;
       }
 
-      //printf("Running GPU binomial tree...\n");
       checkCudaErrors(cudaDeviceSynchronize());
-      //sdkResetTimer(&hTimer);
-      //sdkStartTimer(&hTimer);
 
-      if (useDoublePrecision)
-      {
-          binomialOptions_SM13(callValueGPU, optionData, OPT_N);
-      }
-      else
-      {
-          binomialOptions_SM10(callValueGPU, optionData, OPT_N);
-      }
-
+      binomialOptions_SM13(callValueGPU, optionData, OPT_N);
 
       checkCudaErrors(cudaDeviceSynchronize());
 
       printf("RESULT %f\n",callValueGPU[0]);
-
     }
 
     cudaDeviceReset();
-    //shrQAFinishExit(argc, (const char **)argv, ((errorVal < 5e-4) ? QA_PASSED : QA_FAILED));
 }
