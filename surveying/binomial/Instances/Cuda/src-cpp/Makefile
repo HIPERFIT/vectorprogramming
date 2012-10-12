@@ -123,13 +123,11 @@ binomialOptions_SM13.o: binomialOptions_SM13.cu
 
 # depends also originally on: binomialOptions_gold.o
 bin/binomialOptions: binomialOptions.o binomialOptions_SM13.o
-	$(GCC) $(CCFLAGS) -o $@ $+ $(LDFLAGS) $(EXTRA_LDFLAGS)
 	mkdir -p ./bin
-	cp $@ ./bin
-	rm binomialOptions
+	$(GCC) $(CCFLAGS) -o $@ $+ $(LDFLAGS) $(EXTRA_LDFLAGS)
 
 run: build
 	./bin/binomialOptions
 
 clean:
-	rm -f binomialOptions binomialOptions.o binomialOptions_SM13.o
+	rm -rf binomialOptions binomialOptions.o binomialOptions_SM13.o bin/
