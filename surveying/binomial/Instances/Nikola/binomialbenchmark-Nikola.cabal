@@ -10,7 +10,7 @@ executable binomialbenchmark-Nikola
   -- other-modules:
   build-depends:       base, nikola, vector, binomialbenchmark
 
-executable NikolaPrecompiledBinomial
-  main-is: MainPrecompiled.hs
-  -- other-modules:
-  build-depends:       base, nikola, vector, binomialbenchmark
+-- executable NikolaPrecompiledBinomial
+--  main-is: MainPrecompiled.hs
+--  -- other-modules:
+--  build-depends:       base, nikola, vector, binomialbenchmark

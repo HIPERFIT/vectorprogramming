@@ -1,7 +1,10 @@
 module Main where
 
 import American
-import BinomialBenchmark.Main(runTest)
+import BinomialBenchmark.Main(runTestWith, cfgModSummaryFile)
 
-main = kernels `seq` runTest (binomRun kernels)
-  where kernels = binom defaultModel
+main = do
+  kernelsUnComp `seq` runTestWith (cfgModSummaryFile (++ "-Uncompiled")) (binomRun kernelsUnComp)
+  kernelsComp `seq` runTestWith (cfgModSummaryFile (++ "-Precompiled")) (binomRun kernelsComp)
+  where kernelsUnComp = binom defaultModel
+        kernelsComp = binomCompiled defaultModel

@@ -17,4 +17,4 @@ cabal-version:       >=1.8
 library
   exposed-modules:     BinomialBenchmark.Main, BinomialBenchmark.External
   -- other-modules:
-  build-depends:       base, criterion, process
+  build-depends:       base, criterion, process, filepath

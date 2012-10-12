@@ -19,7 +19,7 @@ benchmarks = [
    -- , ("Feldspar", ghc742)
       , ("Nikola", "nikola-GHC7.4.2")
    -- , ("Obsidian", ghc742)
-    , ("OpenCL", "vanilla-GHC7.4.2")
+   -- , ("OpenCL", "vanilla-GHC7.4.2")
     , ("R", "vanilla-GHC7.4.2")
     , ("Repa", "accelerate-hackage-GHC7.4.1")
     , ("Vector", "vanilla-GHC7.4.2")
@@ -64,7 +64,7 @@ main = do
     isSuccess msg _ = putStrLn msg >> return False
 
     -- the log-tag to assign to runs
-    logtag = head . lines <$> readProcess "date" ["+%m.%d-%H:%M:%S"] ""
+    logtag = head . lines <$> readProcess "date" ["+%Y-%m-%d,%H:%M:%S"] ""
 
     -- small helper sequencer to exit early in case of error
     whileTrue _ [] = return ()
