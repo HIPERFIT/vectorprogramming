@@ -41,3 +41,5 @@ logs/
 summaries/
 *.hi
 *.o
+bin/
+build/

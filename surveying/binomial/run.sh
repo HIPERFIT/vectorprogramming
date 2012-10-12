@@ -27,7 +27,8 @@ fi
 SUMMARYDIR=summaries/$LOGTAG
 SUMMARYFILE=$SUMMARYDIR/$PROGRAM.csv
 
-mkdir $SUMMARYDIR
+# summarydir created by Main.hs
+#mkdir -p $SUMMARYDIR
 
 LOGFILE=logs/$LOGTAG-$PROGRAM
 
@@ -36,7 +37,7 @@ source $HSENVROOT/$HSENV_/.hsenv_$HSENV_/bin/activate
 
 # run configure and build
 cd Instances/$PROGRAM
-#cabal clean
+cabal clean
 cabal install --only-dependencies
 cabal configure
 cabal build

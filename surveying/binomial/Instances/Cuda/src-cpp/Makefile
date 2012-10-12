@@ -113,7 +113,7 @@ INCLUDES := -I$(CUDA_INC_PATH) -I. -I./inc
 # Target rules
 all: build
 
-build: binomialOptions
+build: bin/binomialOptions
 
 binomialOptions.o: binomialOptions.cpp
 	$(GCC) $(CCFLAGS) $(INCLUDES) -o $@ -c $<
@@ -122,13 +122,14 @@ binomialOptions_SM13.o: binomialOptions_SM13.cu
 	$(NVCC) $(NVCCFLAGS) $(EXTRA_NVCCFLAGS) $(GENCODE_SM13) $(GENCODE_SM20) $(GENCODE_SM30) $(INCLUDES) -o $@ -c $<
 
 # depends also originally on: binomialOptions_gold.o
-binomialOptions: binomialOptions.o binomialOptions_SM13.o
+bin/binomialOptions: binomialOptions.o binomialOptions_SM13.o
 	$(GCC) $(CCFLAGS) -o $@ $+ $(LDFLAGS) $(EXTRA_LDFLAGS)
 	mkdir -p ./bin
 	cp $@ ./bin
+	rm binomialOptions
 
 run: build
-	./binomialOptions
+	./bin/binomialOptions
 
 clean:
 	rm -f binomialOptions binomialOptions.o binomialOptions_SM13.o

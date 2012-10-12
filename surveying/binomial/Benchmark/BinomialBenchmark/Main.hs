@@ -34,4 +34,4 @@ cfgModSummaryFile sf cfg =
 -- | Default benchmark for the binomial pricer.
 benchmarkYears binomBench = [ C.bench (show years) $
                   binomBench years
-                  | years <- [1]] --,2,4,8,16,32,64]]
+                  | years <- [1,2,4,8,16,32,64]]
