@@ -45,8 +45,8 @@ cabal build
 cd ..
 
 deactivate_hsenv
-) > $LOGFILE
+) > $LOGFILE-Build
 
 # run the result
-Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE
+Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE | tee $LOGFILE-Benchmark
 

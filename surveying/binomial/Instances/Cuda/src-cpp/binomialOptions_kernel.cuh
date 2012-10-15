@@ -260,4 +260,6 @@ h_OptionData[0].n      );
     binomialOptionsKernel<<<optN, CACHE_SIZE>>>();
     getLastCudaError("binomialOptionsKernel() execution failed.\n");
     checkCudaErrors(cudaMemcpyFromSymbol(callValue, d_CallValue, optN *sizeof(float)));
+    checkCudaErrors(cudaFree(d_CallBufferPtr));
+
 }
