@@ -1,11 +1,82 @@
 \part{Survey}
 \chapter{Survey Setup}
+In this part of our dissertation we present a small scale survey of
+current vector languages. The goal was to orientate ourselves in the
+current landscape of such languages and their
+implementation. \todo{something about what others might use our
+  results for -- it's not really only meants as an exercise for our
+  benefit}
+
+We have decided to evaluate and compare the languages Accelerate
+\cite{}, Repa \cite{}, Nikola \cite{} and the \texttt{Data.Vector}
+package\footnote{\url{http://hackage.haskell.org/package/vector}}. We
+compare these four libraries to R programming language \cite{} and
+CUDA, which are some of the languages currently used by financial
+engineers. The R language is used for expressing financial algorithms
+succintly, while CUDA is used for performance reasons, which is why we
+have chosen to include both of these. Because of time constraints, we
+have had to limit ourselves more than we originally had hoped for,
+this means we have had to leave out languages such as Feldspar\cite{},
+Obsidian\cite{}, Data Parallel Haskell\cite{}, Copperhead\cite{} and
+NESL\cite{} from thesurvey, although they might have provided further
+insigths.
+
+\section{Programming language surveys}
+To make a fair comparison, we have to be objective in our evaluation
+of the languages. Obtaining objectivity in such a comparison is not
+and easy task, though as it is hard to quantitatively measure aspects
+such as the quality of language documentation (longer is not always
+better, and it might be outdated). Also, as mentioned in (Lutz Prechelt, 2001):
+
+\begin{quote}
+  ``Any programming language comparison based on actual sample programs
+  is valid only to the degree to which the capabilities of the
+  respective programmers using these languages are similar.''
+\end{quote}
+
+We thus either have to acquire the same level of experience in all the
+languages ourselves or find experts in each of the languages to do the
+implementation. We have not had the resources to conduct a survey on
+the same standard as Lutz Prechelt did in his paper ``Empirical
+Comparison of Seven Programming Languages''. Here 10-20
+implementations of the same algorithm was written by different people
+(mostly graduate students) in each programming language under comparison.
+
+\todo{How do we obtain this? Contacting Accelerate and Repa people to
+  get their versions? We also have to document the development
+  process, and that we couldn't write an efficient Accelerate version
+  ourselves.}
+
+\section{Comparison}
+
+\paragraph{Qualitative questions}
 \begin{itemize}
-\item How do we perform the survey?
-\item How are such surveys normally performed?
+\item How hard was the installation process?
+\item How portable is it?
+\item Code review of language/compiler implementation.
+\item Quality of documentation.
+\end{itemize}
+\paragraph{Quantitative}
+\begin{itemize}
+\item Benchmark of binomial pricer on expiry = 1,2,4,8,16,32,64 years.
+\item Benchmark of Longstaff and Schwartz.
+\item How many GHC extensions?
+\item (Performance comparison between naive and optimized version of
+  binomial pricer)\_F
+\item (Levenshtein distance in abstract symbolic tokens)\_T between
+  naive and optimized version of binomial pricer.
+\item Version of GHC (how up to date is the code base)\_N
+\item Project health (project activity, etc.)\_N
+\item Reverse dependencies - how many packages
+  depends on it?
+\end{itemize}
+
+\begin{itemize}
+\item How do we carry out the survey?
+%\item How are such surveys normally performed?
 \item Which parameters do look for and measure?
 \item How do we measure these things, e.g. how do we evaluate ``project health''?
-\item Why didn't we include some languages, but included others?
+%\item Why didn't we include some languages, but included others?
 \end{itemize}
 
 \chapter{Qualitative evaluation}
