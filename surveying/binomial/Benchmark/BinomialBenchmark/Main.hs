@@ -8,15 +8,23 @@ import qualified Criterion.Main as C
 import System.Environment(getArgs, withArgs)
 import System.FilePath(takeBaseName,replaceBaseName)
 
+import System.IO(hSetBuffering, stdout,BufferMode(..))
+
 -- | run the tests of a binomial american option pricer, given by the 'binom'
 -- function.
 runTest bench = do
+  -- Always do line buffering on stdout!
+  hSetBuffering stdout LineBuffering
   C.defaultMain $ benchmarkYears (C.nf bench)
 
 runTestIO bench = do
+  -- Always do line buffering on stdout!
+  hSetBuffering stdout LineBuffering
   C.defaultMain $ benchmarkYears bench
 
 runTestWith cfgMod bench = do
+  -- Always do line buffering on stdout!
+  hSetBuffering stdout LineBuffering
   args <- getArgs
   (cfg,_) <- C.parseArgs CCfg.defaultConfig C.defaultOptions args
   -- we want to override given cmdline args, so we hide them from 'defaultMainWith'
