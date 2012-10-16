@@ -25,18 +25,9 @@ typedef struct
     float expiry;
     float bankDays;
     float r;
-    float sigma; // Volatility
-    float alpha; // wtf?
+    float sigma;
+    float alpha;
 } TOptionData;
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Global parameters
-////////////////////////////////////////////////////////////////////////////////
-//Number of time steps
-// #define   NUM_STEPS 2048
-//Max option batch size
-#define MAX_OPTIONS 512
 
 
 

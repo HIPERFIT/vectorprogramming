@@ -9,8 +9,6 @@
  *
  */
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Global types and parameters
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,117 +23,64 @@
 #endif
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Internal GPU-side constants and data structures
 ////////////////////////////////////////////////////////////////////////////////
-// #define  TIME_STEPS 16
+#define  TIME_STEPS 16
 #define  CACHE_SIZE (256)
-// #define CACHE_DELTA (2 * TIME_STEPS)
-// #define  CACHE_STEP (CACHE_SIZE - CACHE_DELTA)
-
-// #if NUM_STEPS % CACHE_DELTA
-// #error Bad constants
-// #endif
+#define CACHE_DELTA (2 * TIME_STEPS)
+#define  CACHE_STEP (CACHE_SIZE - CACHE_DELTA)
 
 //Preprocessed input option data
 typedef struct
 {
-    real S_0;
-    real strike;
-    //real dt;
-    real u;
-    real d;
-    real R;
-    real q;
+    double S_0;
+    double strike;
+    double u;
+    double d;
+    double R;
+    double q;
     int  n;
 } __TOptionData;
-static __constant__ __TOptionData d_OptionData[MAX_OPTIONS];
-static __device__           float d_CallValue[MAX_OPTIONS];
-//static __device__            real d_CallBuffer[MAX_OPTIONS * (NUM_STEPS + 16)];
-static __device__            real* d_CallBuffer;
-//static __device__            int NUM_STEPS;
+static __constant__ __TOptionData d_OptionData;
+static __device__           double d_CallValue;
+static __device__            double* d_CallBuffer;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Overloaded shortcut functions for different precision modes
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef DOUBLE_PRECISION
-__device__ inline float expiryCallValue(real S0, real strike, real u, real d, int n, int i)
-{
-    return fmaxf(strike-S0 * powf(u,i) * powf(d,n-i),0);
-    /*
-    real d = S * expf(vDt * (2.0f * i - NUM_STEPS)) - X;
-    return (d > 0) ? d : 0;
-    */
-}
-#else
 __device__ inline double expiryCallValue(double S0, double strike, double u, double d, int n, int i)
 {
-    return fmaxf(strike-S0 * powf(u,i) * powf(d,n-i),0);
-    /*
-    double d = S * exp(vDt * (2.0 * i - NUM_STEPS)) - X;
-    return (d > 0) ? d : 0;
-    */
+    return fmax(strike-S0 * pow(u,i) * pow(d,n-i),0);
 }
-#endif
 
-
-// Just slice the input array into n bits, sync after each iteration.
-/*
-static __global__ void binomiaOptionsKernelNaive()
-{
-
-    const int     tid = threadIdx.x;
-    const real    S_0 = d_OptionData[tid].S_0;
-    const real strike = d_OptionData[tid].strike;
-    const real      u = d_OptionData[tid].u;
-    const real      d = d_OptionData[tid].d;
-    const real      q = d_OptionData[tid].q;
-    const real      R = d_OptionData[tid].R;
-    const int       n = d_OptionData[tid].n;
-    real *const d_Call = &d_CallBuffer[tid * (n + 16)];
-
-    // TODO...
-}
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // GPU kernel
 ////////////////////////////////////////////////////////////////////////////////
 static __global__ void binomialOptionsKernel()
 {
-    __shared__ real callA[CACHE_SIZE+1];
-    __shared__ real callB[CACHE_SIZE+1];
-    //Global memory frame for current option (thread block)
-    //const int NUM_STEPS   = d_OptionData[blockIdx.x].n;
-    const int TIME_STEPS  = 16; // what exactly is TIME_STEPS?
-    const int CACHE_DELTA = (2 * TIME_STEPS);
-    const int CACHE_STEP  = (CACHE_SIZE - CACHE_DELTA);
-
-
-    // #if NUM_STEPS % CACHE_DELTA ==> bad constants
+    __shared__ double callA[CACHE_SIZE+1];
+    __shared__ double callB[CACHE_SIZE+1];
 
     const int     tid = threadIdx.x;
-    const int     bid = blockIdx.x;
-    const real    S_0 = d_OptionData[bid].S_0;
-    const real strike = d_OptionData[bid].strike;
-    //const real     dt = d_OptionData[bid].dt;
-    const real      u = d_OptionData[bid].u;
-    const real      d = d_OptionData[bid].d;
-    const real      q = d_OptionData[bid].q;
-    const real      R = d_OptionData[bid].R;
-    const int       n = d_OptionData[bid].n;
-    real *const d_Call = &d_CallBuffer[tid * (n + 16)];
+    const double    S_0 = d_OptionData.S_0;
+    const double strike = d_OptionData.strike;
+    const double      u = d_OptionData.u;
+    const double      d = d_OptionData.d;
+    const double      q = d_OptionData.q;
+    const double      R = d_OptionData.R;
+    const int       n = d_OptionData.n;
+    double *const d_Call = d_CallBuffer;
 
     //Compute values at expiry date
-    for (int i = tid; i <= n; i += CACHE_SIZE)
+    for (int i = tid; i < n; i += CACHE_SIZE)
     {
         d_Call[i] = expiryCallValue(S_0, strike, u, d, n, i);
     }
 
-    real S;
+    double S;
     int t;
     //Walk down binomial tree
     //So double-buffer and synchronize to avoid read-after-write hazards.
@@ -169,16 +114,16 @@ static __global__ void binomialOptionsKernel()
             {
                 //Compute discounted expected value
                 __syncthreads();
-                S = S_0 * powf(u, c_base+tid) * powf(d, t-(c_base+tid)-1);
-                callB[tid] = fmaxf(strike-S, (q * callA[tid + 1] + (1-q) * callA[tid])/R);
+                S = S_0 * pow(u, c_base+tid) * pow(d, t-(c_base+tid)-1);
+                callB[tid] = fmax(strike-S, (q * callA[tid + 1] + (1-q) * callA[tid])/R);
                 t--;
                 k--;
 
                 //Compute discounted expected value
                 //S = S_0 * powf(u, tid-1.0f) * powf(d, t-tid);
                 __syncthreads();
-                S = S_0 * powf(u, c_base+tid) * powf(d, t-(c_base+tid)-1);
-                callA[tid] = fmaxf(strike-S, (q * callB[tid + 1] + (1-q) * callB[tid])/R);
+                S = S_0 * pow(u, c_base+tid) * pow(d, t-(c_base+tid)-1);
+                callA[tid] = fmax(strike-S, (q * callB[tid + 1] + (1-q) * callB[tid])/R);
                 k--;
                 t--;
             }
@@ -194,9 +139,9 @@ static __global__ void binomialOptionsKernel()
     }
 
     //Write the value at the top of the tree to destination buffer
-    if (threadIdx.x == 0)
+    if (tid == 0)
     {
-        d_CallValue[blockIdx.x] = (float)callA[0];
+      d_CallValue = callA[0];
     }
 }
 
@@ -206,60 +151,43 @@ static __global__ void binomialOptionsKernel()
 // Host-side interface to GPU binomialOptions
 ////////////////////////////////////////////////////////////////////////////////
 static void binomialOptionsGPU(
-    float *callValue,
-    TOptionData *optionData,
-    int optN
+    double *callValue,
+    TOptionData optionData
 )
 {
-    __TOptionData h_OptionData[MAX_OPTIONS];
+    __TOptionData h_OptionData;
 
-    const int n = optionData[0].expiry * optionData[0].bankDays;
-    for (int i = 0; i < optN; i++)
-    {
-       const double dt = 1.0f / optionData[i].bankDays;
-       const double alpha = optionData[i].alpha;
-       const double sigma = optionData[i].sigma;
-       const double u     = exp(alpha*dt+sigma*sqrt(dt));
-       const double d     = exp(alpha*dt-sigma*sqrt(dt));
-       const double R     = exp(dt*optionData[i].r);
+    const int n = optionData.expiry * optionData.bankDays;
 
-       h_OptionData[i].S_0    = optionData[i].S_0;
-       h_OptionData[i].strike = optionData[i].strike;
-       h_OptionData[i].u      = u;
-       h_OptionData[i].d      = d;
-       h_OptionData[i].R      = R;
-       h_OptionData[i].q      = (R-d)/(u-d);
-       h_OptionData[i].n      = n;
-    }
+    const double dt = 1.0f / optionData.bankDays;
+    const double alpha = optionData.alpha;
+    const double sigma = optionData.sigma;
+    const double u     = exp(alpha*dt+sigma*sqrt(dt));
+    const double d     = exp(alpha*dt-sigma*sqrt(dt));
+    const double R     = exp(dt*optionData.r);
 
-    /*
-printf("h_OptionData[i].S_0 = %f\n"
-"h_OptionData[0].strike = %f\n"
-"h_OptionData[0].u      = %f\n"
-"h_OptionData[0].d      = %f\n"
-"h_OptionData[0].R      = %f\n"
-"h_OptionData[0].q      = %f\n"
-"h_OptionData[0].n      = %d\n",
-h_OptionData[0].S_0    ,
-h_OptionData[0].strike ,
-h_OptionData[0].u      ,
-h_OptionData[0].d      ,
-h_OptionData[0].R      ,
-h_OptionData[0].q      ,
-h_OptionData[0].n      );
-*/
+    h_OptionData.S_0    = optionData.S_0;
+    h_OptionData.strike = optionData.strike;
+    h_OptionData.u      = u;
+    h_OptionData.d      = d;
+    h_OptionData.R      = R;
+    h_OptionData.q      = (R-d)/(u-d);
+    h_OptionData.n      = n;
+
 
     // Allocate result array
     void *d_CallBufferPtr;
-    checkCudaErrors(cudaMalloc(&d_CallBufferPtr, MAX_OPTIONS * (n + 16) * sizeof(real)));
-    checkCudaErrors(cudaMemcpyToSymbol(d_CallBuffer, &d_CallBufferPtr, sizeof(real*)));
+    checkCudaErrors(cudaMalloc(&d_CallBufferPtr, n * sizeof(double)));
+    checkCudaErrors(cudaMemcpyToSymbol(d_CallBuffer, &d_CallBufferPtr, sizeof(double*)));
 
     // Transmit work descriptions
-    checkCudaErrors(cudaMemcpyToSymbol(d_OptionData, h_OptionData, optN * sizeof(__TOptionData)));
+    checkCudaErrors(cudaMemcpyToSymbol(d_OptionData, &h_OptionData, sizeof(__TOptionData)));
 
-    binomialOptionsKernel<<<optN, CACHE_SIZE>>>();
+    // Run on one block
+    binomialOptionsKernel<<<1, CACHE_SIZE>>>();
     getLastCudaError("binomialOptionsKernel() execution failed.\n");
-    checkCudaErrors(cudaMemcpyFromSymbol(callValue, d_CallValue, optN *sizeof(float)));
+
+    checkCudaErrors(cudaMemcpyFromSymbol(callValue, d_CallValue, sizeof(double)));
     checkCudaErrors(cudaFree(d_CallBufferPtr));
 
 }
