@@ -1,29 +1,29 @@
 \part{Survey}
 \chapter{Survey Setup}
-In this and the following chaptersd we present a small-scale survey of
+In this and the following chapters we present a small-scale survey of
 current vector languages. The survey was originally conducted to
 orientate ourselves in the current landscape of parallel functional
-languages and their implementation, but the results might be
-benificial for others as we do not know of other comparisons with
-similar scope.
+languages and their implementation, but the results might be of
+interest for others. We do not know of other comparisons with similar
+scope.
 
 We have decided to evaluate and compare the languages Accelerate
 \cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
 Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
 package\footnote{\url{http://hackage.haskell.org/package/vector}}. We
-compare these four libraries to R programming language  and
-CUDA, which are some of the languages currently used by financial
-engineers. The R language is used for expressing financial algorithms
-succintly, while CUDA is used for performance reasons, which is why we
-have chosen to include both of these. Because of time constraints, we
-have had to limit ourselves more than we originally had hoped for,
-this means we have had to leave out languages such as
+compare these four libraries to R programming language and NVIDIA's
+CUDA platform, which are some of the languages currently used by
+financial engineers. The R language is used for expressing financial
+algorithms succinctly, while CUDA is used for performance reasons,
+which is why we have chosen to include both of these. Because of time
+constraints, we have had to limit ourselves more than we originally
+had hoped for, this means we have had to leave out languages such as
 Feldspar\cite{axelsson2010feldspar},
 Obsidian\cite{svensson2011obsidian}, Data Parallel Haskell \cite{},
-Copperhead\cite{Catanzaro2011} and NESL\cite{nesl} from the survey, although they
-might have provided further insigths.
+Copperhead\cite{Catanzaro2011} and NESL\cite{nesl} from the survey,
+although they might have provided further insights.
 
-\todo{Why only Haskell? Are there any languages we have left our entirely?}
+\todo{Why only Haskell? Are there any languages we have left out entirely?}
 
 \section{Programming language surveys}
 To make a fair comparison, we have to be objective in our evaluation
@@ -42,46 +42,93 @@ and it might be outdated). Also, as mentioned by Lutz Prechelt in his
 We thus either have to acquire the same level of experience in all the
 languages ourselves or find experts in each of the languages to do the
 implementation. We have not had the resources to conduct a survey
-following the standards set by the paper by Lutz Prechelt. For each
+following the standards set in the paper by Lutz Prechelt. For each
 language under comparison he acquired 10-20 implementations of the
-same algorithm from different programmers (mostly graduate students),
+same algorithm from different programmers (mostly graduate
+students). We could have set up a similar experiment by presenting a
+programming challenge to the ``Haskell-Cafe''-mailing list and/or the
+Haskell section on the Reddit website, and surely we could perhaps get
+a decent benchmark in terms speed and memory usage for different
+implementations by different developers, but we would not get answers
+to qualitative questions about the development process. Another aspect
+is that these languages are all in their early stages, and most people
+we would find on those channels might be amateurs. We do not find
+amateur work a good basis for an objective comparison.
 
-\todo{How do we obtain this? Contacting Accelerate and Repa people to
-  get their versions? We also have to document the development
-  process, and that we couldn't write an efficient Accelerate version
-  ourselves.}
+\todo{could still be an interesting experiment to make in the future.}
+\todo{look through the above argument again}
 
 \section{Comparison}
+From the survey we want to uncover three main questions about each
+language, and it is from answers to these questions that we will make
+a comparison. The three questions revolve around the health of
+project, the expressiveness and ease of use of the language, and the
+performance of the language. The following three sections will pose
+these questions and describe how we have decided to test them.
 
-\subsection{Qualitative questions}
+\todo{Should we also include an evaluation on ``Performance
+  \textit{guarantees}''? That is, an evaluation of the theoretical
+  aspects and cost models?}
+
+\subsection{Project Health}
+How good is the project health? That is,
+we want to determine how likely is it that development on the language
+will continue and that it will keep getting funding and interest from
+developers.
+
+Subquestions include:
 \begin{itemize}
-\item How hard was the installation process?
-\item How portable is it?
-\item Code review of language/compiler implementation.
-\item Quality of documentation.
-\end{itemize}
-\subsection{Quantitative}
-\begin{itemize}
-\item Benchmark of binomial pricer on expiry = 1,2,4,8,16,32,64 years.
-\item Benchmark of Longstaff and Schwartz.
-\item How many GHC extensions?
-\item (Performance comparison between naive and optimized version of
-  binomial pricer)\_F
-\item (Levenshtein distance in abstract symbolic tokens)\_T between
-  naive and optimized version of binomial pricer.
-\item Version of GHC (how up to date is the code base)\_N
-\item Project health (project activity, etc.)\_N
-\item Reverse dependencies - how many packages
-  depends on it?
+\item Quality of documentation
+\item Code review
+\item Portability
+\item Installation process
+\item Number of dependencies (incl. GHC extensions)
+\item Number of users (reverse dependencies)
+\item Number of contributors
+\item How easy is it to start contributing?
+\item Latest project activity (e.g. which version of GHC does it compile on?)
+\item Licensing
+\item Funding
 \end{itemize}
 
+\subsection{Ease of use and expressiveness} 
+
+How easy is the language to use? And how expressive is it? Our
+aim is to find a language that might be suitable for a financial
+engineer and we thus want a suitably high-level language. It should
+be near the complexity level of R. We still want the language to
+expressive enough to cover the domain of financial algorithms.
+
+Subquestions include
 \begin{itemize}
-\item How do we carry out the survey?
+\item Which programs can we write, and which can't we write?
+  \begin{itemize}
+  \item Can we write nested loops?
+  \item Does it include all of: scans, folds, zip/map, stencils,
+  \end{itemize}
+\item How good are the error messages?
+\item How high-level is it on the scale from ``R'' to ``CUDA''?
+\end{itemize}
+
+\subsection{Performance} How does the languages compare in a
+performance benchmark?
+\begin{itemize}
+\item Benchmark of binomial pricer on expiry = 1,2,4,8,16,32,64,128 years.
+\item Benchmark of Longstaff and Schwartz
+\item How many in-code optimiser hints (inlining-statements, forcing
+  of delayed arrays etc.) are necessary to get decent performance?
+\item How does the performance of a naive implementation (no
+  optimiser hints) compare to an optimised version?
+\end{itemize}
+
+
+%\begin{itemize}
+%\item How do we carry out the survey?
 %\item How are such surveys normally performed?
-\item Which parameters do look for and measure?
-\item How do we measure these things, e.g. how do we evaluate ``project health''?
+%\item Which parameters do look for and measure?
+%\item How do we measure these things, e.g. how do we evaluate ``project health''?
 %\item Why didn't we include some languages, but included others?
-\end{itemize}
+%\end{itemize}
 
 \chapter{Qualitative evaluation}
 Evaluation of languages on qualitative parameters, such as ``How good
