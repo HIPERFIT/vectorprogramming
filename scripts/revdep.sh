@@ -7,14 +7,15 @@ if [ -d hackage ]; then
 else
   echo extracting hackage index
   mkdir hackage
-  tar -xf $HOME/.cabal/packages/hackage.haskell.org/00-index.tar -C hackage
+  tar -xmf $HOME/.cabal/packages/hackage.haskell.org/00-index.tar -C hackage
 fi
 
 echo "checking revdeps for ${searchPkg}"
 
 touch ${searchPkg}.revdeps
 
-echo found `ls hackage| wc -l` packages
+pTot=`ls hackage| wc -l`
+echo found $pTot packages
 
 pNum=0
 cd hackage
@@ -25,12 +26,12 @@ do
   do
     grep "\<${searchPkg}\>" $cabalfile > /dev/null
     if [ $? = 0 ]; then
-      echo $p
+      echo \n$p\n
       echo $cabalfile >> ../${searchPkg}.revdeps
     fi
   done) || true
 
   pNum=$((1+pNum))
-  echo checked ${pNum} packages
+  printf "checked %.2f %%\r" $(( $pNum.0 / $pTot.0 * 100.0))
 
 done
