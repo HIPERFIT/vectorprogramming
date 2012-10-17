@@ -9,18 +9,14 @@
  *
  */
 
-#ifndef CUDA_NO_SM_13_DOUBLE_INTRINSICS
-#define DOUBLE_PRECISION
-#endif // #ifndef CUDA_NO_SM_13_DOUBLE_INTRINSICS
 #include "binomialOptions_kernel.cuh"
 
 
 extern "C" void binomialOptions_SM13(
-    float *callValue,
-    TOptionData  *optionData,
-    int optN
+    double *callValue,
+    TOptionData  optionData
 )
 {
-    binomialOptionsGPU(callValue, optionData, optN);
+    binomialOptionsGPU(callValue, optionData);
 }
 

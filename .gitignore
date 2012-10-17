@@ -35,6 +35,7 @@ tex/report/*.pdf
 tex/report/*.thm
 tex/report/*.xml
 tex/report/*.bib
+tex/report/*.bcf
 dist_*/
 dist/
 logs/
