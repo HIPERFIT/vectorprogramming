@@ -134,10 +134,38 @@ performance benchmark?
 %\item Why didn't we include some languages, but included others?
 %\end{itemize}
 
-\chapter{Qualitative evaluation}
-Evaluation of languages on qualitative parameters, such as ``How good
-is the documentation?'', ``How tight is the correspondence to the
-Rofls R-code?''
+\chapter{Evaluation: Project Health}
+%``How good is the documentation?'',
+
+\begin{table}
+  \centering
+  \begin{tabular}{l|rrllllr}
+    Language & Project age & Latest release & License & Contributors \\ \hline
+    Accelerate & 3-4 years & June 2012 & BSD3 & 3 \\
+    Nikola & 1-2 years & Not released & BSD3 & 1 \\
+    Repa & 1-2 years & October 2012 & BSD3 & 4 \\
+    Data.Vector & 4 years & October 2012 & BSD3 & 9 \\
+  \end{tabular}
+  \caption{Project status}
+  \label{tab:project_status}
+\end{table}
+
+\begin{table}
+  \centering
+  \begin{tabular}{l|rrllllr}
+    Language & Dependencies & Reverse dependencies & GHC extensions & GHC version \\ \hline
+    Accelerate & 5 (+18) & 2 & 19 (+9) & 7.6.1 \\
+    Nikola & 21 & 0 & 26 & 7.4.2 \\
+    Repa & 6 & 11 & 20 & 7.6.1 \\
+    Data.Vector & 4 & 150+ & 15 & 7.6.1 \\
+  \end{tabular}
+  \caption{Dependency status}
+  \label{tab:dependency_status}
+\end{table}
+
+
+\chapter{Evaluation: Expressiveness}
+% ``How tight is the correspondence to the Rolfs R-code?''
 
 \chapter{Benchmarks}
 Evaluation of languages on measurable parameters. Performance graphs,
