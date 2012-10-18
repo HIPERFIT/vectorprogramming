@@ -26,6 +26,7 @@ fi
 
 SUMMARYDIR=summaries/$LOGTAG
 SUMMARYFILE=$SUMMARYDIR/$PROGRAM.csv
+REPORTFILE=$SUMMARYDIR/$PROGRAM-samples.csv
 
 # summarydir created by Main.hs
 #mkdir -p $SUMMARYDIR
@@ -48,6 +49,7 @@ deactivate_hsenv
 ) > $LOGFILE-Build
 
 # run the result
-Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE +RTS -N | tee $LOGFILE-Benchmark
+Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE \
+  --template samples.tpl --report $REPORTFILE +RTS -N | tee $LOGFILE-Benchmark
 
 
