@@ -1,3 +1,5 @@
+# ggplot2 guide: http://wiki.stdout.org/rcookbook/Graphs/
+
 library(ggplot2)
 #library(scales)
 
@@ -34,7 +36,7 @@ breaks=c(0.001, 0.01, 0.1, 1, 5, 10, 20, 40, 80, 100)
 p = p + scale_y_log10(limits = c(0.001,100)
                     , name="Execution time (seconds)"
                     , breaks=breaks
-                    , labels=as.character(breaks)) #rep("comma", 9))
+                    , labels=as.character(breaks))
 p = p + scale_x_log10(breaks=cuda[,1], name="Problem size (option expiry time in years)")
 
 # Hide unnecessary grid lines
