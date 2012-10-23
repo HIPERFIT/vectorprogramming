@@ -1,32 +1,49 @@
+\chapter{Financial basics}
 Finance is the subfield of economics that has to with valuing
 assets. Assets can be material objects such as goods, buildings, staff
 and so on, or immaterial objects such as knowledge, stocks, bonds,
-patents, copyrights and so forth.
+patents, copyrights and so forth. In this thesis we will use some
+algorithms for determining the value of \textit{options} as example
+programs for illustrative purposes and benchmarks.
 
-\todo{Barter economy = trading economy, e.g. football clubs trading players
-or a computer game such as Diablo II}
+\section{Options}
+Options are so called derivative financial constracts, that gives the
+holder the right to buy or sell some underlying asset (e.g. stocks or
+bonds) from another party at a pre-agreed price and time, but leaves
+him the \textit{option} to leave be. If the holder decides to use this
+right, we say that he \textit{exercises} the option. There are
+different styles of options, the most common will be detailed below.
 
-\todo{Arbitrage}
+\subsection{European options}
+An European option is the simplest of the common option types. The
+holder of an European option can exercise the option at the pre-agreed
+expiration date, and only at that point.
 
-\todo{Payoff}
+%European call option
 
-\todo{Algorithmic trading vs. high frequency trading}
-
-\todo{Application of Monte Carlo simulation}
-
-\todo{Expected discounted payoff}
-
-
-Options
-=======
-
-
-
-A \textit{Call option} grants the holder the right to buy the stock at
-a fixed price $K$ at a fixed time $T$ in the future (where the current
-time is $t = 0$). \todo{Difference between European and American call
-options}
+%European put option
 
 
+% \begin{tabular}[h!]{lll}
+%                             & Issue date & Expiration date \\
+% Market value of underlying  & \$10 & \$15 \\
+% Paid by A                   & \$4 & \$10 \\
+% \end{tabular}
+
+\subsection{American options}
+An American option is discern from European options by not having a
+fixed exercise time, but a time interval of possible exercise times,
+such that the holder may choose when to exercise. As with European
+options, American options comes in both call and put variants.
 
 
+
+% \subsection{Exotic options}
+% Asian options
+% Barrier options
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End:
