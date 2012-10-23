@@ -50,6 +50,6 @@ deactivate_hsenv
 
 # run the result
 Instances/$PROGRAM/dist_$HSENV_/build/binomialbenchmark-${PROGRAM}/binomialbenchmark-${PROGRAM} --summary $SUMMARYFILE \
-  --template samples.tpl --report $REPORTFILE +RTS -N | tee $LOGFILE-Benchmark
+  --template samples.tpl --output $REPORTFILE +RTS -N | tee $LOGFILE-Benchmark
 
 
