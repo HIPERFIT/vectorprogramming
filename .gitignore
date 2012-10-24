@@ -44,3 +44,4 @@ summaries/
 *.o
 bin/
 build/
+.shake.database
