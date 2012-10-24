@@ -18,4 +18,4 @@ executable binomialbenchmark-Cuda
   main-is:             Main.hs
   -- other-modules:
   build-depends:       base, binomialbenchmark, process
-  ghc-options: -Odph -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -optlo-O3 -fllvm
+  ghc-options: -rtsopts -threaded -fllvm -optlo-O3

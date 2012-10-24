@@ -18,3 +18,4 @@ executable binomialbenchmark-R
   main-is:             Main.hs
   -- other-modules:
   build-depends:       base, binomialbenchmark
+  ghc-options: -rtsopts -threaded -fllvm -optlo-O3
