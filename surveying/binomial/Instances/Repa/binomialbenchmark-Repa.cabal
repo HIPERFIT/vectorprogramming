@@ -8,4 +8,4 @@ cabal-version:       >=1.8
 executable binomialbenchmark-Repa
   build-depends:       base ==4.5.*, repa ==3.2.*, binomialbenchmark, mtl
   main-is: Main.hs
-  ghc-options: -Odph -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -optlo-O3 -fllvm
+  ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

@@ -7,3 +7,4 @@ cabal-version:       >=1.8
 executable binomialbenchmark-Accelerate
   main-is: Main.hs
   build-depends:       base, accelerate, accelerate-cuda, binomialbenchmark
+  ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

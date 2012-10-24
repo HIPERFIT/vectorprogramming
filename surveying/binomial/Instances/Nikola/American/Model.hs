@@ -15,7 +15,7 @@ data Model = Model
 
 defaultModel = Model
              {
-               bankDays = 252
+               bankDays = 256
              , alpha = 0.07
              , sigma = 0.20
              , r = 0.03

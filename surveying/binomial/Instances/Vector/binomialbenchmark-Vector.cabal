@@ -8,7 +8,7 @@ version:             0.1.0.0
 -- license:
 license-file:        LICENSE
 author:              Philip Carlsen, Martin Dybdal
-maintainer:          fred@example.net
+maintainer:          plcplc@gmail.com, dybber@dybber.dk
 -- copyright:
 -- category:
 build-type:          Simple
@@ -18,4 +18,4 @@ executable binomialbenchmark-Vector
   main-is: Main.hs
   -- other-modules:
   build-depends:       base, vector, binomialbenchmark
-  ghc-options: -O3 -threaded -fllvm
+  ghc-options: -threaded -optlo-O3 -fllvm

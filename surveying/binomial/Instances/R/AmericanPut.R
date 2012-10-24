@@ -24,7 +24,7 @@ strike<-100;
 r<-0.03;
 alpha<-0.07;
 sigma<-0.20
-bankDays <- 252;
+bankDays <- 256;
 
 cat("OK\n")
 
