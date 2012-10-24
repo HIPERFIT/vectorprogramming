@@ -15,8 +15,6 @@ main = shake shakeOptions $ do
   "master.pdf" *> \out -> do
     let baseFile = dropExtension out
     -- need [baseFile <.> "tex"]
-    -- ideally, we should needTexRecursive on master.tex and have
-    -- needTexRecursive look for \input{..}s
     need [
      "defaultprelude.tex",
      "finance.tex",
