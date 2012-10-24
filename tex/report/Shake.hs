@@ -21,7 +21,7 @@ main = shake shakeOptions $ do
      "intro.tex",
      "master.tex",
      "ourwork.tex",
-     "../bibliography/bibliography.bib"
+     "../bibliography/bibliography.bib",
      "survey.tex"]
     pdflatex $ baseFile <.> "tex"
     bibtex   $ baseFile

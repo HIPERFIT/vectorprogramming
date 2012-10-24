@@ -62,10 +62,10 @@ amateur work a good basis for an objective comparison.
 \todo{could still be an interesting experiment to make in the future.}
 \todo{look through the above argument again}
 
-\section{Comparison}
-From the survey we want to uncover three main questions about each
-language, and it is from answers to these questions that we will make
-a comparison. The three questions revolve around the health of
+\ section{Comparison}
+F rom the survey we want to uncover three main questions about each
+l anguage, and it is from answers to these questions that we will make
+a  comparison. The three questions revolve around the health of
 project, the expressiveness and ease of use of the language, and the
 performance of the language. The following three sections will pose
 these questions and describe how we have decided to test them.
@@ -137,14 +137,93 @@ performance benchmark?
 \chapter{Evaluation: Project Health}
 %``How good is the documentation?'',
 
+\section{Accelerate}
+\subsection{Quality of documentation}
+
+The documentation for Accelerate resides mainly in two different places: The
+haddock API-docs on hackage, and more high-level documentation on the project's
+github wiki.
+Other documentation reside in somewhat scattered web pages, most notably in the
+paper \cite{chakravarty2011accelerating}.
+As of this writing, the main introductory material seems to be the github
+project wiki and the paper \cite{chakravarty2011accelerating}. Of these two,
+the wiki pages are more oriented towards building applications using
+Accelerate, while the paper focuses on detailing the current implementation and
+only briefly introduces the Accelerate language in an academic fashion.
+
+Unfortunately, many of the wiki pages are rather incomplete, so we must
+conclude that there has yet to be published any comprehensive introductory
+material on programming using Accelerate.
+The API reference documentation however is extensive.
+
+\subsection{Code review}
+
+\todo{Text below is copied verbatim from wiki.}
+The Accelerate codebase is large for a Haskell library, and a bit
+overwhelming at first. They have a good division between frontend
+(the accelerate package) and backends (e.g. the accelerate-cuda
+package), which limits the amount of code you have to get into. You
+don't really have to understand the complete frontend to modify in
+the backend and vice versa). A good overview document of the
+different modules, and their tasks would be a great benefit for
+getting other hackers involved.
+
+\subsection{Portability}
+
+Accelerate consists of a frontend package, \texttt{accelerate}, that defines
+the language, and of various backend packages, most notably
+\texttt{accelerate-cuda}, that defines compilers or interpreters for Accelerate
+terms.
+
+The language frontend is tied only to the GHC-compiler (through its generous
+use of GHC haskell extensions), and thus runs on any platform (architecture or
+OS) that GHC supports.
+The CUDA backend is only available on machines with a NVidia CUDA graphics
+card, and supports all versions of CUDA (but recommend using at hardware with
+at least compute capability 1.2).
+
+\subsection{Installation process}
+
+\todo{Text below is copied verbatim from wiki.}
+We succeeded in getting Accelerate to run on GHC 7.4.2, but it still doesn't
+support GHC 7.6.1, possibly because of external dependencies.
+We had some trouble installing the version on hackage, because of a
+minor bug in the cuda-bindings. The bug was caused by code generated
+by c2hs, so it might be something that depends on the version of CUDA
+installed.
+
+We had major trouble installing the development-version from their
+repository, mainly caused by a lot of dependency issues and
+conflicts. We still have to compile the CUDA-backend.
+
+\subsection{Dependencies}
+
+For the Accelerate frontend we have counted 8 package dependencies and 19 GHC
+extensions, while the CUDA backend sports 23 package dependencies and 5 GHC
+extensions.
+
+Most of the package dependencies are commonly occuring packages, but some are
+less so.
+\todo{The last paragraph sounds unsubstantiated}
+
+\subsection{Number of users (reverse dependencies)}
+\subsection{Number of contributors}
+\subsection{How easy is it to start contributing?}
+\subsection{Latest project activity}
+\subsection{Licensing}
+\subsection{Funding}
+\section{Repa}
+\section{Nikola}
+\section{Data.Vector}
+
 \begin{table}
   \centering
   \begin{tabular}{l|rrllllr}
-    Language & Project age & Latest release & License & Contributors \\ \hline
-    Accelerate & 3-4 years & June 2012 & BSD3 & 3 \\
-    Nikola & 1-2 years & Not released & BSD3 & 1 \\
-    Repa & 1-2 years & October 2012 & BSD3 & 4 \\
-    Data.Vector & 4 years & October 2012 & BSD3 & 9 \\
+    Language    & Project age & Latest release & License & Contributors \\ \hline
+    Accelerate  & 3-4 years   & June 2012      & BSD3    & 3 \\
+    Nikola      & 1-2 years   & Not released   & BSD3    & 1 \\
+    Repa        & 1-2 years   & October 2012   & BSD3    & 4 \\
+    Data.Vector & 4 years     & October 2012   & BSD3    & 9 \\
   \end{tabular}
   \caption{Project status}
   \label{tab:project_status}
@@ -153,11 +232,11 @@ performance benchmark?
 \begin{table}
   \centering
   \begin{tabular}{l|rrllllr}
-    Language & Dependencies & Reverse dependencies & GHC extensions & GHC version \\ \hline
-    Accelerate & 5 (+18) & 2 & 19 (+9) & 7.6.1 \\
-    Nikola & 21 & 0 & 26 & 7.4.2 \\
-    Repa & 6 & 11 & 20 & 7.6.1 \\
-    Data.Vector & 4 & 150+ & 15 & 7.6.1 \\
+    Language    & Dependencies & Reverse dependencies & GHC extensions & GHC version \\ \hline
+    Accelerate  & 5 (+18)      & 2                    & 19 (+9)        & 7.6.1 \\
+    Nikola      & 21 0         & 0                    & 26             & 7.4.2 \\
+    Repa        & 6            & 11                   & 20             & 7.6.1 \\
+    Data.Vector & 4            & 150+                 & 15             & 7.6.1 \\
   \end{tabular}
   \caption{Dependency status}
   \label{tab:dependency_status}
