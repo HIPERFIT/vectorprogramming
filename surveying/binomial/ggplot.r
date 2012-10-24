@@ -3,6 +3,11 @@
 library(ggplot2)
 #library(scales)
 
+size=8
+pdf("binomial_benchmark.pdf", width=1.618*size, height=1*size)
+# look at tikzDevice for tex-output
+# pdf_cairo() for exotic fonts
+
 # Format the data for plotting
 cuda <- read.csv("results/Cuda.csv")
 repa <- read.csv("results/Repa.csv")
@@ -44,3 +49,5 @@ p = p + theme(panel.grid.minor=element_blank(), panel.grid.major.x=element_blank
 
 # Show the plot
 print(p)
+
+dev.off()
