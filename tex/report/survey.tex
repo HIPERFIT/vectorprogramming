@@ -27,7 +27,8 @@ although they might have provided further insights.
   entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
   aren't they here?}
 
-\todo{}
+\section{Language introduction}
+\todo{Introduce the basics of Nikola, Accelerate, Repa and Data.Vector}
 
 \section{Programming language surveys}
 To make a fair comparison, we have to be objective in our evaluation
@@ -62,10 +63,10 @@ amateur work a good basis for an objective comparison.
 \todo{could still be an interesting experiment to make in the future.}
 \todo{look through the above argument again}
 
-\ section{Comparison}
-F rom the survey we want to uncover three main questions about each
-l anguage, and it is from answers to these questions that we will make
-a  comparison. The three questions revolve around the health of
+\section{Comparison}
+From the survey we want to uncover three main questions about each
+language, and it is from answers to these questions that we will make
+a comparison. The three questions revolve around the health of
 project, the expressiveness and ease of use of the language, and the
 performance of the language. The following three sections will pose
 these questions and describe how we have decided to test them.
@@ -119,6 +120,7 @@ performance benchmark?
 \begin{itemize}
 \item Benchmark of binomial pricer on expiry = 1,2,4,8,16,32,64,128 years.
 \item Benchmark of Longstaff and Schwartz
+\item Which optimizations are performed?
 \item How many in-code optimiser hints (inlining-statements, forcing
   of delayed arrays etc.) are necessary to get decent performance?
 \item How does the performance of a naive implementation (no
@@ -246,9 +248,38 @@ less so.
 \chapter{Evaluation: Expressiveness}
 % ``How tight is the correspondence to the Rolfs R-code?''
 
-\chapter{Benchmarks}
-Evaluation of languages on measurable parameters. Performance graphs,
-number of dependencies, etc.
+\chapter{Performance}
+We will now look at how the different languages compare in performance
+and which optimisations they employ.
+
+\section{Optimisations}
+
+\subsection{Accelerate}
+Accelerate employs the following optimisations: 
+
+fusion, memory coalesced access
+
+
+
+\section{Benchmarks}
+Speed up graph. In the graph we use the sequential version written
+with Data.Vector as our basis, which the others are compared to.
+
+Accelerate is not included, because of problems in their stream fusion
+algorithm leading to running times that evolve
+exponentially. Disabling fusion lead to CUDA exceptions.
+
+We see that the overhead incurred by using Nikola makes both
+sequential implementations (R and Data.Vector) faster for the smallest
+cases, and only when we reach the largest example (128 years expiry
+time) Nikola catches up.
+
+Repa is the best performing, even though it does not perform any GPU
+computations. We are not sure why Repa gives so varied speed-ups for
+different input sizes, but it might be because of our somewhat
+arbitrary threshold for which problem sizes should be executed in
+parallel and which should be executed sequentially.
+
 
 \chapter{Conclusion}
 What are our recommended choice of languages for different use-cases?
