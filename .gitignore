@@ -45,3 +45,4 @@ summaries/
 bin/
 build/
 .shake.database
+*.swp
