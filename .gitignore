@@ -46,3 +46,4 @@ bin/
 build/
 .shake.database
 *.swp
+.shelly/
