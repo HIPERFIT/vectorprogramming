@@ -167,18 +167,6 @@ good overview document of the different modules, and their tasks would be a
 great benefit for getting other hackers involved.\todo{Text above is copied
 verbatim from wiki.}
 
-\paragraph{Portability.} Accelerate consists of a frontend package,
-\texttt{accelerate}, that defines the language, and of various backend
-packages, most notably \texttt{accelerate-cuda}, that defines compilers or
-interpreters for Accelerate terms.
-
-The language frontend is tied only to the GHC-compiler (through its generous
-use of GHC haskell extensions), and thus runs on any platform (architecture or
-OS) that GHC supports.
-The CUDA backend is only available on machines with a NVidia CUDA graphics
-card, and supports all versions of CUDA (but recommend using at hardware with
-at least compute capability 1.2).
-
 \paragraph{Installation process} We succeeded in getting Accelerate to run on
 GHC 7.4.2, but it still doesn't support GHC 7.6.1, possibly because of external
 dependencies.  We had some trouble installing the version on hackage, because
@@ -190,12 +178,20 @@ mainly caused by a lot of dependency issues and conflicts. We still have to
 compile the CUDA-backend.  \todo{Text above is copied verbatim from wiki.}
 
 \subsection{Relations with other projects}
+
 \paragraph{Dependencies.}
 For the Accelerate frontend we have counted 8 package dependencies and 19 GHC
 extensions, while the CUDA backend sports 23 package dependencies and 5 GHC
 extensions.
 Most of the package dependencies are commonly occuring packages, but some are
 less so. \todo{The last paragraph sounds unsubstantiated}
+
+The Accelerate frontend is tied only to the GHC-compiler (through its generous
+use of GHC haskell extensions), and thus runs on any platform (architecture or
+OS) that GHC supports.
+The CUDA backend is only available on machines with a NVidia CUDA graphics
+card, and supports all versions of CUDA (but recommend using at hardware with
+at least compute capability 1.2).
 
 \paragraph{Reverse Dependencies.} For Accelerate we have
 counted a total of two package users on hackage, excluding the different
@@ -217,47 +213,72 @@ mainly that attribution is retained in derivative works.
 \subsection{Maintainance}
 
 Accelerate has been actively maintained for the
-last 12 months.
+past 12 months.
 The two main contributors, Trevor L. McDonell and Manuel M
 T Chakravarty, are both employed by University of New South Wales, Sydney,
 Australia, and assumably maintain Accelerate as part of their research there.
 
 \section{Repa}
-\subsection{Quality of documentation}
-\subsection{Code review}
-\subsection{Portability}
-\subsection{Installation process}
-\subsection{Dependencies}
-\subsection{Number of users (reverse dependencies)}
-\subsection{Number of contributors}
-\subsection{How easy is it to start contributing?}
-\subsection{Latest project activity}
-\subsection{Licensing}
-\subsection{Funding}
+
+\subsection{Source Quality}
+
+\paragraph{Documentation.} Repa is extensively documented through both API
+documentation on hackage, various papers, tutorials and example programs, eg in
+\cite{lippmeier2012guiding} and \cite{keller2010regular}.  Everything is easily
+accessible directly from the front page of the repa homepage
+\cite{homepage:repa}.
+
+\paragraph{Code.}
+\todo{\ldots}
+
+\paragraph{Installation process.} Since Repa is just a regular Haskell package
+that doesn't interface with foreign functions, its installation is
+straightforward using the \texttt{cabal-install} program.
+
+\subsection{Relations with other projects}
+
+\paragraph{Dependencies.} %
+packages,extensions, portability impediments.  Repa uses 18 GHC extensions and
+depends on 6 other established packages, none specific to any platform.  Thus,
+Repa will most probably function on any machine that is targetable by GHC.
+
+\paragraph{Reverse Dependencies.} Repa is a comparatively popular package. On
+hackage there are 9 other packages that each depend on Repa
+
+\paragraph{Contributors.}
+\paragraph{Licensing.}
+\subsection{Maintainance}
+
 \section{Nikola}
-\subsection{Quality of documentation}
-\subsection{Code review}
-\subsection{Portability}
-\subsection{Installation process}
-\subsection{Dependencies}
-\subsection{Number of users (reverse dependencies)}
-\subsection{Number of contributors}
-\subsection{How easy is it to start contributing?}
-\subsection{Latest project activity}
-\subsection{Licensing}
-\subsection{Funding}
+
+\subsection{Source Quality}
+\paragraph{Documentation.}
+\paragraph{Code.}
+\paragraph{Portability.}
+\paragraph{Installation process}
+
+\subsection{Relations with other projects}
+\paragraph{Dependencies.}
+\paragraph{Reverse Dependencies.}
+\paragraph{Contributors.}
+\paragraph{Licensing.}
+\subsection{Maintainance}
+
 \section{Data.Vector}
-\subsection{Quality of documentation}
-\subsection{Code review}
-\subsection{Portability}
-\subsection{Installation process}
-\subsection{Dependencies}
-\subsection{Number of users (reverse dependencies)}
-\subsection{Number of contributors}
-\subsection{How easy is it to start contributing?}
-\subsection{Latest project activity}
-\subsection{Licensing}
-\subsection{Funding}
+
+\subsection{Source Quality}
+\paragraph{Documentation.}
+\paragraph{Code.}
+\paragraph{Portability.}
+\paragraph{Installation process}
+
+\subsection{Relations with other projects}
+\paragraph{Dependencies.}
+\paragraph{Reverse Dependencies.}
+\paragraph{Contributors.}
+\paragraph{Licensing.}
+\subsection{Maintainance}
+
 
 \begin{table}
   \centering
@@ -329,3 +350,4 @@ What are our recommended choice of languages for different use-cases?
 %%% mode: latex
 %%% TeX-master: "master"
 %%% End:
+
