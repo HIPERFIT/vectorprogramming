@@ -13,4 +13,6 @@ gaussianElem q =
 
 gaussian = map gaussianElem
 
-main = defaultMain gaussian
+inp = -- [0.6, 0.5, 0.4, 0.6, 0.7]
+  [0.99, 1.0, 0.7, 0.8, 0.95 ]
+main = putStrLn . show $ gaussian inp
