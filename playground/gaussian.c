@@ -45,10 +45,10 @@ void showarrayi(int n, int arr[]) {
   }
 }
 
-void gaussian(int n, double inp[], double out[]) {
+void gaussian(int N, double inp[], double out[]) {
 
   int i;
-  for (i = 0; i <n; i++) {
+  for (i = 0; i < N; i++) {
 
     double q = inp[i];
     double dq = q - 0.5;
@@ -64,20 +64,9 @@ void gaussian(int n, double inp[], double out[]) {
         pp = 1.0-q;
       }
 
-
       double s  = sqrt(-log(pp));
-      double x;
-
-      if (s <= 5.0 ) {
-        x = 2; // 1000000 * s;
-      } else {
-        x = 3; // 5555555+s;
-      }
-      if (dq < 0.0) {
-        out[i] = 4; //-x;
-      } else {
-        out[i] = 5; // x;
-      }
+      double x = s <= 5.0 ? 2 : 3;
+      out[i] = dq < 0.0 ? 4 : 5;
     }
   }
 
@@ -90,7 +79,7 @@ int itperm(int size, char* sigma, bool* conds) {
     int beg = 0, end = size - 1;
 
     int j;
-    for(j = 0; j < end; j++) {
+    for(j = 0; j < size-1; j++) {
         if( conds[sigma[beg]] ) {
             beg = beg + 1;
         } else {
@@ -101,26 +90,29 @@ int itperm(int size, char* sigma, bool* conds) {
         }
     }
 
-    if( conds[size-1] ) { beg = beg + 1; }
+    if(conds[sigma[beg]]) {
+      beg++;
+    }
 
-    return end+1;
+    return beg;
 }
 
 int tile = 7;
 
-void gaussianBrDiv(int n, double inp[], double out[]) {
+void gaussianBrDiv(int N, double inp[], double out[]) {
 
   int i;
   int j;
-  /*par*/for (i = 0; i < n; i+=tile) {
+  /*par*/for (i = 0; i < N; i+=tile) {
 
     double qs[tile];
     double dqs[tile];
     bool   conds[tile];
     char   sigma1[tile];
     double pps[tile];
+    double ss[tile];
 
-    int M = MIN(i+tile,n)-i;
+    int M = MIN(tile,N-i);
 
     /*seq*/for (j = 0; j < M; j++) {
       qs[j] = inp[i+j];
@@ -134,25 +126,26 @@ void gaussianBrDiv(int n, double inp[], double out[]) {
       out[sigma1[j]+i] = 1;
     }
 
-    printf("split = %d\n", split);
-    printf("conds  = {");
-    showarrayb(M, conds);
-    printf("}\n");
+    /* printf("split = %d\n", split); */
+    /* printf("conds   = { "); */
+    /* showarrayb(M, conds); */
+    /* printf("}\n"); */
 
-    printf("sigma1 = { ");
-    showarrayb(M, sigma1);
-    printf("}\n");
+    /* printf("sigma1  = { "); */
+    /* showarrayb(M, sigma1); */
+    /* printf("}\n"); */
 
-    printf("out i=%d = { ", i);
-    showarrayf(n, out);
-    printf("}\n");
+    /* printf("out i=%d = { ", i); */
+    /* showarrayf(N, out); */
+    /* printf("}\n"); */
 
-/*
+
     bool *conds1 = &conds[split];
     int MF = M-split;
 
-    /*seq* /for (j = 0; j < MF; j++) {
+    /*seq*/for (j = 0; j < MF; j++) {
       conds1[j] = dqs[j+split] < 0.0;
+      ss[sigma1[j+split]]  = sqrt(-log(pps[sigma1[j+split]]));
     }
     char *sigma2 = &sigma1[split];
 
@@ -173,7 +166,7 @@ void gaussianBrDiv(int n, double inp[], double out[]) {
     printf("sigma2 = {");
     showarrayb(MF, sigma2);
     printf("}\n");
-    * /
+    */
 
     for (j = split; j < splitF; j++) {
       pps[sigma1[j]] = qs[sigma1[j]];
@@ -190,27 +183,24 @@ void gaussianBrDiv(int n, double inp[], double out[]) {
     printf("sigma1 = {");
     showarrayb(M, sigma1);
     printf("}\n");
-    * /
+    */
 
     for (j = split; j < M; j++) {
-      double s  = sqrt(-log(pps[sigma1[j]]));
       //printf("%.2lf ", s);
       //printf("%d ", j);
       double x;
 
-      if (s <= 5.0) {
-        x = 2 // 1000000 * s;
+      if (ss[sigma1[j]] <= 5.0) {
+        x = 2; // 1000000 * s;
       } else {
-        x = 3 //5555555+s;
+        x = 3; //5555555+s;
       }
       if (dqs[sigma1[j]] < 0.0) {
-        out[sigma1[j]+i] = 4 // -x;
+        out[sigma1[j]+i] = 4; // -x;
       } else {
-        out[sigma1[j]+i] = 5 // x;
+        out[sigma1[j]+i] = 5; // x;
       }
     }
-
-*/
   }
 
   return;
@@ -234,7 +224,6 @@ int main(int argc, char *argv[]) {
   printf("gaussian(..)      = ");
   showarrayf(n, out1);
   printf("\n");
-
 
   gaussianBrDiv(n, inp, out2);
   printf("gaussianBrDiv(..) = ");
