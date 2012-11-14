@@ -83,18 +83,20 @@ developers.
 
 Subquestions include:
 \begin{itemize}
-\item Quality of documentation
-\item Code review
-\item Portability
-\item Installation process
-\item Number of dependencies (incl. GHC extensions)
-\item Number of users (reverse dependencies)
-\item Number of contributors
+\item Quality of documentation. Good documentation gives better acessibility for new users and developers.
+\item Code review. Our own assesment of the standard of the code.
+\item Portability. More portable progams have a wider potential user audience.
+\item Installation process. A cumbersome installation process is deterring for newcomers.
+\item Number of dependencies (incl. GHC extensions). ``Bad health is transitive''.
+\item Number of users (reverse dependencies). The bigger the audience, the more people with some interest in the project continuing.
+\item Number of contributors.
 \item How easy is it to start contributing?
 \item Latest project activity (e.g. which version of GHC does it compile on?)
 \item Licensing
 \item Funding
 \end{itemize}
+
+\todo{Document the procedures and scripts that were used to collect reverse dependencies and to carry out installs}
 
 \subsection{Ease of use and expressiveness}
 
@@ -158,11 +160,11 @@ conclude that there has yet to be published any comprehensive introductory
 material on programming using Accelerate.
 The API reference documentation however is extensive.
 
-\paragraph{Code.}  The Accelerate codebase is large for a Haskell library, and
+\paragraph{Code.} The Accelerate codebase is large for a Haskell library, and
 a bit overwhelming at first. They have a good division between frontend (the
 accelerate package) and backends (e.g. the accelerate-cuda package), which
 limits the amount of code you have to get into. You don't really have to
-understand the complete frontend to modify in the backend and vice versa). A
+understand the complete frontend to modify in the backend and vice versa. A
 good overview document of the different modules, and their tasks would be a
 great benefit for getting other hackers involved.\todo{Text above is copied
 verbatim from wiki.}
@@ -238,24 +240,52 @@ straightforward using the \texttt{cabal-install} program.
 \subsection{Relations with other projects}
 
 \paragraph{Dependencies.} %
-packages,extensions, portability impediments.  Repa uses 18 GHC extensions and
-depends on 6 other established packages, none specific to any platform.  Thus,
-Repa will most probably function on any machine that is targetable by GHC.
+Repa uses 18 GHC extensions and depends on 6 other established packages, none
+specific to any platform. Thus, Repa will most probably function on any
+machine that is targetable by GHC.
 
 \paragraph{Reverse Dependencies.} Repa is a comparatively popular package. On
-hackage there are 9 other packages that each depend on Repa
+hackage there are 9 other packages that each depend on Repa.
 
-\paragraph{Contributors.}
-\paragraph{Licensing.}
+\paragraph{Contributors.} Looking at the commit log for the official Repa
+source code repository, we may count 4 distinct names. The primary contributor
+(in number of patches) appears to be Ben Lippmeier by a great margin.
+
+\todo{It seems redundant to keep saying that the code is publically available
+in a VCS. They all are. And we have no reference to cite that contributions are
+welcome, so any comment on contribution friendliness would be guesswork. Should
+we perhaps report that? Is the question of ease of contribution even
+interesting? Isn't it a universally accepted work dynamic of free/oss software
+that contribution is encouraged}
+
+\paragraph{Licensing.} Repa is licensed under the terms of the BSD3 license.
+
 \subsection{Maintainance}
+Ben Lippmeier is employed as a researcher by "School of Computer Science and
+Engineering", and Repa is listed among his projects there.
 
 \section{Nikola}
 
 \subsection{Source Quality}
-\paragraph{Documentation.}
-\paragraph{Code.}
-\paragraph{Portability.}
-\paragraph{Installation process}
+
+\paragraph{Documentation.} As Nikola is not published on Hackage, there is no
+automatically searchable generated documentation, and one has to manually
+generate haddock documentation. Counting source lines reveals a figure of 24\%
+comment lines, which is above the average comment ratio according to the
+ohloh.net open source project visualisation website\footnote{14-11-2012:
+``Across all Haskell projects on Ohloh, 17\% of all source code lines are
+comments. For nikola-haskell, this figure is 24\%.''} Further, Nikola is
+described in the paper \cite{mainland10nikola}.
+
+\paragraph{Code.} (TODO)
+
+\paragraph{Portability.} Only runs(/builds even?) on machines with an NVidia
+CUDA card and with the CUDA drivers and sdk installed.
+
+\paragraph{Installation process} Nikola requires running a classical style
+automake "configure"-script to produce the binding to the cuda-backend.
+
+We had a sizable amount of trouble executing the installation. \todo{why exactly?}
 
 \subsection{Relations with other projects}
 \paragraph{Dependencies.}
@@ -317,7 +347,7 @@ and which optimisations they employ.
 \section{Optimisations}
 
 \subsection{Accelerate}
-Accelerate employs the following optimisations: 
+Accelerate employs the following optimisations:
 
 fusion, memory coalesced access
 
