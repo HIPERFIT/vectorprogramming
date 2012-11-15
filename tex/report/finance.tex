@@ -1,5 +1,7 @@
 \chapter{Financial basics}
-Finance is the subfield of economics that has to with valuing
+\todo{Better chapter title}
+
+Finance is the subdiscipline of economics concerned with appraising
 assets. Assets can be material objects such as goods, buildings, staff
 and so on, or immaterial objects such as knowledge, stocks, bonds,
 patents, copyrights and so forth. In this thesis we will use some
@@ -7,28 +9,42 @@ algorithms for determining the value of \textit{options} as example
 programs for illustrative purposes and benchmarks.
 
 \section{Options}
-Options are so called derivative financial constracts, that gives the
+Options are so called derivative financial contracts, that gives the
 holder the right to buy or sell some underlying asset (e.g. stocks or
 bonds) from another party at a pre-agreed price and time, but leaves
 him the \textit{option} to leave be. If the holder decides to use this
-right, we say that he \textit{exercises} the option. There are
-different styles of options, the most common will be detailed below.
+right, we say that he \textit{exercises} the option. 
+
+\begin{example}[European Call Option]
+  Imagine a stock valued at \$10 at time 0, and at time 1 its value
+  might have gone up or down. Instead of directly trading this option,
+  two parties might make an alternative agreement. The stock holder
+  would issue an option saying:
+  \begin{quotation}
+    ``The holder of this option will at time 1 be eligible to buy the
+    stock at price \$10 if he so desires''.
+  \end{quotation}
+  In this case the ``time 1'' is the \textbf{expiration time} of the
+  option and ``\$10'' is the \textbf{strike price}. An interested
+  buyer would then evaluate the changes of the option to have risen in
+  value and might decide to buy the option for say ``\$2''. Then at
+  time he gets to choose between loosing his ``\$2'' investment (not
+  buying the stock) or buying the stock to the strike price
+  ``\$10''. If the stock has increased more in value than the initial
+  investment of ``\$2'', then the buyer would have benefited.
+\end{example}
+The option described in the above example is a \textit{European call
+  option}.  There are other styles of options, the most common will be
+detailed below.
 
 \subsection{European options}
-An European option is the simplest of the common option types. The
-holder of an European option can exercise the option at the pre-agreed
-expiration date, and only at that point.
+A European option is the simplest of the common option types. The
+holder of a European option can exercise the option at the pre-agreed
+expiration date, and only at that point. 
 
-%European call option
-
-%European put option
-
-
-% \begin{tabular}[h!]{lll}
-%                             & Issue date & Expiration date \\
-% Market value of underlying  & \$10 & \$15 \\
-% Paid by A                   & \$4 & \$10 \\
-% \end{tabular}
+What makes the above option a \textit{call option} is the fact that
+the option holder is eligible to buy the stock. Alternatively, a
+\textit{put option} would give the holder the right to sell the stock.
 
 \subsection{American options}
 An American option is discern from European options by not having a

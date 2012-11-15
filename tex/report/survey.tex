@@ -7,6 +7,7 @@ languages and their implementation, but the results might be of
 interest for others. We do not know of other comparisons with similar
 scope.
 
+\section{Languages}
 We have decided to evaluate and compare the languages Accelerate
 \cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
 Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
@@ -27,8 +28,17 @@ although they might have provided further insights.
   entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
   aren't they here?}
 
-\section{Language introduction}
-\todo{Introduce the basics of Nikola, Accelerate, Repa and Data.Vector}
+
+We will now look a bit closer on each of the chosen languages. If you
+already have experience in this area, you can skip this section.
+
+\subsection{Data.Vector}
+
+\subsection{Repa}
+
+\subsection{Accelerate}
+
+\subsection{Nikola}
 
 \section{Programming language surveys}
 To make a fair comparison, we have to be objective in our evaluation
@@ -346,11 +356,28 @@ and which optimisations they employ.
 
 \section{Optimisations}
 
+\subsection{Data.Vector}
+The documentation on Data.Vector is scarce, what we know is that it
+performs some fusion, and a single comment reveals that they use the
+foldr/build deforestation algorithm introduced in ().
+
 \subsection{Accelerate}
-Accelerate employs the following optimisations:
+Fusion is currently being implemented in Accelerate. The newest
+version on Hackage (0.12.1.0) does not perform any fusion, but the
+development repository contains a not completely functional
+implementation, so it will possibly be part of the next release.
 
-fusion, memory coalesced access
+Accelerate goes a long way to restrict the possible programs you can
+write, such that they can make certain performance guarantees. For
+instance, they do not allow you to write sequential loops running on
+the GPU as this may allow one thread to diverge letting the remaining
+threads in a block waiting.
 
+This is problematic, as certain problems are more efficiently
+expressed using nested loops, and you thus need to manually flatten,
+giving a performance penalty. Techniques have been developed to
+minimise thread divergence, and as such they could possibly benefit
+from such an implementation.
 
 
 \section{Benchmarks}
