@@ -295,14 +295,46 @@ CUDA card and with the CUDA drivers and sdk installed.
 \paragraph{Installation process} Nikola requires running a classical style
 automake "configure"-script to produce the binding to the cuda-backend.
 
-We had a sizable amount of trouble executing the installation. \todo{why exactly?}
+We had a sizable amount of trouble executing the installation. \todo{why
+exactly? (Difficult to link with CUDA sdk, cabal dependency hell)}
 
 \subsection{Relations with other projects}
-\paragraph{Dependencies.}
-\paragraph{Reverse Dependencies.}
-\paragraph{Contributors.}
+
+\paragraph{Dependencies.} For Nikola we have counted a total of 20 package
+dependencies, all of which are either maintained by Mainland himself or appear
+to have a healthy user base (reverse dependencies on Hackage).
+
+One of the dependencies is the \texttt{cuda} package, meaning that the nikola
+package is only installable on machines with the NVidia CUDA sdk and hardware.
+
+We have counted the use of 26 different GHC language extensions, most of which
+are regularly occuring. \todo{We need a more purposeful/relevant treatment of
+ghc extensions and their consequences to project health}
+
+\paragraph{Reverse Dependencies.} Since Nikola is not published on hackage, our
+method of counting users doesn't apply. Nikola is published on the github.com
+website however, where the project has 9 stars and zero forks\footnote{Gathered
+on 2012-11-15}, which is at least some measurable artifact of the existance of
+human interest in the language effort.
+
+\paragraph{Contributors.} According to the version control system's commit
+logs, only Geoffrey Mainland has contributed to the development of Nikola
+
+The source code is hosted on github, so structurally/bureaucratically easy.
+Geoffrey appears to be interested/open in merging in contributions from other
+people. \todo{This comment still seems redundant ..}
+
+Since Nikola is still a work in progress that has yet to settle on a final form
+and direction, new contributions might only be accepted if they align with the
+author's own possibly unarticulated notion of what he wants with the project.
+\todo{This needs reassesment..}
+
 \paragraph{Licensing.}
+Harvard College, appears BSD style. \todo{validate or elaborate.}
+
 \subsection{Maintainance}
+\todo{ Appears to have been funded as part of phd research (or what?), but appears
+to be a spare-time project now.}
 
 \section{Data.Vector}
 
