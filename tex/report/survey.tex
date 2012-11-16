@@ -28,7 +28,6 @@ although they might have provided further insights.
   entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
   aren't they here?}
 
-
 We will now look a bit closer on each of the chosen languages. If you
 already have experience in this area, you can skip this section.
 
@@ -149,7 +148,6 @@ performance benchmark?
 %\end{itemize}
 
 \chapter{Evaluation: Project Health}
-%``How good is the documentation?'',
 
 \section{Accelerate}
 \subsection{Source Quality}
@@ -336,21 +334,37 @@ Harvard College, appears BSD style. \todo{validate or elaborate.}
 \todo{ Appears to have been funded as part of phd research (or what?), but appears
 to be a spare-time project now.}
 
-\section{Data.Vector}
+\section{Vector}
 
 \subsection{Source Quality}
-\paragraph{Documentation.}
+
+\paragraph{Documentation.} The Vector package has extensive api-documentation
+available. Furthermore there is a tutorial on
+\cite{homepage:haskell:vectortutorial}.
+
 \paragraph{Code.}
-\paragraph{Portability.}
-\paragraph{Installation process}
+
+\paragraph{Portability.} Vector is tied to GHC through its package dependency
+on the ghc-prim package. Otherwise it appears to be Haskell98 \todo{verify
+this.}
+
+\paragraph{Installation process.} Vector is just a regular Cabal package with
+no particular dependencies, so it installs without any complications
 
 \subsection{Relations with other projects}
-\paragraph{Dependencies.}
-\paragraph{Reverse Dependencies.}
-\paragraph{Contributors.}
-\paragraph{Licensing.}
-\subsection{Maintainance}
 
+\paragraph{Dependencies.} Vector only has 4 package dependencies, and all of
+these are regularly occuring packages.
+
+\paragraph{Reverse Dependencies.} Even without counting recursively, it is
+evident that Vector has well past 150 users on hackage.
+
+\paragraph{Contributors.}
+At least Roman Leshchinskiy. \todo{Depends on darcs.}
+
+\paragraph{Licensing.} The Vector package is licensed with the BSD3 license.
+
+\subsection{Maintainance} Vector has seen regular maintainance as of October 2012.
 
 \begin{table}
   \centering
