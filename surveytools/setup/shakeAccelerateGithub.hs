@@ -1,6 +1,7 @@
 module Main where
 
 import Development.Shake
+import Development.Shake.FilePath
 import Shake.Cabal
 import Shake.Git
 
@@ -24,11 +25,13 @@ main = shake shakeOptions $ do
   gitUpdateRule
   mapM gitFilesRule gitRepos
 
-  buildCabalRule [accelCabal, accelIoCabal, accelCudaCabal]
-  cudaCabal `hsPkgRule` (\pkg -> do
-                                  systemCwd "cuda" "autoconf" []
-                                  buildCabal pkg
-                                  )
+  buildCabalRule [accelCabal, accelIoCabal]
+  -- These two should be generalised into one
+  [accelCudaCabal,cudaCabal]
+    `hsPkgsRule` (\pkg -> do
+                            systemCwd (takeDirectory $ cabalFile pkg) "autoconf" []
+                            buildCabal pkg)
+
   action $ do
     need $ map cabalFile cabalPkgs
     -- requireCabal cabalPkgs -- insufficient, as the order does indeed matter..
