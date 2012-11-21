@@ -5,15 +5,17 @@
 library(ggplot2)
 library(tools)
 
-size=8
-pdf("benchmark.pdf", width=1.618*size, height=1*size)
-
-
 # read arguments following --args (--args included)
 args <- commandArgs(trailingOnly = TRUE)
 
-dir <- args[2]   # where are the results located
+dir <- args[2]   # where the results are located
 basisfile <- args[3] # which of graphs should be treated as basis (zero) which the others compares to
+
+outputfile <- paste(dir, "/speedup-graph.pdf", sep="")
+
+# Store the resulting graph in the given directory
+size=8
+pdf(outputfile, width=1.618*size, height=1*size)
 
 # The graph to measure the other against
 basis_data <- read.csv(paste(dir, "/", basisfile, sep=""))
@@ -24,17 +26,17 @@ csvfiles = list.files(dir)
 dataset <- c()
 for(i in 1:length(csvfiles)) {
   csv = csvfiles[i]
-  if(csv != basisfile) {
+  if(csv != basisfile && file_ext(csv) == "csv") {
     data <- read.csv(paste(dir, "/", csv, sep=""))
     dataset <- rbind(dataset, cbind(data, Language=file_path_sans_ext(csv)))
   }
 }
 
 frame <- data.frame(Size=dataset[,1]
-                  , Time=basis_data[,2]/dataset[,2] -1
-                  , Language=dataset[,8]
-                  , Stddev=dataset[,5]
-                    )
+                   , Time=basis_data[,2]/dataset[,2] -1
+                   , Language=dataset[,8]
+                   , Stddev=dataset[,5]
+                   )
 
 # Dodge is used to position the bars beside each other instead of on
 # top of each other
@@ -55,8 +57,6 @@ p = p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
 # Hide unnecessary grid lines from x axis
 p = p + theme(panel.grid.minor.x=element_blank())
 
-
-# Show the plot
+# Save the plot
 print(p)
-
 dev.off()
