@@ -220,8 +220,8 @@ gaussian = R.map gaussianElem
 ------------------------------------------------------------
 
 brownian_bridge_gen :: Pricing_Data -> Array D DIM1 SpecReal -> [[SpecReal]]
-brownian_bridge_gen conf@Pricing_Data{..} =
-    arrangePerDate . map (mkBBridge conf) . divideInto md_dim
+brownian_bridge_gen conf@Pricing_Data{..} = undefined
+  --  arrangePerDate . map (mkBBridge conf) . divideInto md_dim
 
 arrangePerDate :: [Array D DIM1 SpecReal] -> [[SpecReal]]
 arrangePerDate vs = let (Z :. l) = R.extent (head vs)
