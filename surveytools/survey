@@ -1,0 +1,63 @@
+#!/bin/sh
+
+#Obtain absolute path to surveytools directory
+SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
+
+setup() {
+    $SURVEYTOOLS_DIR/install-hsenv --nikola -- accelerate-github --vanilla 7.4.2
+}
+
+execute() {
+    
+}
+
+plot() {
+
+}
+
+revdeps () {
+
+}
+
+
+show_usage() {
+  echo "Collect survey data"
+  echo ""
+  echo "Invoke with one or more of the following flags:"
+  echo "  --setup"
+  echo "  --execute"
+  echo "  --revdeps"
+  echo "  --thebigbutton"
+  echo "  --usage"
+}
+
+if [ $# -lt 1 ]; then
+    echo "No arguments given. Aborting."
+    echo ""
+    show_usage
+    exit 1
+fi
+
+case $1 in
+  --setup)
+    setup
+    ;;
+  --execute)
+    execute
+    ;;
+  --revdeps)
+    revdeps
+    ;;
+  --thebigbutton)
+    setup
+    execute
+    revdeps
+    ;;
+  --usage)
+    show_usage
+    ;;
+  *)
+    echo "Unknown parameter $1"
+    show_usage
+    ;;
+esac
