@@ -7,27 +7,26 @@ setup() {
     $SURVEYTOOLS_DIR/install-hsenv --nikola -- accelerate-github --vanilla 7.4.2
 }
 
-execute() {
+benchmark() {
     
 }
 
 plot() {
-
+    #Rscript ggplot_speedup.r --args $SURVEYTOOLS_DIR/../results/binomial/ Vector.csv
 }
 
 revdeps () {
 
 }
 
-
 show_usage() {
-  echo "Collect survey data"
+  echo "Collects and plots survey data"
   echo ""
   echo "Invoke with one or more of the following flags:"
-  echo "  --setup"
-  echo "  --execute"
-  echo "  --revdeps"
-  echo "  --thebigbutton"
+  echo "  --setup         Setup necessary GHC installations and build benchmarks"
+  echo "  --benchmark     Runs benchmarks and generates graphs"
+  echo "  --revdeps       Count reverse dependencies"
+  echo "  --thebigbutton  Alias for --setup and --benchmark"
   echo "  --usage"
 }
 
@@ -42,16 +41,15 @@ case $1 in
   --setup)
     setup
     ;;
-  --execute)
-    execute
+  --benchmark)
+    benchmark
     ;;
   --revdeps)
     revdeps
     ;;
   --thebigbutton)
     setup
-    execute
-    revdeps
+    benchmark
     ;;
   --usage)
     show_usage
