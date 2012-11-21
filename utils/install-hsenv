@@ -14,8 +14,8 @@ set -e
 
 PATH=~/.cabal/bin/:/usr/local/cuda-4.2/bin/:$PATH
 LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib #:$LD_LIBRARY_PATH
-
-
+SCRIPTFILE=`readlink -f $0`
+SCRIPTROOT=`dirname $SCRIPTFILE`
 ROOT=~/
 cd $ROOT
 
@@ -44,15 +44,16 @@ init_hsenv() {
   if [ -d $INSTALL_DIR ]; then
     echo "$INSTALL_DIR already exists, using old installation"
     cd $INSTALL_DIR
+    source .hsenv_$NAME-GHC$GHC_VERSION/bin/activate
   else
       fetchGHC
       mkdir -p $INSTALL_DIR
       cd $INSTALL_DIR
       hsenv --ghc=$GHC_DIR/ghc-$GHC_VERSION-x86_64-unknown-linux.tar.bz2
+      source .hsenv_$NAME-GHC$GHC_VERSION/bin/activate
+      cabal install cabal-install
   fi
 
-  source .hsenv_$NAME-GHC$GHC_VERSION/bin/activate
-  cabal install cabal-install
 }
 
 installCUDAFromHackage (){
@@ -81,37 +82,38 @@ installAccelerateFromHackage(){
 installAccelerateFromGithub() {
   init_hsenv "accelerate-github" "7.6.1"
 
-    pushd /home/dybber/lib/
-    cd symbol
-    cabal install
-    cd ../mainland-pretty
-    cabal install
-    cd ../language-c-quote
-    cabal install
-    popd
-    
-    
-    git clone git://github.com/tmcdonell/cuda.git
-    cd cuda
-    autoconf
-    cabal install --extra-include-dirs=/usr/local/cuda/include/
-    cd ..
+   #pushd /home/dybber/lib/
+   #cd symbol
+   #cabal install
+   #cd ../mainland-pretty
+   #cabal install
+   #cd ../language-c-quote
+   #cabal install
+   #popd
 
-    git clone git://github.com/AccelerateHS/accelerate.git
-    git clone git://github.com/AccelerateHS/accelerate-cuda.git
-    git clone git://github.com/AccelerateHS/accelerate-io.git
+   #git clone git://github.com/tmcdonell/cuda.git
+   #cd cuda
+   #autoconf
+   #cabal install --extra-include-dirs=/usr/local/cuda/include/
+   #cd ..
 
-    cd accelerate
-    cabal install
+   #git clone git://github.com/AccelerateHS/accelerate.git
+   #git clone git://github.com/AccelerateHS/accelerate-cuda.git
+   #git clone git://github.com/AccelerateHS/accelerate-io.git
 
-    cd ../accelerate-io
-    cabal install
+   #cd accelerate
+   #cabal install
 
-    cd ../accelerate-cuda
-    autoconf
-    cabal install --extra-include-dirs=/usr/local/cuda/include/ \
-                  --extra-lib-dirs=/usr/local/cuda/lib64/
-    cd ../..
+   #cd ../accelerate-io
+   #cabal install
+
+   #cd ../accelerate-cuda
+   #autoconf
+   #cabal install --extra-include-dirs=/usr/local/cuda/include/ \
+   #              --extra-lib-dirs=/usr/local/cuda/lib64/
+   #cd ../..
+
+   $SCRIPTROOT/shakeAccelerateGithub
   deactivate_hsenv
 }
 
