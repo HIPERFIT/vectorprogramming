@@ -4,18 +4,21 @@
 SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
 
 setup() {
-    $SURVEYTOOLS_DIR/install-hsenv --nikola -- accelerate-github --vanilla 7.4.2
+    $SURVEYTOOLS_DIR/setup/install-hsenv --nikola -- accelerate-github --vanilla 7.4.2
 }
 
 benchmark() {
-    
+
+  echo "Nothing here yet"
 }
 
 plot() {
     #Rscript ggplot_speedup.r --args $SURVEYTOOLS_DIR/../results/binomial/ Vector.csv
+  echo "Nothing here yet"
 }
 
 revdeps () {
+  echo "Nothing here yet"
 
 }
 

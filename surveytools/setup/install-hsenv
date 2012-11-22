@@ -123,38 +123,42 @@ installAccelerateFromGithub() {
 installNikola() {
   init_hsenv "nikola" "7.4.2"
 
-    installCUDAFromHackage
-    cabal install --reinstall repa-3.2.1.1 test-framework-quickcheck2 test-framework-hunit
+    #installCUDAFromHackage
+    #cabal install --reinstall repa-3.2.1.1 test-framework-quickcheck2 test-framework-hunit
 
-    if [ -d nikola ]; then
-      cd nikola
-      git pull
-    else
-      git clone git://github.com/mainland/nikola.git || true
-      cd nikola
-    fi
+    #if [ -d nikola ]; then
+    #  cd nikola
+    #  git pull
+    #else
+    #  git clone git://github.com/mainland/nikola.git || true
+    #  cd nikola
+    #fi
 
-    # (configure fails because of missing dependencies, and install works just as well)
-    cabal configure \
-       --disable-library-profiling \
-       --enable-tests \
-       --flags=examples \
-       --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
-    #
-    #cabal build
-    #cabal install
-    cabal install # \
+    ## (configure fails because of missing dependencies, and install works just as well)
+    ##cabal configure \
+    ##   --disable-library-profiling \
+    ##   --enable-tests \
+    ##   --flags=examples \
+    ##   --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
+    ##
+    ##cabal build
+    ##cabal install
+    #cabal install --only-dependencies
+    #cabal configure  \
     #   --disable-library-profiling \
     #   --enable-tests \
     #   --flags=examples \
-    #   --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
+    #   --configure-option="--with-nvcc=/usr/local/cuda-5.0/bin/nvcc"
+    #   #--configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
 
+
+    $SCRIPTROOT/shakeNikola
   deactivate_hsenv
 }
 
 installFeldspar() {
   init_hsenv "feldspar" "7.0.2"
-    cabal install feldspar-language 
+    cabal install feldspar-language
 
     cabal unpack feldspar-compiler
     cd feldspar-compiler*
