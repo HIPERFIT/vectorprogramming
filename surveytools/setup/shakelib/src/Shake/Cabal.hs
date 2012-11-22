@@ -73,15 +73,21 @@ hsPkgRule :: CabalPackage -> (CabalPackage -> Action ()) -> Rules ()
 hsPkgRule pkg act = rule $ \ pkg' ->
   if pkg == pkg'
     then Just $ do
-      act pkg'
-      -- Check what was actually installed
-      (out,_) <- systemOutput "ghc-pkg" ["--simple-output","list", cabalPackageName pkg]
-      case lines out of
-        [] -> error $ "hsPkg rule action didn't install " ++ cabalPackageName pkg ++ " as promised!"
-        hd:_ -> do
-          let ver = reverse $ takeWhile (/='-')  (reverse hd)
-          putQuiet $ "Action installed \"" ++ hd ++ "\", recorded version = \"" ++ ver ++ "\""
-          return ver
+      -- If ghc-pkg doesn't already think this is installed, go ahead:
+      installed <- ghcPkgList pkg
+      if length installed == 0 then do
+        act pkg'
+        -- Check what was actually installed
+        --(out,_) <- systemOutput "ghc-pkg" ["--simple-output","list", cabalPackageName pkg]
+        pkgsIns <- ghcPkgList $ pkg
+        case pkgsIns of
+          [] -> error $ "hsPkg rule action didn't install " ++ cabalPackageName pkg ++ " as promised!"
+          hd:_ -> do
+            let ver = ghcPkgVer hd
+            putQuiet $ "Action installed \"" ++ hd ++ "\", recorded version = \"" ++ ver ++ "\""
+            return ver
+        else return $ ghcPkgVer (head installed)
+
     else Nothing
 
 hsPkgsRule :: [CabalPackage] -> (CabalPackage -> Action ()) -> Rules ()
@@ -104,6 +110,17 @@ buildCabal (CabalFile fp nm args) = do
 buildCabal (CabalHackage pkg args) = do
   system' "cabal" $ args ++ ["install", pkg]
   return ()
+
+-- * Aux definitions
+
+ghcPkgList :: CabalPackage -> Action [String]
+ghcPkgList pkg = do
+  (out,_) <- systemOutput "ghc-pkg" ["--simple-output","list", cabalPackageName pkg]
+  return $ lines out
+
+-- | Turn a name-ver to ver
+ghcPkgVer :: String -> String
+ghcPkgVer ver = reverse $ takeWhile (/='-')  (reverse ver)
 
 wc_l = length . lines
 

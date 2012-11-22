@@ -5,10 +5,10 @@ import Development.Shake.FilePath
 import Shake.Cabal
 import Shake.Git
 
-cudaGit  =     GitRepo "cuda" ["cuda.cabal"] "git://github.com/tmcdonell/cuda.git"
-accelGit =     GitRepo "accelerate" ["accelerate.cabal"] "git://github.com/AccelerateHS/accelerate.git"
-accelIoGit =   GitRepo "accelerate-io" ["accelerate-io.cabal"] "git://github.com/AccelerateHS/accelerate-io.git"
-accelCudaGit = GitRepo "accelerate-cuda" ["accelerate-cuda.cabal"] "git://github.com/AccelerateHS/accelerate-cuda.git"
+cudaGit  =     GitRepo (Branch "plc-tmp" RevAsIs) "cuda" ["cuda.cabal"] "git://github.com/tmcdonell/cuda.git"
+accelGit =     gitRepoFiles "accelerate" ["accelerate.cabal"] "git://github.com/AccelerateHS/accelerate.git"
+accelIoGit =   gitRepoFiles "accelerate-io" ["accelerate-io.cabal"] "git://github.com/AccelerateHS/accelerate-io.git"
+accelCudaGit = GitRepo (Branch "plc-tmp" RevAsIs) "accelerate-cuda" ["accelerate-cuda.cabal"] "git://github.com/AccelerateHS/accelerate-cuda.git"
 
 gitRepos = [cudaGit, accelGit, accelIoGit, accelCudaGit]
 
@@ -29,6 +29,7 @@ main = shake shakeOptions $ do
   -- These two should be generalised into one
   [accelCudaCabal,cudaCabal]
     `hsPkgsRule` (\pkg -> do
+                            systemCwd (takeDirectory $ cabalFile pkg) "cabal" ["clean"]
                             systemCwd (takeDirectory $ cabalFile pkg) "autoconf" []
                             buildCabal pkg)
 
