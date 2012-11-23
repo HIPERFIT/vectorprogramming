@@ -85,36 +85,6 @@ installAccelerateFromHackage(){
 installAccelerateFromGithub() {
   init_hsenv "accelerate-github" "7.6.1"
 
-   #pushd /home/dybber/lib/
-   #cd symbol
-   #cabal install
-   #cd ../mainland-pretty
-   #cabal install
-   #cd ../language-c-quote
-   #cabal install
-   #popd
-
-   #git clone git://github.com/tmcdonell/cuda.git
-   #cd cuda
-   #autoconf
-   #cabal install --extra-include-dirs=/usr/local/cuda/include/
-   #cd ..
-
-   #git clone git://github.com/AccelerateHS/accelerate.git
-   #git clone git://github.com/AccelerateHS/accelerate-cuda.git
-   #git clone git://github.com/AccelerateHS/accelerate-io.git
-
-   #cd accelerate
-   #cabal install
-
-   #cd ../accelerate-io
-   #cabal install
-
-   #cd ../accelerate-cuda
-   #autoconf
-   #cabal install --extra-include-dirs=/usr/local/cuda/include/ \
-   #              --extra-lib-dirs=/usr/local/cuda/lib64/
-   #cd ../..
 
    $SCRIPTROOT/shakeAccelerateGithub
   deactivate_hsenv
@@ -122,35 +92,6 @@ installAccelerateFromGithub() {
 
 installNikola() {
   init_hsenv "nikola" "7.4.2"
-
-    #installCUDAFromHackage
-    #cabal install --reinstall repa-3.2.1.1 test-framework-quickcheck2 test-framework-hunit
-
-    #if [ -d nikola ]; then
-    #  cd nikola
-    #  git pull
-    #else
-    #  git clone git://github.com/mainland/nikola.git || true
-    #  cd nikola
-    #fi
-
-    ## (configure fails because of missing dependencies, and install works just as well)
-    ##cabal configure \
-    ##   --disable-library-profiling \
-    ##   --enable-tests \
-    ##   --flags=examples \
-    ##   --configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
-    ##
-    ##cabal build
-    ##cabal install
-    #cabal install --only-dependencies
-    #cabal configure  \
-    #   --disable-library-profiling \
-    #   --enable-tests \
-    #   --flags=examples \
-    #   --configure-option="--with-nvcc=/usr/local/cuda-5.0/bin/nvcc"
-    #   #--configure-option="--with-nvcc=/usr/local/cuda-4.2/bin/nvcc"
-
 
     $SCRIPTROOT/shakeNikola
   deactivate_hsenv

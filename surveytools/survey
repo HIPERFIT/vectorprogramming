@@ -4,7 +4,8 @@
 SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
 
 setup() {
-    $SURVEYTOOLS_DIR/setup/install-hsenv --nikola -- accelerate-github --vanilla 7.4.2
+    # Really, each benchmark should be responsible for its own setup (maybe aided by sourcing a library)
+    $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla-GHC7.4.2
 }
 
 benchmark() {
@@ -23,7 +24,7 @@ revdeps () {
 }
 
 show_usage() {
-  echo "Collects and plots survey data"
+  echo "Collects and plots all survey data"
   echo ""
   echo "Invoke with one or more of the following flags:"
   echo "  --setup         Setup necessary GHC installations and build benchmarks"
