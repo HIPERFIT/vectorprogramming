@@ -20,21 +20,6 @@ data Exp a where
   EInt       :: Int -> Exp Int
   EDouble    :: Double -> Exp Double
 
-  -- For arithmetic and friends...
-  -- EBinOp     :: (a -> b -> c) -> (Exp (a,b)
-
-  {-
-  EPlusI     :: Exp (Int, Int) -> Exp Int
-  EMultI     :: Exp (Int, Int) -> Exp Int
-  EEqI       :: Exp (Int, Int) -> Exp Bool
-  ELessTI    :: Exp (Int, Int) -> Exp Bool
-
-  EPlusD     :: Exp (Double, Double) -> Exp Double
-  EMultD     :: Exp (Double, Double) -> Exp Double
-  EEqD       :: Exp (Double, Double) -> Exp Bool
-  ELessTD    :: Exp (Double, Double) -> Exp Bool
-  -}
-
   EArrFun    :: Typeable a => Exp Int -> Name Int -> (Exp Int -> Exp a) -> Exp (Arr a)
   ET2        :: (Typeable a, Typeable b) => (Exp a, Exp b) -> Exp (a,b)
   ET3        :: (Typeable a, Typeable b, Typeable c) => (Exp a, Exp b, Exp c) -> Exp (a,b,c)
@@ -75,9 +60,10 @@ data Name a where Name :: Int -> String -> Name a
 -- Only allow top-level functions by having user defined functions as a
 -- distinct type.
 data Fun a b where
-  Fun  :: String -> Name a -> (Exp a -> Exp b) -> Fun a b
+  Fun      :: String -> Name a -> (Exp a -> Exp b) -> Fun a b
   FBuiltin :: String -> (a -> b) -> Fun a b
   deriving Typeable
+
 data Arr a   where Arr  :: [a] -> Arr a
   deriving Typeable
 
@@ -86,15 +72,39 @@ var :: String -> Name a
 var nm = Name 0 nm
 
 -- }}}
--- {{{ "StdLib"
+-- {{{ "StdLib
 
 plus :: (Num a) => Fun (a,a) a
 plus = FBuiltin "+" (uncurry (+))
 (+.) x y = EApp plus (ET2(x,y))
 
+minus :: (Num a) => Fun (a,a) a
+minus = FBuiltin "-" (uncurry (-))
+(-.) x y = EApp plus (ET2(x,y))
+
 mult :: (Num a) => Fun (a,a) a
 mult = FBuiltin "*" (uncurry (*))
 x *. y = EApp mult (ET2(x,y))
+
+pow :: Fun (Double,Int) Double
+pow = FBuiltin "^" (uncurry (^))
+x ^. y = EApp pow (ET2(x,y))
+
+div' :: Fun (Double, Double) Double
+div' = FBuiltin "/" (uncurry (/))
+x /. y = EApp div' (ET2(x,y))
+
+exp' :: Fun Double Double
+exp' = FBuiltin "exp" exp
+
+sqrt' :: Fun Double Double
+sqrt' = FBuiltin "sqrt" sqrt
+
+toDouble :: Fun Int Double
+toDouble = FBuiltin "toDouble" fromIntegral
+
+($.) :: (Typeable a, Typeable b) => Fun a b -> Exp a -> Exp b
+($.) = EApp
 
 -- }}}
 -- {{{ Vectorisation :
@@ -434,4 +444,84 @@ Flattening:
 
 -}
 -- }}}
+-- }}}
+
+
+-- {{{ Vectorised binomial
+
+data FinModel = FinModel{
+ modStrike :: Double,
+ modBankDays :: Int,
+ modS0 :: Double,
+ modR :: Double,
+ modAlpha :: Double,
+ modSigma :: Double
+}
+
+-- A transl(iter)ation of binom from the Vector version.
+-- (Some of the model parameters are given in the meta language)
+binomTranslit :: FinModel -> Fun Int Double
+binomTranslit mod = Fun "binom" (var "expiry") (\expiry ->
+  ELetIn (var "s0") (EDouble $ modS0 mod) (\s0 ->
+  ELetIn (var "r") (EDouble $ modR mod) (\r ->
+  ELetIn (var "alpha") (EDouble $ modAlpha mod) (\alpha ->
+  ELetIn (var "sigma") (EDouble $ modSigma mod) (\sigma ->
+  ELetIn (var "n") ((EInt $ modBankDays mod) *. expiry) (\n ->
+  ELetIn (var "dt") ((toDouble $. expiry) /. (toDouble $. n)) (\dt ->
+  ELetIn (var "u") (exp' $. (alpha *. dt +. sigma *. (sqrt' $. dt))) (\u ->
+  ELetIn (var "d") (exp' $. (alpha *. dt -. sigma *. (sqrt' $. dt))) (\d ->
+  ELetIn (var "stepR") (exp' $. r *. dt) (\stepR ->
+  ELetIn (var "q") ((stepR -. d) /. (u -. d)) (\q ->
+  ELetIn (var "qUR") (q /. stepR) (\qUr ->
+  ELetIn (var "qDR") ((EDouble 1 -. q) /. stepR) (\qDr ->
+  ELetIn (var "uPow") (EArrFun (n +. EInt 1) (var "i") (\i -> u ^. i)) (\uPow ->
+  ELetIn (var "dPow") (EArrFun (n +. EInt 1) (var "i") (\i -> d ^. (n -.i {- watch out for off-by-one here! -})))
+  (\dPow ->
+  ELetIn (var "st") (s0 *.^ (zipWith2 (mult $.) uPow dPow)) (\st ->
+  ELetIn (var "finalPut") (pmax $. ET2((EDouble $ modStrike mod) -.^ st, EDouble 0)) (\finalPut ->
+    undefined
+  )))))))))))))))))
+
+  where
+    pmax :: Fun (Arr Double, Double) (Arr Double)
+    pmax = FBuiltin "pmax" undefined
+    ppmax :: Fun (Arr Double, Arr Double) (Arr Double)
+    ppmax = FBuiltin "ppmax" undefined
+    (*.^) x as = EMapP (var "a") (\a -> x *. a) as
+    (-.^) x as = EMapP (var "a") (\a -> x -. a) as
+    zipWith2 :: (Typeable a, Typeable b, Typeable c) => (Exp (a,b) -> Exp c) -> Exp (Arr a) -> Exp (Arr b) -> Exp (Arr c)
+    zipWith2 f a b = EMapP (var "ab") (\ab -> f ab) (EZip2 (ET2(a,b)))
+
+--binom :: Int -> Double
+--binom expiry = V.head first
+--  where
+--    uPow = V.generate (n+1) (u^)
+--    dPow = V.reverse $ V.generate (n+1) (d^)
+--
+--    st = s0 *^ (uPow ^*^ dPow)
+--    finalPut = pmax (strike -^ st) 0
+--
+---- for (i in n:1) {
+----   St<-S0*u.pow[1:i]*d.pow[i:1]
+----   put[1:i]<-pmax(strike-St,(qUR*put[2:(i+1)]+qDR*put[1:i]))
+---- }
+--    first = foldl' prevPut finalPut [n, n-1 .. 1]
+--    prevPut put i = ppmax (strike -^ st) ((qUR *^ V.tail put) ^+^ (qDR *^ V.init put))
+--      where st = s0 *^ ((V.take i uPow) ^*^ (V.drop (n+1-i) dPow))
+--
+--    -- standard econ parameters
+--    strike = 100 :: Double
+--    bankDays = 256 :: Int
+--    s0 = 100 :: Double
+--    r = 0.03; alpha = 0.07; sigma = 0.20
+--    n = expiry*bankDays
+--    dt = fromIntegral expiry/fromIntegral n
+--    u = exp(alpha*dt+sigma*sqrt dt)
+--    d = exp(alpha*dt-sigma*sqrt dt)
+--    stepR = exp(r*dt)
+--    q = (stepR-d)/(u-d)
+--    qUR = q/stepR; qDR = (1-q)/stepR
+
+
+
 -- }}}
