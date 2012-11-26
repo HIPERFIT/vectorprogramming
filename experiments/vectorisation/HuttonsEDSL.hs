@@ -47,7 +47,11 @@ data Exp a where
   EZip2      :: (Typeable a, Typeable b) => Exp (Arr a, Arr b) -> Exp (Arr (a,b))
   EZip3      :: (Typeable a, Typeable b, Typeable c) => Exp (Arr a, Arr b, Arr c) -> Exp (Arr (a,b,c))
   EUnzip2    :: (Typeable a, Typeable b) => Exp (Arr (a,b)) -> Exp (Arr a, Arr b)
-  EIndex     :: Typeable a => Exp (Arr Int, Arr a) -> Exp (Arr a)
+  EIndexP     :: Typeable a => Exp (Arr Int, Arr a) -> Exp (Arr a)
+  EIndex     :: Typeable a => Exp (Int, Arr a) -> Exp a
+
+  EFold      :: (Typeable a, Typeable b) =>
+                Name (a, b) -> (Exp (a,b) -> Exp a) -> Exp a -> Exp (Arr b) -> Exp a
 
   -- Bigger, temporaray building blocks
   EReduceP   :: (Typeable a) => (Fun (a, a) a, Exp (Arr a)) -> Exp a
@@ -70,6 +74,11 @@ data Arr a   where Arr  :: [a] -> Arr a
 -- (non-fresh) construction of a variable name
 var :: String -> Name a
 var nm = Name 0 nm
+
+varEq :: Name a -> Name b -> Bool
+varEq (Name i nm) (Name i' nm')
+      | i == i' && nm == nm' = True
+varEq _ _ = False
 
 -- }}}
 -- {{{ "StdLib
@@ -131,7 +140,10 @@ vectoriseArrow n fn = do
 -- | Vectorise an expression (Exp). No support for function recursion yet.
 vectoriseE :: (Typeable a) => Int -> Exp a -> Fresh (Exp (Arr a))
 vectoriseE n exp =
-  case exp of
+  --if closed exp then
+    --ELetIn <$> getVar "closedExp" <*> pure exp <*> pure (\vClosed -> EReplicate n vClosed)
+  --  return $ EReplicate n exp
+  {-else -} case exp of
     EBool x -> return $ EReplicate (ET2 (EInt n, EBool x))
     EInt x  -> return $ EReplicate (ET2 (EInt n, EInt x))
     EDouble x -> return $ EReplicate (ET2 (EInt n, EDouble x))
@@ -139,18 +151,6 @@ vectoriseE n exp =
     ET2 (f, s) -> ((EZip2 . ET2) .) . (,) <$> vectoriseE n f <*> vectoriseE n s
     ET3 (f, s, t) -> (((EZip3 . ET3) .) .) . (,,) <$> vectoriseE n f <*> vectoriseE n s <*> vectoriseE n t
     EArrFun n' ixVar f -> return $ EReplicate (ET2 (EInt n, EArrFun n' ixVar f))
-
-{-
-    EPlusI  a -> vecOp EPlusI  a
-    EMultI  a -> vecOp EMultI  a
-    EEqI    a -> vecOp EEqI    a
-    ELessTI a -> vecOp ELessTI a
-
-    EPlusD  a -> vecOp EPlusD  a
-    EMultD  a -> vecOp EMultD  a
-    EEqD    a -> vecOp EEqD    a
-    ELessTD a -> vecOp ELessTD a
-    -}
 
     EVar x            -> return $ EVar $ varL x
     EApp f e          -> EApp <$> vectoriseF n f <*> vectoriseE n e
@@ -178,6 +178,10 @@ vectoriseE n exp =
     EZip3 a      -> vecOp EZip3 a
     EUnzip2 a    -> vecOp EUnzip2 a
     EIndex a     -> vecOp EIndex a
+    EIndexP a    -> vecOp EIndexP a
+    -- EFold var f initial arr ->
+                -- Name (a, b) -> (Exp (a,b) -> Exp a) -> Exp a -> Exp (Arr b) -> Exp a
+                -- Lifted: Name (Arr (a, b)) -> (Exp (Arr (a,b)) -> Exp (Arr a)) -> Exp (Arr a) -> Exp (Arr (Arr b)) -> Exp (Arr a)
 
     -- Bigger, temporaray building blocks
     EReduceP (f, a) -> EMapP <$> getVar "#ix" <*> pure (\a -> EReduceP (f,a)) <*> vectoriseE n a
@@ -214,31 +218,21 @@ abstract nm exp = \v -> subst v nm exp
 -- | Perform variable substitution in expressions. Var is the only interesting case...
 subst :: Typeable a =>
          Typeable b => Exp a -> Name a -> Exp b -> Exp b
-subst e1 nm@(Name cnt nm') e2 =
+subst e1 v e2 =
   case e2 of
-{-
-    EPlusI  a -> EPlusI  $ rec a
-
-    EMultI  a -> EMultI  $ rec a
-    EEqI    a -> EEqI    $ rec a
-    ELessTI a -> ELessTI $ rec a
-
-    EPlusD  a -> EPlusD  $ rec a
-    EMultD  a -> EMultD  $ rec a
-    EEqD    a -> EEqD    $ rec a
-    ELessTD a -> ELessTD $ rec a
--}
     EArrFun n ixV fn -> EArrFun (rec n) ixV (abstract ixV (rec $ fn $ EVar ixV))
     ET2(a,b) -> ET2(rec a, rec b)
     ET3(a,b,c) -> ET3(rec a, rec b, rec c)
 
     -- Won't work without extensive copying or De Bruijn indexing of free variables
     -- ... So we just unsafeCoerce for now.
-    v@(EVar (Name cnt' nm'')) -> if nm' == nm'' && cnt == cnt'
-                                 then case cast e1 of {Just e1 -> e1; Nothing -> v}
-                                 else v
+    vExp@(EVar v') -> shadows v v'
+                        (maybe
+                          (error . render $ "bad variable hygiene:" <+> ppName v <+> "/=" <+> ppName v' <+> "in subst")
+                          id (cast e1))
+                        (vExp)
     EApp f a -> EApp f (rec a)
-    ELetIn v val exp -> ELetIn v (rec val) (abstract v (rec $ exp $ EVar v))
+    ELetIn v' val exp -> ELetIn v' (rec val) (shadows v' v exp $ abstract v' (rec $ exp $ EVar v'))
 
     -- For compositionality, all these might be Fun-wrapped in actual use.
 
@@ -250,7 +244,7 @@ subst e1 nm@(Name cnt nm') e2 =
 
     -- Note how EMapP is the only one in curried style to reflect lack of closures.
     EIf c t e -> EIf (rec c) (rec t) (rec e)
-    EMapP ixV f a -> EMapP ixV (abstract ixV (rec $ f $ EVar ixV)) (rec a)
+    EMapP ixV f a -> EMapP ixV (shadows ixV v f $ abstract ixV (rec $ f $ EVar ixV)) (shadows ixV v a $ rec a)
     ECombine a -> ECombine $ rec a
     EConcat a  -> EConcat $ rec a
     EReplicate a -> EReplicate $ rec a
@@ -259,6 +253,9 @@ subst e1 nm@(Name cnt nm') e2 =
     EZip3   a -> EZip3 $ rec a
     EUnzip2 a -> EUnzip2 $ rec a
     EIndex  a -> EIndex $ rec a
+    EIndexP a -> EIndexP $ rec a
+    EFold vAkkX f initial xs -> EFold vAkkX (shadows vAkkX v f $ abstract vAkkX (rec $ f (EVar vAkkX)))
+                                            (rec initial) (rec xs)
 
     -- Bigger, temporaray building blocks
     EReduceP (f, a) -> EReduceP (f, rec a)
@@ -268,7 +265,11 @@ subst e1 nm@(Name cnt nm') e2 =
     const -> const
   where
     rec :: Typeable c => Exp c -> Exp c
-    rec x = subst e1 nm x
+    rec x = subst e1 v x
+
+    -- @shadows v v' eqVal neqVal@, results in eqVal when v overshadows v', neqVal otherwise.
+    shadows :: Name a -> Name b -> c -> c -> c
+    shadows v v' eqV neqV = if varEq v v' then eqV else neqV
 
 -- }}}
 -- {{{ Pretty printing:
@@ -296,28 +297,6 @@ ppExp x = case x of
   EBool b   -> text $ show b
   EInt i    -> text $ show i
   EDouble d -> text $ show d
-
-{-
-  EPlusI (ET2(a,b))  -> ppExp a <+> "+" <+> ppExp b
-  EMultI (ET2(a,b))  -> ppExp a <+> "*" <+> ppExp b
-  EEqI   (ET2(a,b))  -> ppExp a <+> "=" <+> ppExp b
-  ELessTI (ET2(a,b)) -> ppExp a <+> "<=" <+> ppExp b
-
-  EPlusD (ET2(a,b))  -> ppExp a <+> "+"  <+> ppExp b
-  EMultD (ET2(a,b))  -> ppExp a <+> "*"  <+> ppExp b
-  EEqD   (ET2(a,b))  -> ppExp a <+> "="  <+> ppExp b
-  ELessTD (ET2(a,b)) -> ppExp a <+> "<=" <+> ppExp b
-
-  EPlusI  a -> "(+)"  <+> ppExp a
-  EMultI  a -> "(*)"  <+> ppExp a
-  EEqI    a -> "(=)"  <+> ppExp a
-  ELessTI a -> "(<=)" <+> ppExp a
-
-  EPlusD a  -> "(+)"  <+> ppExp a
-  EMultD a  -> "(*)"  <+> ppExp a
-  EEqD   a  -> "(=)"  <+> ppExp a
-  ELessTD a -> "(<=)" <+> ppExp a
-  -}
 
   EArrFun n ixV f -> parens $ ppExp n <+> "§" <+> ppName ixV <+> "->" <+> (ppExp $ f $ EVar ixV)
   ET2 (a,b)   -> parens $ ppExp a <+> "," <+> ppExp b
@@ -348,6 +327,7 @@ ppExp x = case x of
   EZip3      a -> "zip3" <+> parens (ppExp a)
   EUnzip2    a -> "unzip2" <+> parens (ppExp a)
   EIndex     a -> "index" <+> parens (ppExp a)
+  EIndexP    a -> "indexP" <+> parens (ppExp a)
 
   -- Bigger, temporaray building blocks
   EReduceP(f,a)-> "reduce" <+> parens (ppFunName f <+> "," <+> ppExp a)
@@ -392,7 +372,7 @@ sparseMatMult =
                          ELetIn (var "vec") (E2of2 cellVec)
                          (\vec  -> cell *. vec
                          )))
-                 (EZip2 $ ET2(cells, (EIndex $ ET2(cols, vec))))
+                 (EZip2 $ ET2(cells, (EIndexP $ ET2(cols, vec))))
       )))
 
 sparseMatMultVec = vectoriseF 10 sparseMatMult
@@ -446,23 +426,37 @@ Flattening:
 -- }}}
 -- }}}
 
+-- What becomes of Fold when we flatten it?
+-- fold (+) 0 [1..2]
+--fold2Expr init = foldr (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (vAkk' +. x) akk)) (id) [EInt x | x <- [1..3]] $ init
+--foldFun = Fun "foldl" (var "init") $ \vInit -> fold2Expr vInit
 
 -- {{{ Vectorised binomial
 
 data FinModel = FinModel{
- modStrike :: Double,
+ modStrike   :: Double,
  modBankDays :: Int,
- modS0 :: Double,
- modR :: Double,
- modAlpha :: Double,
- modSigma :: Double
+ modS0       :: Double,
+ modR        :: Double,
+ modAlpha    :: Double,
+ modSigma    :: Double
 }
+
+finModel = FinModel {
+  modStrike = 100,
+  modBankDays = 256,
+  modS0 = 100,
+  modR = 0.03,
+  modAlpha = 0.07,
+  modSigma = 0.20
+  }
 
 -- A transl(iter)ation of binom from the Vector version.
 -- (Some of the model parameters are given in the meta language)
 binomTranslit :: FinModel -> Fun Int Double
 binomTranslit mod = Fun "binom" (var "expiry") (\expiry ->
   ELetIn (var "s0") (EDouble $ modS0 mod) (\s0 ->
+  ELetIn (var "strike") (EDouble $ modStrike mod) (\strike ->
   ELetIn (var "r") (EDouble $ modR mod) (\r ->
   ELetIn (var "alpha") (EDouble $ modAlpha mod) (\alpha ->
   ELetIn (var "sigma") (EDouble $ modSigma mod) (\sigma ->
@@ -479,18 +473,55 @@ binomTranslit mod = Fun "binom" (var "expiry") (\expiry ->
   (\dPow ->
   ELetIn (var "st") (s0 *.^ (zipWith2 (mult $.) uPow dPow)) (\st ->
   ELetIn (var "finalPut") (pmax $. ET2((EDouble $ modStrike mod) -.^ st, EDouble 0)) (\finalPut ->
-    undefined
-  )))))))))))))))))
+  ELetIn (var "first") (foldl (\put i ->
+                                 ELetIn (var "st") (s0 *.^ ((take' $. (ET2(i, uPow))) ^*.^ (drop' $. ET2(n +. (EInt 1) -. i, dPow))  )) (\st ->
+                                   ppmax $. (ET2(strike -.^ st , (qUr *.^ (tail' $. put)) ^+.^ (qDr *.^ (init' $. put)) ))
+                                   ))
+                        finalPut (map EInt $ [1..2 {- foo junk. horribly wrong -}])) (\first ->
+    EIndex (ET2(EInt 0,first))
+  )))))))))))))))))))
 
   where
     pmax :: Fun (Arr Double, Double) (Arr Double)
     pmax = FBuiltin "pmax" undefined
     ppmax :: Fun (Arr Double, Arr Double) (Arr Double)
     ppmax = FBuiltin "ppmax" undefined
-    (*.^) x as = EMapP (var "a") (\a -> x *. a) as
-    (-.^) x as = EMapP (var "a") (\a -> x -. a) as
+    -- (*.^) x as = EMapP (var "a") (\a -> x *. a) as
+    -- (-.^) x as = EMapP (var "a") (\a -> x -. a) as
+    (*.^) :: Exp Double -> Exp (Arr Double) -> Exp(Arr Double)
+    (*.^) x as = (FBuiltin "*^" undefined) $. ET2(x,as)
+    (-.^) :: Exp Double -> Exp (Arr Double) -> Exp (Arr Double)
+    (-.^) x as = (FBuiltin "-^" undefined) $. ET2(x,as)
     zipWith2 :: (Typeable a, Typeable b, Typeable c) => (Exp (a,b) -> Exp c) -> Exp (Arr a) -> Exp (Arr b) -> Exp (Arr c)
+    -- (^*.^) xs ys = zipWith2 (mult $.) xs ys
+    -- (^+.^) xs ys = zipWith2 (plus $.) xs ys
+    (^*.^) :: Exp (Arr Double) -> Exp (Arr Double) -> Exp (Arr Double)
+    (^*.^) xs ys = (FBuiltin "^*^" undefined) $. ET2(xs,ys)
+    (^+.^) :: Exp (Arr Double) -> Exp (Arr Double) -> Exp (Arr Double)
+    (^+.^) xs ys = (FBuiltin "^+^" undefined) $. ET2(xs,ys)
     zipWith2 f a b = EMapP (var "ab") (\ab -> f ab) (EZip2 (ET2(a,b)))
+
+    -- Common special cases of EIndexP
+    take' :: Fun (Int, Arr Double) (Arr Double)
+    take' = FBuiltin "take" undefined
+    drop' :: Fun (Int, Arr Double) (Arr Double)
+    drop' = FBuiltin "drop" undefined
+    init' :: Fun (Arr Double) (Arr Double)
+    init' = FBuiltin "init" undefined
+    tail' :: Fun (Arr Double) (Arr Double)
+    tail' = FBuiltin "tail" undefined
+
+-- Pre-unrolled foldl:
+foldExpr :: Int -> (Exp a -> Exp b -> Exp a) -> Exp b -> Exp (Arr a) -> Exp b
+foldExpr = undefined
+{-
+foldExpr n fn init arr = foldr (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (fn undefined vAkk' {-(EIndex (ET2(x, arr)))-}) akk))
+                               (id)
+                               [EInt x | x <- [0..n]] $ init
+-}
+--fold2Expr init = foldr (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (vAkk' +. x) akk)) (id) [EInt x | x <- [1..3]] $ init
+--foldFun = Fun "foldl" (var "init") $ \vInit -> fold2Expr vInit
+
 
 --binom :: Int -> Double
 --binom expiry = V.head first
