@@ -1,7 +1,7 @@
 module LinAlg (polyfit, polyval) where
 
 import Data.Vector hiding ((++))
-import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take)
+import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or)
 import qualified Prelude
 import Debug.Trace
 import qualified Data.Packed.Matrix as HM
@@ -15,7 +15,7 @@ polyval p xs = sum $ zipWith3 (\p' n' x' -> p'*x'**(fromIntegral n')) p pows xs
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
 vander :: Vector Double -> Int -> Vector (Vector Double)
-vander xs degree = transpose $ generate degree (\x -> map (** (fromIntegral x)) xs)
+vander xs degree = transpose $ generate (degree + 1) (\x -> map (** (fromIntegral x)) xs)
 
 -- https://github.com/numpy/numpy/blob/master/numpy/lib/polynomial.py#L394
 
@@ -23,29 +23,35 @@ vander xs degree = transpose $ generate degree (\x -> map (** (fromIntegral x)) 
 -- * Solve system A*c = y for c
 --  - This can be done by LU, Cholesky or QR decomposition
 polyfit :: Vector Double -> Vector Double -> Int -> Vector Double
-polyfit xs ys degree = zipWith (/) c scale
+polyfit xs ys degree = traceShow ys $ c --zipWith (/) c scale
   where
-    a = vander xs (degree + 1)
-    scale = map (sqrt . sum . (map (\x -> x*x))) $ transpose a
-    lhs = transpose $ zipWith (\as s -> map (/s) as) (transpose a) scale
-    c = solveWithHMatrix lhs ys -- solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
+    a = vander xs degree
+--    scale = map (sqrt . sum . (map (\x -> x*x))) $ transpose a
+--    lhs = transpose $ zipWith (\as s -> map (/s) as) (transpose a) scale
+    c = lstsq_HMatrix a ys -- solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
 
 mdim a = (HM.rows a, HM.cols a)
 
-solveWithHMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
-solveWithHMatrix a b = fromList . Prelude.map Prelude.head . HM.toLists $ HM.linearSolveLS amat bmat
+lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
+lstsq_HMatrix a b = fromList . Prelude.map Prelude.head . HM.toLists $ HM.linearSolveLS amat bmat
   where
+    aT = transpose a
+    c = aT `matProd` a
+    d = aT `matVecProd` b
     amat :: HM.Matrix Double
-    amat = HM.fromLists . toList $ map toList a
+    amat = HM.fromLists . toList $ map toList c
     bmat :: HM.Matrix Double
 --    bmat = HM.fromLists $ [toList b]
-    bmat = HM.fromLists $ Prelude.map (:[]) (toList b)
+    bmat = HM.fromLists $ Prelude.map (:[]) (toList d)
 
-solveWithCholesky :: Vector (Vector Double) -> Vector Double -> Vector Double
-solveWithCholesky a b = x
+lstsq_cholesky :: Vector (Vector Double) -> Vector Double -> Vector Double
+lstsq_cholesky a b = x
   where
-    l = cholesky a
-    y = forwardSubstitute l b
+    aT = transpose a
+    c = aT `matProd` a
+    d = aT `matVecProd` b
+    l = cholesky c
+    y = forwardSubstitute l d
     x = backwardSubstitute (transpose l) y
 
 dim a = show n ++ "x" ++ show m
@@ -53,8 +59,11 @@ dim a = show n ++ "x" ++ show m
     n = length a
     m = length (a ! 0)
 
+nullMatrix :: Vector (Vector Double) -> Bool
+nullMatrix a = null a || or (map null a)
+
 cholesky :: Vector (Vector Double) -> Vector (Vector Double)
-cholesky a | length a == 0 = empty
+cholesky a | nullMatrix a = empty
 cholesky a = merge l11 l21 l22
   where
     l11 = sqrt a11
@@ -68,14 +77,14 @@ cholesky a = merge l11 l21 l22
     vecMult xs ys = zipWith (*) xs ys
 
     split :: Vector (Vector Double) -> (Double, Vector Double, Vector (Vector Double))
-    split a | null a = error "Should not happen"
+    split a | nullMatrix a = error "Should not happen"
     split a = (a11, a21, a22)
       where a11 = (a ! 0) ! 0
             a21 = map head (tail a)
             a22 = map tail (tail a)
 
     merge :: Double -> Vector Double -> Vector (Vector Double) -> Vector (Vector Double)
-    merge l11 l21 l22 | null l22 = singleton (singleton l11)
+    merge l11 l21 l22 | nullMatrix l22 = singleton (singleton l11)
     merge l11 l21 l22 = cons row0 rest
       where
        row0 = cons l11 $ replicate (length (l22 ! 0)) 0.0
@@ -92,11 +101,11 @@ matVecProd :: Vector (Vector Double) -> Vector Double -> Vector Double
 matVecProd xs ys = map (dotProd ys) xs
 
 transpose :: Vector (Vector Double) -> Vector (Vector Double)
-transpose xs | null xs || null (head xs) = empty
+transpose xs | nullMatrix xs = empty
              | otherwise  = cons (map head xs) $ transpose (map tail xs)
 
 forwardSubstitute l b = foldl subst empty (zip3 (generate (length b) id) l b)
-  where subst as (m, ls_m, b_m) = snoc as $ (b_m - dotProd as ls_m) / l_mm
+  where subst as (m, ls_m, b_m) = snoc as $ (b_m - dotProd as ls_m') / l_mm
           where
             ls_m' = take m ls_m
             l_mm :: Double
@@ -105,23 +114,3 @@ forwardSubstitute l b = foldl subst empty (zip3 (generate (length b) id) l b)
 backwardSubstitute u b = reverse $ forwardSubstitute ru rb
   where rb = (reverse b)
         ru = (reverse $ map reverse u)
-
--- ex_mat :: Vector (Vector Double)
--- ex_mat = fromList $ Prelude.map fromList [[3,-1,-1], [-1,3,-1], [-1,-1,3]]
--- ex_vec :: Vector Double
--- ex_vec = fromList [-651,2177,4069]
-
--- ex_mat2 :: Vector (Vector Double)
--- ex_mat2 = DV.fromList $ map DV.fromList [[1,0,0], [0,1,0], [2,-0.5,1]]
--- ex_vec2 :: Vector Double
--- ex_vec2 = DV.fromList [0,10,-11]
-
--- ex_mat3 :: Vector (Vector Double)
--- ex_mat3 = DV.fromList $ map DV.fromList [[-1,2,1], [0,8,6], [0,0,6]]
-
-
-
--- exm :: Vector (Vector Double)
--- exm = fromList $ Prelude.map fromList [[1, 2], [3,4]]
--- exv :: Vector Double
--- exv = fromList [5,6]

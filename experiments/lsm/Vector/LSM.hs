@@ -9,7 +9,7 @@ import LinAlg
 
 m :: Int
 m = 50            -- time steps
-reg = 7
+reg = 9
 
 r,vol,s0,t,v0_right,dt,df :: Double
 r   = 0.06               -- short rate
@@ -59,7 +59,7 @@ average xs = DV.sum xs / (fromIntegral $ DV.length xs)
 
 lsm :: Int -> Int -> IO Double
 lsm m n_paths = do
---  s <- genPaths m n_paths
+  s <- genPaths m n_paths
   s <- readPaths
   let v = iv (DV.last s) :: Vector Double
   res <- DV.foldM lsm' v (DV.reverse $ DV.init s)
@@ -76,21 +76,21 @@ lsm m n_paths = do
         c = polyval rg s
     return $ DV.zipWith (exercise_decision c) h v'
 
--- main :: IO ()
--- main = print =<< lsm m n_paths
---  where
---    m = 50 -- time steps
---    n_paths = 9
-
-
 main :: IO ()
-main = do
-  s <- readPaths
-  let v = iv (DV.last s) :: Vector Double
-  let v' = DV.map (*df) $ v
-  let s' = DV.last $ DV.init s
-  let rg = polyfit s' v' reg
-  print rg
+main = print =<< lsm m n_paths
+ where
+   m = 50 -- time steps
+   n_paths = 100
+
+
+-- main :: IO ()
+-- main = do
+--   s <- readPaths
+--   let v = iv (DV.last s) :: Vector Double
+--   let v' = DV.map (*df) $ v
+--   let s' = DV.last $ DV.init s
+--   let rg = polyfit s' v' reg
+--   print rg
 
 -- writePaths :: Vector (Vector Double) -> IO ()
 -- writePaths xs = zipWithM_ printPath [1..] (DV.toList $ transpose xs)
