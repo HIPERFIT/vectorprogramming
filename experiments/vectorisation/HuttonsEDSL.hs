@@ -326,6 +326,7 @@ ppExp x = case x of
   EZip2      a -> "zip2" <+> parens (ppExp a)
   EZip3      a -> "zip3" <+> parens (ppExp a)
   EUnzip2    a -> "unzip2" <+> parens (ppExp a)
+  EIndex (ET2(ix,arr))-> parens (ppExp arr <+> "!" <+> ppExp ix)
   EIndex     a -> "index" <+> parens (ppExp a)
   EIndexP    a -> "indexP" <+> parens (ppExp a)
 
@@ -337,7 +338,7 @@ ppExp x = case x of
     ppLetBind (doc,body) = (doc,body)
 
 
-instance (Show a, Show b) => Show (Fun a b) where
+instance Show (Fun a b) where
   show x = render $ ppFun x
 instance Show (Name a) where
   show x = render $ ppName x
@@ -512,13 +513,15 @@ binomTranslit mod = Fun "binom" (var "expiry") (\expiry ->
     tail' = FBuiltin "tail" undefined
 
 -- Pre-unrolled foldl:
-foldExpr :: Int -> (Exp a -> Exp b -> Exp a) -> Exp b -> Exp (Arr a) -> Exp b
-foldExpr = undefined
+foldExpr :: (Typeable a, Typeable b) => Int -> (Exp a -> Exp b -> Exp b) -> Exp b -> Exp (Arr a) -> Exp b
+foldExpr n fn init arr = ELetIn (var "foldShared") (arr) $ \foldShared -> (foldr
+                            (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (fn (EIndex $ ET2(x,foldShared)) vAkk')
+                                                  (\vAkk' -> akk vAkk')))
+                            (id) [EInt x | x <- [0..n]]) init
 {-
 foldExpr n fn init arr = foldr (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (fn undefined vAkk' {-(EIndex (ET2(x, arr)))-}) akk))
                                (id)
-                               [EInt x | x <- [0..n]] $ init
--}
+                               [EInt x | x <- [0..n]] $ init-}
 --fold2Expr init = foldr (\x akk -> (\vAkk' -> ELetIn (var "vAkk") (vAkk' +. x) akk)) (id) [EInt x | x <- [1..3]] $ init
 --foldFun = Fun "foldl" (var "init") $ \vInit -> fold2Expr vInit
 
