@@ -1,0 +1,10 @@
+name:                benchmark-binomial-gpu-Accelerate
+version:             0.1.0.0
+author:              Martin Dybdal, Ken Friis Larsen
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable benchmark-binomial-gpu-Accelerate
+  main-is: Main.hs
+  build-depends:       base, accelerate, accelerate-cuda, benchmarkrunner
+  ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

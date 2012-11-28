@@ -24,8 +24,6 @@ LOGFILE=logs/$LOGTAG-rebuild-$HSENV_
 
  source $HSENVROOT/$HSENV_/.hsenv_$HSENV_/bin/activate
 
-cd benchmarkrunner/
-
 cabal update
 cabal clean
 cabal install --reinstall

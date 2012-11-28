@@ -1,3 +1,4 @@
+
 module BenchmarkRunner.Main(runTest, runTestIO, runTestWith, cfgModSummaryFile)
 where
 
@@ -8,28 +9,33 @@ import qualified Criterion.Main as C
 import System.Environment(getArgs, withArgs)
 import System.FilePath(takeBaseName,replaceBaseName)
 
-import System.IO(hSetBuffering, stdout,BufferMode(..))
+import System.IO(hSetBuffering, stdout,BufferMode(..),stdin, hGetLine)
 
 -- | run the tests of a binomial american option pricer, given by the 'binom'
 -- function.
+--runTest :: Num a => Show a => NFData b => (a -> b) -> IO ()
 runTest bench = do
   -- Always do line buffering on stdout!
   hSetBuffering stdout LineBuffering
-  C.defaultMain $ benchmarkYears (C.nf bench)
+  args <- (map read . words) `fmap` hGetLine stdin
+  C.defaultMain $ benchmarkInts (args :: [Int]) (C.nf bench)
 
+runTestIO :: C.Benchmarkable b => (Int -> b) -> IO ()
 runTestIO bench = do
   -- Always do line buffering on stdout!
   hSetBuffering stdout LineBuffering
-  C.defaultMain $ benchmarkYears bench
+  args <- (map read . words) `fmap` hGetLine stdin
+  C.defaultMain $ benchmarkInts (args :: [Int]) bench
 
 runTestWith cfgMod bench = do
   -- Always do line buffering on stdout!
   hSetBuffering stdout LineBuffering
   args <- getArgs
   (cfg,_) <- C.parseArgs CCfg.defaultConfig C.defaultOptions args
+  args_ <- (map read . words) `fmap` hGetLine stdin
   -- we want to override given cmdline args, so we hide them from 'defaultMainWith'
   withArgs [] $
-    C.defaultMainWith (cfgMod cfg) (return ())  $ benchmarkYears (C.nf bench)
+    C.defaultMainWith (cfgMod cfg) (return ()) $ benchmarkInts (args_ :: [Int]) (C.nf bench)
 
 -- | Function to modify the basename of the summaryfile.
 cfgModSummaryFile :: (String -> String) -> CCfg.Config -> CCfg.Config
@@ -40,6 +46,7 @@ cfgModSummaryFile sf cfg =
     }
 
 -- | Default benchmark for the binomial pricer.
-benchmarkYears binomBench = [ C.bench (show years) $
-                  binomBench years
-                  | years <- [1,2,4,8,16,32,64]]
+benchmarkInts :: C.Benchmarkable b => [Int] -> (Int -> b) -> [C.Benchmark]
+benchmarkInts args bench = 
+  map (\i -> C.bench (show i) $ bench i) args
+

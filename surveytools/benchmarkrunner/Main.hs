@@ -19,11 +19,12 @@ hsenvs_dir = "/home/dybber/hsenvs/"
 
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 platforms = [
-     ("Cuda", "vanilla-GHC7.4.2")
-    , ("Nikola", "nikola-GHC7.4.2")
+     ("CUDA", "vanilla-GHC7.4.2")
+--    , ("Nikola", "nikola-GHC7.4.2")
     , ("R", "vanilla-GHC7.4.2")
-    , ("Repa", "accelerate-hackage-GHC7.4.1")
+    , ("Repa", "accelerate-github-GHC7.6.1")
     , ("Vector", "vanilla-GHC7.4.2")
+    , ("CPP", "vanilla-GHC7.4.2")
 --   ("Accelerate", "accelerate-hackage-GHC7.4.1")
 -- , ("DPH", ghc742)
    -- , ("Feldspar", ghc742)
@@ -71,7 +72,7 @@ getBenchmarks :: [(String, String)] -> IO [(String, String, String)]
 getBenchmarks ns = do
   -- Which benchmarks should we run
   pwd <- getCurrentDirectory
-  let dir = pwd </> "benchmarks"
+  let dir = pwd </> "../../benchmarks"
   benchmark_dirs <- retrieveSubdirectories dir
   -- And then, on which platforms?
   concatForM benchmark_dirs $ \benchmark -> do

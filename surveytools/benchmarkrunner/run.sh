@@ -15,7 +15,7 @@ PLATFORM=$2
 NAME=$BENCHMARK-$PLATFORM
 
 # The main directory of the test program
-PROGRAMDIR=benchmarks/$BENCHMARK/$PLATFORM
+PROGRAMDIR=../../benchmarks/$BENCHMARK/$PLATFORM
 # (note the underscore to avoid variable capture when sourcing!)
 HSENV_=$3
 LOGTAG=$4
@@ -57,7 +57,8 @@ deactivate_hsenv
 ) > $LOGFILE-Build
 
 # run the result
-$PROGRAMDIR/dist_$HSENV_/build/benchmark-${NAME}/benchmark-${NAME} --summary $SUMMARYFILE \
-  --template samples.tpl --output $REPORTFILE +RTS -N | tee $LOGFILE-Benchmark
+cat ../../benchmarks/$BENCHMARK/inputs | $PROGRAMDIR/dist_$HSENV_/build/benchmark-${NAME}/benchmark-${NAME} \
+  --summary $SUMMARYFILE \
+  --output $REPORTFILE +RTS -N | tee $LOGFILE-Benchmark
 
 
