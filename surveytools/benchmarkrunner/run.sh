@@ -15,21 +15,14 @@ PLATFORM=$2
 NAME=$BENCHMARK-$PLATFORM
 
 # The main directory of the test program
-PROGRAMDIR=../../benchmarks/$BENCHMARK/$PLATFORM
+PROGRAMDIR=$(readlink -f $(pwd)../../benchmarks/$BENCHMARK/$PLATFORM)
 # (note the underscore to avoid variable capture when sourcing!)
 HSENV_=$3
 LOGTAG=$4
+HSENVROOT=$(readlink -f $(pwd)/../../build/hsenvs)
 
-# source local definition of HSENVROOT
-hostname=`hostname`
-conffile=$hostname-env.sh
-
-if [ -f $conffile ]; then
-  source ./$conffile
-else
-  echo "Please make file $conffile, containing HSENVROOT variable definition"
-  exit -1
-fi
+echo $PROGRAMDIR
+exit 0
 
 SUMMARYDIR=summaries/$LOGTAG
 SUMMARYFILE=$SUMMARYDIR/$NAME.csv

@@ -6,19 +6,11 @@ set -e
 HSENV_=$1
 LOGTAG=$2
 
-# source local definition of HSENVROOT
-hostname=`hostname`
-conffile=$hostname-env.sh
-
-if [ -f $conffile ]; then
-  source ./$conffile
-else
-  echo "Please make file $conffile, containing HSENVROOT variable definition"
-  exit -1
-fi
-
-mkdir -p logs
-LOGFILE=logs/$LOGTAG-rebuild-$HSENV_
+BUILDROOT=$(readlink -f $(pwd)/../../build)
+HSENVROOT=$BUILDROOT/hsenvs
+LOGDIR=$BUILDROOT/log
+mkdir -p $LOGDIR
+LOGFILE=$LOGDIR/$LOGTAG-rebuild-$HSENV_
 
 (
 
@@ -32,3 +24,5 @@ cd ..
 
 deactivate_hsenv
 ) > $LOGFILE
+
+
