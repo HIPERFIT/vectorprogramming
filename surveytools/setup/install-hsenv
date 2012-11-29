@@ -13,17 +13,24 @@
 set -e
 
 export PATH=~/.cabal/bin/:/usr/local/cuda-4.2/bin/:$PATH
-#export PATH=~/.cabal/bin/:/usr/local/cuda-5.0/bin/:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib64 #:$LD_LIBRARY_PATH
-#export LD_LIBRARY_PATH=/usr/local/cuda-5.0/lib64 #:$LD_LIBRARY_PATH
 
 SCRIPTFILE=`readlink -f $0`
 SCRIPTROOT=`dirname $SCRIPTFILE`
-ROOT=~/
+ROOT=$(readlink -f ${SCRIPTROOT}/../../build)
+
+if [ ! -d "$ROOT" ]; then
+  mkdir "$ROOT"
+fi
+
 cd $ROOT
 
 BASEPATH=$PATH
 BASEGHC=`ghc --version | awk -F' ' '{print $NF}'`
+
+BUILDTOOLSNAME=buildtools
+BUILDTOOLSVERSION=7.4.2
+BUILDTOOLSBIN=$ROOT/hsenvs/$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/.hsenv_$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/cabal/bin/
 
 # deactivate current hsenv if possible
 deactivate_hsenv 2> /dev/null || true
@@ -59,6 +66,27 @@ init_hsenv() {
 
 }
 
+installBuildTools () {
+
+  init_hsenv $BUILDTOOLSNAME $BUILDTOOLSVERSION
+
+  cd $SCRIPTROOT
+  for tool in */
+  do
+
+    if [ ! $(ghc-pkg --simple-output list $(basename $tool) | wc -l) = 1 ]; then
+      cd $tool
+      cabal clean
+      cabal install --reinstall
+      echo $(basename $tool)
+      ghc-pkg --simple-output list $(basename $tool)
+      cd ..
+    fi
+  done
+
+  deactivate_hsenv
+}
+
 installCUDAFromHackage (){
   # Fix and install cuda bindings
   cabal unpack cuda || true
@@ -85,15 +113,13 @@ installAccelerateFromHackage(){
 installAccelerateFromGithub() {
   init_hsenv "accelerate-github" "7.6.1"
 
-
-   $SCRIPTROOT/shakeAccelerateGithub
+  $BUILDTOOLSBIN/shaketool --accelerate
   deactivate_hsenv
 }
 
 installNikola() {
   init_hsenv "nikola" "7.4.2"
-
-    $SCRIPTROOT/shakeNikola
+  $BUILDTOOLSBIN/shaketool --nikola
   deactivate_hsenv
 }
 
@@ -106,6 +132,7 @@ installFeldspar() {
     sed -i -e "s/ExplicitForall/ExplicitForAll/" Feldspar/NameExtractor.hs
     cabal install
     cd ..
+
   deactivate_hsenv
 }
 
@@ -150,6 +177,8 @@ if [ $# -lt 1 ]; then
     show_usage
     exit 1
 fi
+
+installBuildTools
 
 while [ $# -gt 0 ]; do
   case $1 in

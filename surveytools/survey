@@ -9,8 +9,8 @@ setup() {
 }
 
 benchmark() {
-
-  echo "Nothing here yet"
+  runhaskell $SURVEYTOOLS_DIR/benchmarkrunner/Main.hs -r
+  runhaskell $SURVEYTOOLS_DIR/benchmarkrunner/Main.hs all
 }
 
 plot() {
