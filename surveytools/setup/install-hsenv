@@ -216,14 +216,14 @@ while [ $# -gt 0 ]; do
       exit 1
     fi
 
-    (echo $1 | grep -P "[0-9]+\.[0-9]+\.[0-9]+" > /dev/null) || 
+    (echo $1 | grep -P "[0-9]+\.[0-9]+\.[0-9]+" > /dev/null) ||
        (
         echo "Parameter to --vanilla ($1) not formatted correctly."
         echo ""
         show_usage
         exit 1
        )
-    
+
     installVanilla $1 $2
     shift; shift
     continue

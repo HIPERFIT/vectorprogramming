@@ -17,7 +17,7 @@ import System.Directory
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 platforms = [
      ("CUDA", "vanilla-GHC7.4.2")
---    , ("Nikola", "nikola-GHC7.4.2")
+    , ("Nikola", "nikola-GHC7.4.2")
     , ("R", "vanilla-GHC7.4.2")
     , ("Repa", "accelerate-github-GHC7.6.1")
     , ("Vector", "vanilla-GHC7.4.2")

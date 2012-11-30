@@ -8,10 +8,15 @@ import ShakeLib.Cabal
 import ShakeLib.Git
 
 cudaGit  = gitRepoFiles "cuda" ["cuda.cabal"] "git://github.com/tmcdonell/cuda.git"
+cudaMainlandGit  = gitRepoFiles "cuda-mainland" ["cuda.cabal"] "git://github.com/mainland/cuda.git"
 nikolaGit = gitRepoFiles "nikola" ["nikola.cabal"]
   "git://github.com/mainland/nikola.git"
 
-gitRepos = [cudaGit, nikolaGit]
+
+cudaMainlandCabal =   CabalFile "cuda-mainland/cuda.cabal" "cuda"
+              []
+               -- ["--extra-include-dirs=/usr/local/cuda/include/"]
+               -- ["--extra-include-dirs=/usr/local/cuda-5.0/include/"]
 
 cudaCabal =   CabalFile "cuda/cuda.cabal" "cuda"
                -- ["--extra-include-dirs=/usr/local/cuda/include/"]
@@ -23,6 +28,7 @@ nikolaCabal = CabalFile "nikola/nikola.cabal" "nikola" []
 --               "--flags=examples",
                "--configure-option=--with-nvcc=/usr/local/cuda-5.0/bin/nvcc"] -}
 
+gitRepos = [cudaGit, nikolaGit]
 cabalPkgs = [cudaCabal, nikolaCabal]
 
 rules = do

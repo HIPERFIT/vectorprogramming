@@ -1,7 +1,11 @@
 #!/bin/sh
 
-#Obtain absolute path to surveytools directory
+set -e
+
 SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
+BUILD_DIR=$SURVEYTOOLS_DIR/../build
+BENCHRESULTS_DIR=$SURVEYTOOLS_DIR/../results/benchmark-summaries
+BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
 
 setup() {
   # Really, each benchmark should be responsible for its own setup (maybe aided by sourcing a library)
@@ -12,12 +16,32 @@ setup() {
 
 benchmark() {
   cd $SURVEYTOOLS_DIR/benchmarkrunner
-  runhaskell Main.hs all
+  #runhaskell Main.hs all
+  runhaskell Main.hs Repa CUDA R Vector
 }
 
 plot() {
-    #Rscript ggplot_speedup.r --args $SURVEYTOOLS_DIR/../results/binomial/ Vector.csv
-  echo "Nothing here yet"
+
+  LATEST=$(ls -c $BENCHRESULTS_DIR |head -n 1)
+
+  Rscript plotting/ggplot_speedup.r --args $BENCHRESULTS_DIR/$LATEST binomial-cpu-Vector.csv
+}
+
+clean () {
+
+  rm -rf $BUILD_DIR/hsenvs
+  rm -rf $BENCH_DIR/*/*/dist*
+
+  # special cases, should really be handled locally.
+  (
+    cd $BENCH_DIR/binomial-gpu/CUDA/src-cpp
+    make clean || true
+    )
+  (
+    cd $BENCH_DIR/binomial-cpu/C
+    make clean || true
+    )
+
 }
 
 revdeps () {
@@ -29,10 +53,13 @@ show_usage() {
   echo "Collects and plots all survey data"
   echo ""
   echo "Invoke with one or more of the following flags:"
+  echo "  --clean         Clean up the various build files"
   echo "  --setup         Setup necessary GHC installations and build benchmarks"
   echo "  --benchmark     Runs benchmarks and generates graphs"
+  echo "  --plot          Plot the lastest benchmark execution"
   echo "  --revdeps       Count reverse dependencies"
-  echo "  --thebigbutton  Alias for --setup and --benchmark"
+  echo "  --thebigbutton  Alias for '--setup --benchmark --plot'"
+  echo "  --nightly       Alias for '-- clean --setup --benchmark --plot'"
   echo "  --usage"
 }
 
@@ -43,25 +70,50 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-case $1 in
-  --setup)
-    setup
-    ;;
-  --benchmark)
-    benchmark
-    ;;
-  --revdeps)
-    revdeps
-    ;;
-  --thebigbutton)
-    setup
-    benchmark
-    ;;
-  --usage)
-    show_usage
-    ;;
-  *)
-    echo "Unknown parameter $1"
-    show_usage
-    ;;
-esac
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    --clean)
+      clean
+      shift
+      ;;
+    --nightly)
+      clean
+      setup
+      benchmark
+      plot
+      shift
+      ;;
+    --setup)
+      setup
+      shift
+      ;;
+    --benchmark)
+      benchmark
+      shift
+      ;;
+    --revdeps)
+      revdeps
+      shift
+      ;;
+    --thebigbutton)
+      setup
+      benchmark
+      plot
+      shift
+      ;;
+    --plot)
+      plot
+      shift
+      ;;
+    --usage)
+      show_usage
+      break
+      ;;
+    *)
+      echo "Unknown parameter $1"
+      show_usage
+      break
+      ;;
+  esac
+done

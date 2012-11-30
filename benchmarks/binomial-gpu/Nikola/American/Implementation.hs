@@ -11,7 +11,7 @@ import Data.Array.Nikola.Backend.CUDA
 import American.Model
 
 liftInt :: Int -> Exp Int32
-liftInt = lift . fromIntegral
+liftInt = lift . (fromIntegral :: Int -> Int32)
 
 v1 ^*^ v2 = zipWith (*) v1 v2
 v1 ^+^ v2 = zipWith (+) v1 v2
@@ -23,15 +23,15 @@ ppmax = zipWith max
 
 
 finalPut :: Model
-         -> Vector M (Exp F)
-         -> Vector M (Exp F)
+         -> Vector G (Exp F)
+         -> Vector G (Exp F)
          -> Vector D (Exp F)
 finalPut (Model{..}) = finalPut' (lift strike) (lift s0)
 
 finalPut' :: Exp F
           -> Exp F
-          -> Vector M (Exp F)
-          -> Vector M (Exp F)
+          -> Vector G (Exp F)
+          -> Vector G (Exp F)
           -> Vector D (Exp F)
 finalPut' strike s0 uPow dPow = pmax (strike -^ st) 0
   where
@@ -39,14 +39,14 @@ finalPut' strike s0 uPow dPow = pmax (strike -^ st) 0
     st = s0 *^ (uPow ^*^ dPow)
 
 prevPut :: Model
-        -> Vector M (Exp F)
-        -> Vector M (Exp F)
+        -> Vector G (Exp F)
+        -> Vector G (Exp F)
         -> Exp Int32
-        -> Vector M (Exp F)
+        -> Vector G (Exp F)
         -> Exp Int32
         -> Vector D (Exp F)
-prevPut (Model{..}) = 
-  prevPut' (lift strike) (lift s0) 
+prevPut (Model{..}) =
+  prevPut' (lift strike) (lift s0)
            (liftInt bankDays)
            (lift alpha) (lift sigma) (lift r)
 
@@ -56,10 +56,10 @@ prevPut' :: Exp F
          -> Exp F
          -> Exp F
          -> Exp F
-         -> Vector M (Exp F)
-         -> Vector M (Exp F)
+         -> Vector G (Exp F)
+         -> Vector G (Exp F)
          -> Exp Int32
-         -> Vector M (Exp F)
+         -> Vector G (Exp F)
          -> Exp Int32
          -> Vector D (Exp F)
 prevPut' strike s0 bankDays alpha sigma r uPow dPow expiry put i =
