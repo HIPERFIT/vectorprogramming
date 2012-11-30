@@ -8,7 +8,7 @@ LOGTAG=$2
 
 BUILDROOT=$(readlink -f $(pwd)/../../build)
 HSENVROOT=$BUILDROOT/hsenvs
-LOGDIR=$BUILDROOT/log
+LOGDIR=$BUILDROOT/logs
 mkdir -p $LOGDIR
 LOGFILE=$LOGDIR/$LOGTAG-rebuild-$HSENV_
 

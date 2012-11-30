@@ -4,13 +4,15 @@
 SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
 
 setup() {
-    # Really, each benchmark should be responsible for its own setup (maybe aided by sourcing a library)
-    $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla
+  # Really, each benchmark should be responsible for its own setup (maybe aided by sourcing a library)
+  $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla
+  cd $SURVEYTOOLS_DIR/benchmarkrunner
+  runhaskell Main.hs -r
 }
 
 benchmark() {
-  runhaskell $SURVEYTOOLS_DIR/benchmarkrunner/Main.hs -r
-  runhaskell $SURVEYTOOLS_DIR/benchmarkrunner/Main.hs all
+  cd $SURVEYTOOLS_DIR/benchmarkrunner
+  runhaskell Main.hs all
 }
 
 plot() {

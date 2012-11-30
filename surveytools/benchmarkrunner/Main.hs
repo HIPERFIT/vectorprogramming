@@ -14,9 +14,6 @@ import System.Exit
 import System.Process(rawSystem, readProcess)
 import System.Directory
 
-
-hsenvs_dir = "/home/dybber/hsenvs/"
-
 -- The various benchmarks, and the version of ghc (which hsenv) they use.
 platforms = [
      ("CUDA", "vanilla-GHC7.4.2")
@@ -61,8 +58,8 @@ runBenchmarks ns = do
   benchmarks <- getBenchmarks ns
   tag <- logtag
   putStrLn $ "(" ++ tag ++ ") Executing the following experiments:"
+  -- mkSummaryDir tag
   print benchmarks
-  mkSummaryDir tag
   whileTrue (criterion tag) benchmarks
 
 -- Go through the directory hierarchy and collect the existing
@@ -80,13 +77,13 @@ getBenchmarks ns = do
     return [(benchmark, p, env) | p <- ps, (p', env) <- ns, p == p']
  where
    retrieveSubdirectories :: FilePath -> IO [FilePath]
-   retrieveSubdirectories dir = do 
+   retrieveSubdirectories dir = do
      xs <- removeDotdirs `fmap` getDirectoryContents dir
      filterM (doesDirectoryExist . (dir </>)) xs
    removeDotdirs = filter ((/= '.') . head)
    concatForM ls f = concat `fmap` forM ls f
 
--- 
+--
 criterion tag (benchmark, platform, env) = do
   exitcode <- rawSystem "./run.sh" [benchmark,platform,env,tag]
   isSuccess ("running benchmark " ++ benchmark ++ ", " ++ platform ++ " (on " ++ env ++") failed!") exitcode
@@ -95,7 +92,8 @@ criterion tag (benchmark, platform, env) = do
 isSuccess _ ExitSuccess = return True
 isSuccess msg _ = putStrLn msg >> return False
 
-mkSummaryDir tag = rawSystem "mkdir" ["-p", "summaries" </> tag]
+
+--mkSummaryDir tag = rawSystem "mkdir" ["-p", "../summaries" </> tag]
 
 -- the log-tag to assign to runs
 logtag = head . lines <$> readProcess "date" ["+%Y-%m-%d,%H:%M:%S"] ""

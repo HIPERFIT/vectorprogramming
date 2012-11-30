@@ -6,6 +6,6 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable benchmark-binomial-cpu-Repa
-  build-depends:       base ==4.5.*, repa ==3.2.*, benchmarkrunner, mtl
+  build-depends:       base, repa ==3.2.*, benchmarkrunner, mtl
   main-is: Main.hs
   ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

@@ -14,25 +14,25 @@ PLATFORM=$2
 # Name of benchmark (for naming logs, reports etc.)
 NAME=$BENCHMARK-$PLATFORM
 
+BUILDROOT=$(readlink -f $(pwd)/../../build)
+RESULTROOT=$(readlink -f $(pwd)/../../results)
+HSENVROOT=$BUILDROOT/hsenvs
+LOGDIR=$BUILDROOT/logs
+mkdir -p $LOGDIR
+
+
 # The main directory of the test program
-PROGRAMDIR=$(readlink -f $(pwd)../../benchmarks/$BENCHMARK/$PLATFORM)
+PROGRAMDIR=$(readlink -f $(pwd)/../../benchmarks/$BENCHMARK/$PLATFORM)
 # (note the underscore to avoid variable capture when sourcing!)
 HSENV_=$3
 LOGTAG=$4
-HSENVROOT=$(readlink -f $(pwd)/../../build/hsenvs)
 
-echo $PROGRAMDIR
-exit 0
-
-SUMMARYDIR=summaries/$LOGTAG
+SUMMARYDIR=$RESULTROOT/benchmark-summaries/$LOGTAG
 SUMMARYFILE=$SUMMARYDIR/$NAME.csv
 REPORTFILE=$SUMMARYDIR/$NAME-samples.csv
 
-# summarydir created by Main.hs
-#mkdir -p $SUMMARYDIR
-
-mkdir -p logs
-LOGFILE=logs/$LOGTAG-$BENCHMARK-$PLATFORM
+mkdir -p $SUMMARYDIR
+LOGFILE=$LOGDIR/$LOGTAG-$BENCHMARK-$PLATFORM
 
 (
 source $HSENVROOT/$HSENV_/.hsenv_$HSENV_/bin/activate
