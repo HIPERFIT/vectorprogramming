@@ -1,0 +1,17 @@
+name:                benchmark-sobol-Vector
+version:             0.1.0.0
+-- synopsis:
+-- description:
+license:             BSD3
+author:              Philip Carlsen, Martin Dybdal
+maintainer:          plcplc@gmail.com, dybber@dybber.dk
+-- copyright:
+-- category:
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable benchmark-sobol-Vector
+  main-is: Main.hs
+  -- other-modules:
+  build-depends:       base, vector, benchmarkrunner
+  ghc-options: -threaded -optlo-O3 -fllvm
