@@ -51,25 +51,63 @@ sobolInd_ n =
     indices = generate (constant $ arrayShape sobol_dirVs_array) 
                        (snd . unindex2)
     
-    doit :: Exp (Elem, Index) -> Exp (Elem, Index) -> Exp (Elem, Index)
+    ps = map (testBit (grayCode n)) indices
+
+    doit :: Exp (Elem, Bool) -> Exp (Elem, Bool) -> Exp (Elem, Bool)
     doit a b =
       let xa,xb :: Exp Elem
-          ia,ib :: Exp Index
+          ia,ib :: Exp Bool
           (xa,ia) = (fst a, snd a)
           (xb,ib) = (fst b, snd b)
-      in testBit (grayCode n) ia ? 
-           (testBit (grayCode n) ib ?
+      in ia ? 
+           (ib ?
               (lift (xa `xor` xb, ia),
                a),
             b)
-  in map fst $ fold doit (constant (0,1)) $ zip (use sobol_dirVs_array) indices
+  in map fst $ fold doit (constant (0, True)) $ zip (use sobol_dirVs_array) ps
 
--- Compiles
 sobolInd :: Exp Index -> Acc (Vector SpecReal)
 sobolInd n = map norm (sobolInd_ n)
     where
       norm :: Exp Elem -> Exp SpecReal
       norm = ( / sobol_divisor) . fromIntegral
+
+-- Manually flattened version
+mapsobolInd_ :: Vector Index -> Acc (Array DIM2 Elem)
+mapsobolInd_ ns =
+  let 
+    indices :: Acc (Array DIM2 Index)
+    indices = generate (constant $ arrayShape sobol_dirVs_array) 
+                       (snd . unindex2)
+    
+    indicesRep = replicate (constant $ Z :. length ns :. All :. All) indices
+    
+    Z :. i :. j = arrayShape sobol_dirVs_array
+    
+    nss = replicate (constant $ Z :. All :. i :. j) (use ns)
+
+    ps = zipWith (testBit . grayCode) nss indicesRep
+    
+    dirVsRep = replicate (constant $ Z :. length ns :. All :. All) (use sobol_dirVs_array)
+    
+    doit :: Exp (Elem, Bool) -> Exp (Elem, Bool) -> Exp (Elem, Bool)
+    doit a b =
+      let xa,xb :: Exp Elem
+          ia,ib :: Exp Bool
+          (xa,ia) = (fst a, snd a)
+          (xb,ib) = (fst b, snd b)
+      in ia ? 
+           (ib ?
+              (lift (xa `xor` xb, ia),
+               a),
+            b)
+  in map fst $ fold doit (constant (0, True)) $ zip dirVsRep ps
+
+mapsobolInd :: Vector Index -> Acc (Array DIM2 SpecReal)
+mapsobolInd ns = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ ns
+
+    
+
 
 
 -- -- Previous attempt at generating sobol sequences
