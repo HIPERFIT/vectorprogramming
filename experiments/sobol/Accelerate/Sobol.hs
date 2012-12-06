@@ -37,26 +37,32 @@ length arr = let (_ :. n) = arrayShape arr in n
 grayCode :: Exp Index -> Exp Elem
 grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
 
+
+
+sobolIndices :: Acc (Array DIM2 Index)
+sobolIndices = generate (constant $ arrayShape sobol_dirVs_array) 
+                          (snd . unindex2)
+
+
 sobolInd_ :: Exp Index -> Acc (Vector Elem)
 sobolInd_ n =
   let 
     indices :: Acc (Array DIM2 Index)
     indices = generate (constant $ arrayShape sobol_dirVs_array) 
-                       (fst . unindex2)
+                       (snd . unindex2)
     
-    -- The "42" constant is added as placeholder, as the operator
-    -- needs to be associative
     doit :: Exp (Elem, Index) -> Exp (Elem, Index) -> Exp (Elem, Index)
-    doit b xi =
-      let b',x :: Exp Elem
-          i :: Exp Index
-          b' = fst b
-          x = fst xi
-          i = snd xi
-      in testBit (grayCode n) i ? (lift (x `xor` b',constant 42), lift (b', constant 42))
-
-  in map fst $ fold doit (constant (0,42)) $ zip (use sobol_dirVs_array) indices
-
+    doit a b =
+      let xa,xb :: Exp Elem
+          ia,ib :: Exp Index
+          (xa,ia) = (fst a, snd a)
+          (xb,ib) = (fst b, snd b)
+      in testBit (grayCode n) ia ? 
+           (testBit (grayCode n) ib ?
+              (lift (xa `xor` xb, ia),
+               a),
+            b)
+  in map fst $ fold doit (constant (0,1)) $ zip (use sobol_dirVs_array) indices
 
 -- Compiles
 sobolInd :: Exp Index -> Acc (Vector SpecReal)
