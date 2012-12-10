@@ -1,4 +1,4 @@
-module Sobol (sobolSequences) where
+module Sobol where
 
 import System.Environment
 
@@ -12,7 +12,7 @@ import qualified Data.Vector.Unboxed as VU
 
 type Elem = DW.Word32
 type SpecReal = Double
-type Index = Integer
+type Index = Int
 
 sobol_bit_count = 30
 sobol_dim = 1
@@ -38,9 +38,19 @@ sobolInd_ n =
             xorVs vs = DL.foldl' DB.xor 0 [vs VB.! i | i <- indices]
         in map xorVs sobol_dirVs
 
+-- -- independent formula
+-- -- LENGTH(RET) = LENGTH(sobol_dirVs)
+-- sobolInd_ :: Index -> [Elem]
+-- sobolInd_ n =
+--         let 
+--           doit b (x,i) = if DB.testBit (grayCode n) i then x `DB.xor` b else b
+--           xorVs vs = VB.foldl' doit 0 $ VB.zip vs (VB.fromList [0..sobol_bit_count-1])
+--         in map xorVs sobol_dirVs
+
+
 sobolInd :: Index -> [SpecReal]
 sobolInd n = map norm (sobolInd_ n)
     where norm = ( / sobol_divisor ) . fromIntegral
 
-sobolSequences :: Index -> [[SpecReal]]
-sobolSequences num_iters = map sobolInd [1..num_iters]
+sobolSequence :: Index -> [[SpecReal]]
+sobolSequence num_iters = map sobolInd [0..num_iters]
