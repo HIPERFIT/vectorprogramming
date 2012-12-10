@@ -68,7 +68,7 @@ binom expiry = first
 
     -- standard econ parameters
     strike      = 100
-    bankDays    = 5 --252
+    bankDays    = 252
     s0          = 100
     r           = 0.03
     alpha       = 0.07
@@ -90,5 +90,5 @@ binom expiry = first
 main = print
      . head
      . A.toList
-     $ ACUDA.run (binom 1)
+     $ ACUDA.run (binom 2)
 
