@@ -17,14 +17,15 @@ setup() {
 benchmark() {
   cd $SURVEYTOOLS_DIR/benchmarkrunner
   #runhaskell Main.hs all
-  runhaskell Main.hs Repa CUDA R Vector
+  runhaskell Main.hs Accelerate Nikola Repa CUDA R Vector
 }
 
 plot() {
+  cd $SURVEYTOOLS_DIR/plotting
 
   LATEST=$(ls -c $BENCHRESULTS_DIR |head -n 1)
 
-  Rscript plotting/ggplot_speedup.r --args $BENCHRESULTS_DIR/$LATEST binomial-cpu-Vector.csv
+  Rscript ggplot_speedup.r --args $BENCHRESULTS_DIR/$LATEST binomial-cpu-Vector.csv
 }
 
 clean () {
@@ -78,10 +79,12 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --nightly)
+      (
       clean
       setup
       benchmark
       plot
+      ) > $BUILD_DIR//logs/$(date +%Y-%m-%d,%H:%M:%S)-nightly-output
       shift
       ;;
     --setup)
