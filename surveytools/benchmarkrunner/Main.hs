@@ -22,7 +22,7 @@ platforms = [
     , ("Repa", "accelerate-github-GHC7.6.1")
     , ("Vector", "vanilla-GHC7.4.2")
     , ("CPP", "vanilla-GHC7.4.2")
---   ("Accelerate", "accelerate-hackage-GHC7.4.1")
+    ,  ("Accelerate", "accelerate-github-GHC7.6.1")
 -- , ("DPH", ghc742)
    -- , ("Feldspar", ghc742)
    -- , ("Obsidian", ghc742)
