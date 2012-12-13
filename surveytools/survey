@@ -17,7 +17,7 @@ setup() {
 benchmark() {
   cd $SURVEYTOOLS_DIR/benchmarkrunner
   #runhaskell Main.hs all
-  runhaskell Main.hs Accelerate # Nikola Repa CUDA R Vector
+  runhaskell Main.hs Nikola Repa CUDA R Vector Accelerate
 }
 
 plot() {
