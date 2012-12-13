@@ -9,9 +9,9 @@ import ShakeLib.Git
 
 cudaGit  = gitRepoFiles "cuda" ["cuda.cabal"] "git://github.com/tmcdonell/cuda.git"
 cudaMainlandGit  = gitRepoFiles "cuda-mainland" ["cuda.cabal"] "git://github.com/mainland/cuda.git"
-nikolaGit = gitRepoFiles "nikola" ["nikola.cabal"]
-  "git://github.com/mainland/nikola.git"
-
+nikolaGit = --gitRepoFiles "nikola" ["nikola.cabal"]
+  -- "git://github.com/mainland/nikola.git"
+  GitRepo (Branch "hiperfit" Head) "nikola" ["nikola.cabal"] "git://github.com/HIPERFIT/nikola.git"
 
 cudaMainlandCabal =   CabalFile "cuda-mainland/cuda.cabal" "cuda"
               []
