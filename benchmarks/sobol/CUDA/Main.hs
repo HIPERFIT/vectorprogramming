@@ -12,7 +12,7 @@ main = do
                          ++" make")
                 >>= waitForProcess
   if exitcode == ExitSuccess then do
-    proc <- initialiseExt ("../../benchmarks/sobol/CUDA/src-cpp/bin/binomialOptions") []
+    proc <- initialiseExt ("../../benchmarks/sobol/CUDA/src-cpp/SobolQRNG") []
     runTestIO $ benchmarkExt proc
     terminateExt proc
     else do
