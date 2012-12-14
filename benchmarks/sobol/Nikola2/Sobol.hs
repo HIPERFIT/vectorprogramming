@@ -54,38 +54,6 @@ fold f b arr =
           iter (i,x) = (i+1, f (lookup (ix :. i)) x)
   in fromFunction sh buildArray
 
-sobolInd_ :: Exp Index -> Array D DIM1 (Exp Elem)
-sobolInd_ n =
-  let 
-    indices :: Array D DIM2 (Exp Index)
-    indices = fromFunction (extent sobol_dirVs_array)
-                           (\(Z :. i :. j) -> j)
-    ps :: Array D DIM2 (Exp Bool)
-    ps = map (testBit (fromIntegral $ grayCode n)) indices
-
-    doit :: (Exp Elem, Exp Bool) -> (Exp Elem, Exp Bool) -> (Exp Elem, Exp Bool)
-    doit a@(xa,ia) b@(xb,ib) =
-         if ia then if ib then (lift $ xa `xor` xb, lift ia)
-                    else a
-         else b
-              
-    z :: Array D DIM2 (Exp Elem, Exp Bool)
-    z = zip sobol_dirVs_array ps
-    
-    f :: Array D DIM1 (Exp Elem, Exp Bool)
-    f = fold doit (lift (0 :: Elem), lift True) z
-  in map fst f
-
-sobolInd :: Exp Index -> Array D DIM1 (Exp SpecReal)
-sobolInd n = map norm (sobolInd_ n)
-    where
-      norm :: Exp Elem -> Exp SpecReal
-      norm = ( / sobol_divisor) . fromIntegral
-
-length :: Shape (sh :. Exp Ix) =>  IsArray r a => Array r (sh :. Exp Ix) a -> Exp Int32
-length arr = let (_ :. n) = extent arr in toInt n
-
-
 replicateAddDIM :: Source r a => Shape sh => Exp Ix -> Array r sh a -> Array D (sh :. Exp Ix) a
 replicateAddDIM n arr =
   let (sh, lookup) = toFunction arr
@@ -95,7 +63,6 @@ replicateAddFirstDIM :: Source r a => Exp Ix -> Array r DIM2 a -> Array D DIM3 a
 replicateAddFirstDIM n arr =
   let (Z :. l :. m, lookup) = toFunction arr
   in fromFunction (Z :. n :. l :. m) $ \(Z :. _ :. i :. j) -> lookup (Z :. i :. j)
-
 
 type DIM3 = DIM2 :. Exp Ix
 

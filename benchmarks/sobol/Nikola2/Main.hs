@@ -18,8 +18,8 @@ sobolIndRuntimeCompiled :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal
 sobolIndRuntimeCompiled = NH.compile $ mapsobolIndr
 
 
--- sobolIndPrecompiled :: CV.Vector Int32 -> CV.Vector SpecReal
--- sobolIndPrecompiled = $(NTH.compileSig mapsobolInd (undefined :: CV.Vector Int32 -> CV.Vector SpecReal))
+sobolIndPrecompiled :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal
+sobolIndPrecompiled = $(NTH.compileSig mapsobolIndr (undefined :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal))
 
 sobolSequence :: (Int32 -> CV.Vector Int32 -> CV.Vector SpecReal) -> Int -> [SpecReal]
 sobolSequence sobol n = CV.toList . sobol (Prelude.fromIntegral n) . CV.fromList $ map Prelude.fromIntegral [0..n-1]
@@ -27,6 +27,6 @@ sobolSequence sobol n = CV.toList . sobol (Prelude.fromIntegral n) . CV.fromList
 main = do
   initializeCUDACtx
   sobolIndRuntimeCompiled `seq` runTestWith (cfgModSummaryFile (++ "-Uncompiled")) (sobolSequence sobolIndRuntimeCompiled)
---  sobolIndPrecompiled `seq` runTestWith (cfgModSummaryFile (++ "-Precompiled")) (sobolSequence sobolIndPrecompiled)
+  sobolIndPrecompiled `seq` runTestWith (cfgModSummaryFile (++ "-Precompiled")) (sobolSequence sobolIndPrecompiled)
   -- runTest sobolSequence
   -- runTest sobolSequenceCompiled
