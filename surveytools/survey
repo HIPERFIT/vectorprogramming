@@ -2,22 +2,43 @@
 
 set -e
 
-SURVEYTOOLS_DIR=$(dirname $(readlink -f $0))
-BUILD_DIR=$SURVEYTOOLS_DIR/../build
-BENCHRESULTS_DIR=$SURVEYTOOLS_DIR/../results/benchmark-summaries
+SCRIPTFILE=`readlink -f $0`
+SCRIPTROOT=`dirname $SCRIPTFILE`
+ROOT=$(readlink -f ${SCRIPTROOT}/..)
+
+BUILDROOT=$ROOT/build
+BENCHROOT=$ROOT/benchmarks
+RESULTROOT=$ROOT/results
+HSENVROOT=$BUILDROOT/hsenvs
+LOGDIR=$BUILDROOT/logs
+
+SURVEYTOOLS_DIR=$SCRIPTROOT
+BENCHRESULTS_DIR=$RESULTROOT/benchmark-summaries
 BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
 
 setup() {
-  # Really, each benchmark should be responsible for its own setup (maybe aided by sourcing a library)
-  $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla
-  cd $SURVEYTOOLS_DIR/benchmarkrunner
-  runhaskell Main.hs -r
+  $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla --vanilla 7.6.1 vanilla
+  $SURVEYTOOLS_DIR/benchmarkrunner/rebuildBenchmarkRunner.sh
 }
 
 benchmark() {
+
+  LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
   cd $SURVEYTOOLS_DIR/benchmarkrunner
-  #runhaskell Main.hs all
-  runhaskell Main.hs Nikola Repa CUDA R Vector Accelerate
+  for experiment in $BENCHROOT/*
+  do
+    if [ ! -d $experiment ]; then
+      continue
+    fi
+    for platform in $experiment/*
+    do
+      if [ ! -d $platform ]; then
+        continue
+      fi
+      $SURVEYTOOLS_DIR/benchmarkrunner/run.sh $(basename $experiment) $(basename $platform) $LOGTAG
+    done
+  done
+  #runhaskell Main.hs Nikola Repa CUDA R Vector Accelerate
 }
 
 plot() {
@@ -30,7 +51,7 @@ plot() {
 
 clean () {
 
-  rm -rf $BUILD_DIR/hsenvs
+  rm -rf $BUILDROOT/hsenvs
   rm -rf $BENCH_DIR/*/*/dist*
 
   # special cases, should really be handled locally.
@@ -84,7 +105,7 @@ while [ $# -gt 0 ]; do
       setup
       benchmark
       plot
-      ) > $BUILD_DIR//logs/$(date +%Y-%m-%d,%H:%M:%S)-nightly-output
+      ) > $BUILDROOT//logs/$(date +%Y-%m-%d,%H:%M:%S)-nightly-output
       shift
       ;;
     --setup)

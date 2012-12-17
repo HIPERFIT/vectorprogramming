@@ -17,20 +17,21 @@ export LD_LIBRARY_PATH=/usr/local/cuda-4.2/lib64 #:$LD_LIBRARY_PATH
 
 SCRIPTFILE=`readlink -f $0`
 SCRIPTROOT=`dirname $SCRIPTFILE`
-ROOT=$(readlink -f ${SCRIPTROOT}/../../build)
+ROOT=$(readlink -f ${SCRIPTROOT}/../..)
+BUILDROOT=$ROOT/build
 
-if [ ! -d "$ROOT" ]; then
-  mkdir "$ROOT"
+if [ ! -d "$BUILDROOT" ]; then
+  mkdir "$BUILDROOT"
 fi
 
-cd $ROOT
+cd $BUILDROOT
 
 BASEPATH=$PATH
 BASEGHC=`ghc --version | awk -F' ' '{print $NF}'`
 
 BUILDTOOLSNAME=buildtools
 BUILDTOOLSVERSION=7.4.2
-BUILDTOOLSBIN=$ROOT/hsenvs/$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/.hsenv_$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/cabal/bin/
+BUILDTOOLSBIN=$BUILDROOT/hsenvs/$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/.hsenv_$BUILDTOOLSNAME-GHC$BUILDTOOLSVERSION/cabal/bin/
 
 # deactivate current hsenv if possible
 deactivate_hsenv 2> /dev/null || true
@@ -48,8 +49,8 @@ fetchGHC() {
 init_hsenv() {
   NAME=$1
   GHC_VERSION=$2
-  GHC_DIR=$ROOT/ghc/ghc-$GHC_VERSION
-  INSTALL_DIR=$ROOT/hsenvs/$NAME-GHC$GHC_VERSION/
+  GHC_DIR=$BUILDROOT/ghc/ghc-$GHC_VERSION
+  INSTALL_DIR=$BUILDROOT/hsenvs/$NAME-GHC$GHC_VERSION/
 
   if [ -d $INSTALL_DIR ]; then
     echo "$INSTALL_DIR already exists, using old installation"

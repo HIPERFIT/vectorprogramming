@@ -6,15 +6,16 @@ import System.Process
 import System.Exit
 
 main = do
+  -- ** Deprecated, maintained by run.sh instead
   -- compile source code.
   -- Definitely not cosher paths
-  exitcode <- runCommand ("cd ../../benchmarks/binomial-gpu/CUDA/src-cpp/;"
-                         ++" make")
-                >>= waitForProcess
-  if exitcode == ExitSuccess then do
-    proc <- initialiseExt ("../../benchmarks/binomial-gpu/CUDA/src-cpp/bin/binomialOptions") []
+  -- exitcode <- runCommand ("cd ../../benchmarks/binomial-gpu/CUDA/src-cpp/;"
+  --                       ++" make")
+  --              >>= waitForProcess
+  --if exitcode == ExitSuccess then do
+    proc <- initialiseExt ("src-cpp/bin/binomialOptions") []
     runTestIO $ benchmarkExt proc
     terminateExt proc
-    else do
-    putStrLn $ "make exited with " ++ show exitcode
-    exitWith exitcode
+  --  else do
+ --   putStrLn $ "make exited with " ++ show exitcode
+ --   exitWith exitcode

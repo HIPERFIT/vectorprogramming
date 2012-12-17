@@ -8,7 +8,8 @@ import ShakeLib.Git
 cudaGit  =     GitRepo (Branch "plc-tmp" Head) "cuda" ["cuda.cabal"] "git://github.com/plcplc/cuda.git"
 accelGit =     gitRepoFiles "accelerate" ["accelerate.cabal"] "git://github.com/AccelerateHS/accelerate.git"
 accelIoGit =   gitRepoFiles "accelerate-io" ["accelerate-io.cabal"] "git://github.com/AccelerateHS/accelerate-io.git"
-accelCudaGit = GitRepo (Branch "master" (Commit "99b82e4ad8887338c39b3be07ed7b1f7f61c20fb"))
+accelCudaGit = GitRepo (Branch "master" -- (Commit "99b82e4ad8887338c39b3be07ed7b1f7f61c20fb"))
+                                        (Commit "e8d131c34ad46fed1274451c9656136034b55023"))
                  "accelerate-cuda" ["accelerate-cuda.cabal"]
                  "git://github.com/AccelerateHS/accelerate-cuda.git"
 

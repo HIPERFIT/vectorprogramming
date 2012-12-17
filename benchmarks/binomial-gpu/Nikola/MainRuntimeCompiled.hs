@@ -1,7 +1,10 @@
 module Main where
 
+import qualified Data.Array.Nikola.Backend.CUDA as C
 import American
-import BenchmarkRunner.Main(runTest)
+import BenchmarkRunner.Main(runTest, cfgModSummaryFile)
 
-main = kernels `seq` runTest (binomRun kernels)
-  where kernels = binom defaultModel
+main = do
+  C.initializeCUDACtx
+  kernelsUnComp `seq` runTest (binomRun kernelsUnComp)
+  where kernelsUnComp = binom defaultModel
