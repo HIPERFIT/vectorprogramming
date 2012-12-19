@@ -58,7 +58,7 @@ initialiseExt cmd args = do
            error $ cmd ++ show args ++ " outputted " ++ res ++ ", expected OK."
 
 benchmarkExt (ExternalProcess hIn hOut _) benchArg = do
-  hPutStrLn hIn $ show benchArg
+  hPutStrLn hIn $ benchArg
   -- hFlush hIn
   res <- hGetLine hOut
   case res of

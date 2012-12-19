@@ -44,7 +44,7 @@ benchmarksForN n =
     C.bgroup (show n)
          [ -- C.bench (printf "               vector %-3d" n) $
          --           C.nf AMV.binom n
-         -- , 
+         -- ,
            C.bench (printf "nikola v1 interpreter %-3d" n) $
                    C.nf AMN.binom n
          , C.bench (printf "   nikola v1 compiled %-3d" n) $

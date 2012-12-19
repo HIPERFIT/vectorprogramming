@@ -35,7 +35,7 @@ data Kernels = Kernels (CV.Vector F
                         -> Int32
                         -> CV.Vector F)
                        Model
-                   
+
 
 binom :: Model -> Kernels
 binom (mdl@Model{..}) = Kernels finalPut prevPut mdl

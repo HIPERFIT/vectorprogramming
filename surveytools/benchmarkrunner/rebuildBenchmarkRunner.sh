@@ -21,10 +21,8 @@ LOGFILE=$LOGDIR/$LOGTAG-rebuild-benchmarkrunner
       hsenvBase=$(basename $hsenv)
       source $HSENVROOT/$hsenvBase/.hsenv_$hsenvBase/bin/activate
 
-      cabal update
       cabal clean
       cabal install --reinstall
-
 
       deactivate_hsenv
     done

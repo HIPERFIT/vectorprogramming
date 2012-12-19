@@ -16,26 +16,38 @@ SURVEYTOOLS_DIR=$SCRIPTROOT
 BENCHRESULTS_DIR=$RESULTROOT/benchmark-summaries
 BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
 
+LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
+
+source $SURVEYTOOLS_DIR/bin/loadHSENV.sh
+
 setup() {
   $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla --vanilla 7.6.1 vanilla
-  $SURVEYTOOLS_DIR/benchmarkrunner/rebuildBenchmarkRunner.sh
+
+  #rebuild the benchmarkrunner
+  (
+    cd $SURVEYTOOLS_DIR/benchmarkrunner
+    loadHSENV "buildtools"
+    cabal configure
+    cabal build
+    deactivate_hsenv
+  )
+
 }
 
 benchmark() {
 
-  LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
   cd $SURVEYTOOLS_DIR/benchmarkrunner
   for experiment in $BENCHROOT/*
   do
     if [ ! -d $experiment ]; then
       continue
     fi
-    for platform in $experiment/*
+    for instance in $experiment/*
     do
-      if [ ! -d $platform ]; then
+      if [ ! -d $instance ]; then
         continue
       fi
-      $SURVEYTOOLS_DIR/benchmarkrunner/run.sh $(basename $experiment) $(basename $platform) $LOGTAG
+      $SURVEYTOOLS_DIR/benchmarkrunner/run.sh $(basename $experiment) $(basename $instance) $LOGTAG
     done
   done
   #runhaskell Main.hs Nikola Repa CUDA R Vector Accelerate
@@ -105,7 +117,7 @@ while [ $# -gt 0 ]; do
       setup
       benchmark
       plot
-      ) > $BUILDROOT//logs/$(date +%Y-%m-%d,%H:%M:%S)-nightly-output
+      ) &> $BUILDROOT/logs/$LOGTAG-Nightly
       shift
       ;;
     --setup)
