@@ -79,7 +79,7 @@ mapsobolInd_ lengthn ns =
     indicesRep = replicateAddFirstDIM (lengthn) indices
 
     nss :: Array D DIM3 (Exp Index)
-    nss = replicateAddDIM dirVs_n $ replicateAddDIM dirVs_m ns
+    nss = replicateAddDIM dirVs_m $ replicateAddDIM dirVs_n ns
 
     ps :: Array D DIM3 (Exp Bool)
     ps = zipWith (testBit . fromIntegral . grayCode) nss indicesRep
