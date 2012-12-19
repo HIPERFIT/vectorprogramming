@@ -136,8 +136,8 @@ sobol.o: sobol.cpp
 
 SobolQRNG: sobol.o sobol_gold.o sobol_primitives.o sobol_gpu.o
 	$(GCC) $(CCFLAGS) -o $@ $+ $(LDFLAGS) $(EXTRA_LDFLAGS)
-	mkdir -p ../../bin/$(OSLOWER)/$(TARGET)
-	cp $@ ../../bin/$(OSLOWER)/$(TARGET)
+	mkdir -p ../
+	cp $@ ../
 
 run: build
 	./SobolQRNG

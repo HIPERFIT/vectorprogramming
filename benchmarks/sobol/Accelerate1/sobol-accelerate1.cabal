@@ -1,17 +1,12 @@
-name:                benchmark-sobol-Nikola
+name:                sobol-accelerate1
 version:             0.1.0.0
--- synopsis:
--- description:
 license:             BSD3
 author:              Philip Carlsen, Martin Dybdal
 maintainer:          plcplc@gmail.com, dybber@dybber.dk
--- copyright:
--- category:
 build-type:          Simple
 cabal-version:       >=1.8
 
-
-executable benchmark-sobol-Nikola
+executable sobol-accelerate1
   main-is:       Main.hs
-  build-depends: base, nikola, vector, benchmarkrunner
+  build-depends: base, accelerate, vector, accelerate-cuda
   ghc-options:   -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -optlo-O3 -fllvm

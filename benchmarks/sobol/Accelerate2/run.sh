@@ -1,4 +1,3 @@
 #!/bin/bash
-HSENV_=accelerate-github-GHC7.6.1
-buildBenchmark $HSENV_
-runBenchmark $HSENV_ benchmark-sobol-Accelerate2
+
+exec ./dist_*/build/sobol-accelerate2/sobol-accelerate2 $@
