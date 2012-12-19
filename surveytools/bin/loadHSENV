@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Assumes that $HSENVROOT is a defined environment variable
+
+sourceit () {
+  HSENV=$1
+  source $HSENVROOT/$HSENV/.hsenv_$HSENV/bin/activate
+}
+
+loadHSENV () {
+  case $1 in
+    accelerate-github-GHC7.6.1)
+      sourceit "accelerate-github-GHC7.6.1"
+      ;;
+    accelerate)
+      sourceit "accelerate-github-GHC7.6.1"
+      ;;
+    nikola-GHC7.4.2)
+      sourceit "nikola-GHC7.4.2"
+      ;;
+    nikola)
+      sourceit "nikola-GHC7.4.2"
+      ;;
+    vanilla-GHC7.4.2)
+      sourceit "vanilla-GHC7.4.2"
+      ;;
+    vanilla)
+      sourceit "vanilla-GHC7.4.2"
+      ;;
+    *)
+      echo "Unknown parameter $1"
+      break
+      ;;
+  esac
+}
