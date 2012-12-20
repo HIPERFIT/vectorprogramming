@@ -52,7 +52,7 @@ cfgModSummaryFile sf cfg =
 -}
 benchmarks :: C.Benchmarkable b => [String] -> (String -> b) -> [C.Benchmark]
 benchmarks args bench =
-  map (\i -> C.bench (show i) $ bench i) args
+  map (\i -> C.bench (i) $ bench i) args
 
 main = do
   exec:rest <- getArgs

@@ -53,16 +53,27 @@ benchmark() {
       fi
       $SURVEYTOOLS_DIR/benchmarkrunner/run.sh $(basename $experiment) $(basename $instance) $LOGTAG
     done
+    #copy the plot settings to summarydir to make the plot generation self contained
+    cp $experiment/plot_baseline $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
+
   done
-  #runhaskell Main.hs Nikola Repa CUDA R Vector Accelerate
+
 }
 
 plot() {
+
   cd $SURVEYTOOLS_DIR/plotting
 
+  # We don't want to do path fiddling inside R.
   LATEST=$(ls -c $BENCHRESULTS_DIR |head -n 1)
 
-  Rscript ggplot_speedup.r --args $BENCHRESULTS_DIR/$LATEST binomial-cpu-Vector.csv
+  for experimentdir in $BENCHRESULTS_DIR/$LATEST/*
+  do
+    echo plotting in $experimentdir
+    BASELINE=$(cat $experimentdir/plot_baseline)
+
+    Rscript ggplot_speedup.r --args $experimentdir $(basename $experimentdir)-$BASELINE.csv
+  done
 }
 
 clean () {
