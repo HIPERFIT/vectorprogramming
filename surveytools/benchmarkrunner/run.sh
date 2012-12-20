@@ -39,16 +39,24 @@ RUNNER=$SCRIPTROOT/dist_*/build/benchmarkunner/benchmarkunner
 mkdir -p $SUMMARYDIR
 LOGFILE=$LOGDIR/$LOGTAG-$BENCHMARK-$INSTANCE
 
+# A useful environment.
+source $ROOT/surveytools/bin/loadHSENV
+
 # Setup the benchmark
 (
-  # Give setup.sh a useful environment.
-  source $ROOT/surveytools/bin/loadHSENV.sh
-
   cd $PROGRAMDIR
   source setup.sh
 ) 2>&1| tee $LOGFILE-Setup
 
 # Actually run the benchmark
+(
+  loadHSENV "buildtools"
+  cabal install --only-dependencies
+  cabal configure
+  cabal build
+  deactivate_hsenv
+)
+
 echo running $PROGRAMDIR/run.sh
 cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER run.sh \
   --summary $SUMMARYFILE \

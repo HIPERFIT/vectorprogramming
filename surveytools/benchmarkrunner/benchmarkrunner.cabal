@@ -13,6 +13,7 @@ cabal-version:       >=1.8
 executable benchmarkunner
   build-depends : base, criterion, process, filepath
   main-is: BenchmarkRunner/Main.hs
+  ghc-options: -rtsopts -threaded
 
 --library
 --  exposed-modules:     BenchmarkRunner.Main, BenchmarkRunner.External
