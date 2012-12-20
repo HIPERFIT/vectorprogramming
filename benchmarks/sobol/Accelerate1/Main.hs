@@ -8,6 +8,8 @@ import Data.Array.Accelerate (constant, toList, fromList, index1)
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 
+import System.IO
+
 import Sobol
 
 runsobol :: Int -> [Double]
@@ -17,6 +19,9 @@ sobolSequence :: Int -> [[Double]]
 sobolSequence n = Prelude.map runsobol [0..n-1]
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   execute sobolSequence
 

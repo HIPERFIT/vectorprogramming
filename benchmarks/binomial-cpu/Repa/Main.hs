@@ -12,6 +12,7 @@ import Data.Array.Repa.Eval
 import Prelude hiding (map, zipWith)
 
 import Control.Monad.Identity (runIdentity)
+import System.IO
 
 type F = Double
 
@@ -85,6 +86,9 @@ repa_head arr = arr `unsafeIndex` (Z :. 0)
 
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   execute binom
 

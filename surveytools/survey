@@ -10,27 +10,31 @@ BUILDROOT=$ROOT/build
 BENCHROOT=$ROOT/benchmarks
 RESULTROOT=$ROOT/results
 HSENVROOT=$BUILDROOT/hsenvs
-LOGDIR=$BUILDROOT/logs
+LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
+LOGDIR=$BUILDROOT/logs/$LOGTAG
+mkdir -p $LOGDIR
 
 SURVEYTOOLS_DIR=$SCRIPTROOT
 BENCHRESULTS_DIR=$RESULTROOT/benchmark-summaries
 BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
 
-LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
 
 source $SURVEYTOOLS_DIR/bin/loadHSENV
 
 setup() {
+  (
   $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla --vanilla 7.6.1 vanilla
 
   #rebuild the benchmarkrunner
   (
     cd $SURVEYTOOLS_DIR/benchmarkrunner
     loadHSENV "buildtools"
+    cabal install --only-dependencies
     cabal configure
     cabal build
     deactivate_hsenv
   )
+  )  2>&1| tee $LOGDIR/Survey-Setup
 
 }
 
@@ -112,12 +116,14 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --nightly)
+      LOGTAG=$(date +%Y-%m-%d)-Nightly
+      LOGDIR=$BUILDROOT/logs/$LOGTAG
       (
       #clean
       #setup
       benchmark
       plot
-      ) &> $BUILDROOT/logs/$LOGTAG-Nightly
+      ) &> $LOGDIR/Survey-Nightly
       shift
       ;;
     --setup)

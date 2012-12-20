@@ -7,11 +7,15 @@ import qualified Data.Array.Accelerate as A
 import qualified Data.Array.Accelerate.CUDA as A
 
 import American
+import System.IO
 
 binom :: Int -> FloatRep
 binom = head . A.toList . A.run . binomAcc
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   execute binom
 

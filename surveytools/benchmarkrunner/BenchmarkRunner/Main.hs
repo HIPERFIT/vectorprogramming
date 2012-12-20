@@ -56,5 +56,6 @@ benchmarks args bench =
 
 main = do
   exec:rest <- getArgs
-  extProc <- initialiseExt exec []
+  extProc <- initialiseExt exec [] -- "/bin/bash" ["-c", exec]
   withArgs rest $ runTestIO $ benchmarkExt extProc
+  terminateExt extProc

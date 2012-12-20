@@ -12,6 +12,7 @@ import qualified Data.Array.Nikola.Backend.CUDA.TH as NTH
 import Data.Array.Nikola.Backend.CUDA (initializeCUDACtx)
 
 import Sobol
+import System.IO
 
 -- sobolIndRuntimeCompiled :: Int -> CV.Vector SpecReal
 -- sobolIndRuntimeCompiled = NH.compile sobolInd . Prelude.fromIntegral
@@ -23,6 +24,9 @@ sobolSequence :: (Int -> CV.Vector SpecReal) -> Int -> [[SpecReal]]
 sobolSequence sobol n = map (CV.toList . sobol) [0..n-1]
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   initializeCUDACtx
   putStrLn "OK"
   execute (sobolSequence (sobolIndPrecompiled . Prelude.fromIntegral))

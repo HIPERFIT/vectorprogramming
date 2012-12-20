@@ -13,6 +13,7 @@ import Data.Array.Nikola.Backend.CUDA (initializeCUDACtx)
 import Data.Int
 
 import Sobol
+import System.IO
 
 -- -- Would be nice to make the length parameter unnecessary here. We
 -- -- haven't found away around that yet.
@@ -27,6 +28,9 @@ sobolSequence :: (Int32 -> CV.Vector Int32 -> CV.Vector SpecReal) -> Int -> [Spe
 sobolSequence sobol n = CV.toList . sobol (Prelude.fromIntegral n) . CV.fromList $ map Prelude.fromIntegral [0..n-1]
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   initializeCUDACtx
   putStrLn "OK"
   execute (sobolSequence (sobolIndPrecompiled . Prelude.fromIntegral))

@@ -9,6 +9,7 @@ import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
 
 import Sobol
+import System.IO
 
 sobSeq :: Int -> Array DIM2 SpecReal
 sobSeq n = run $ mapsobolInd (fromList (Z :. n) [0..n])
@@ -26,6 +27,9 @@ sobolSequence :: Int -> [[Double]]
 sobolSequence = to2DList . sobSeq
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   execute sobolSequence
 

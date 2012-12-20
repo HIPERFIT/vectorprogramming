@@ -5,6 +5,7 @@ import System.Exit (exitSuccess)
 
 import Data.List(foldl')
 import System.Environment(getArgs)
+import System.IO
 
 -- Pointwise manipulation of vectors and scalars
 v1 ^*^ v2 = V.zipWith (*) v1 v2
@@ -47,6 +48,9 @@ binom expiry = V.head first
     qUR = q/stepR; qDR = (1-q)/stepR
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   execute binom
 

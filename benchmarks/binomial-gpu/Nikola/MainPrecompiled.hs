@@ -5,8 +5,12 @@ import System.Exit (exitSuccess)
 
 import qualified Data.Array.Nikola.Backend.CUDA as C
 import American
+import System.IO
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   C.initializeCUDACtx
   putStrLn "OK"
   execute (binomRun $ binomCompiled defaultModel)

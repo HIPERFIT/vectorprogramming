@@ -23,8 +23,9 @@ BUILDROOT=$ROOT/build
 BENCHROOT=$ROOT/benchmarks
 RESULTROOT=$ROOT/results
 HSENVROOT=$BUILDROOT/hsenvs
-LOGDIR=$BUILDROOT/logs
+LOGDIR=$BUILDROOT/logs/$LOGTAG
 mkdir -p $LOGDIR
+LOGFILE=$LOGDIR/$BENCHMARK-$INSTANCE
 
 # The main directory of the test program
 PROGRAMDIR=$BENCHROOT/$BENCHMARK/$INSTANCE
@@ -37,28 +38,28 @@ REPORTFILE=$SUMMARYDIR/$NAME-report.html
 RUNNER=$SCRIPTROOT/dist_*/build/benchmarkunner/benchmarkunner
 
 mkdir -p $SUMMARYDIR
-LOGFILE=$LOGDIR/$LOGTAG-$BENCHMARK-$INSTANCE
 
-# A useful environment.
+# Useful environments:
 source $ROOT/surveytools/bin/loadHSENV
+
+buildCabal() {
+  # What you want most of the time when building benchmarks via cabal
+  cabal install --only-dependencies
+  cabal configure
+  cabal build
+}
+
+cd $PROGRAMDIR
 
 # Setup the benchmark
 (
-  cd $PROGRAMDIR
   source setup.sh
 ) 2>&1| tee $LOGFILE-Setup
 
 # Actually run the benchmark
-(
-  loadHSENV "buildtools"
-  cabal install --only-dependencies
-  cabal configure
-  cabal build
-  deactivate_hsenv
-)
-
+TIMEOUTMINS=1
 echo running $PROGRAMDIR/run.sh
-cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER run.sh \
+#cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER $PROGRAMDIR/run.sh \
+cat $BENCHROOT/$BENCHMARK/inputs | timeout --foreground $(($TIMEOUTMINS*60)) $RUNNER $PROGRAMDIR/run.sh \
   --summary $SUMMARYFILE \
   --output $REPORTFILE +RTS -N1 2>&1| tee $LOGFILE-Run
-

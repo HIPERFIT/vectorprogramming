@@ -2,10 +2,14 @@ module Main where
 
 import Control.Monad (when, forever)
 import System.Exit (exitSuccess)
-
+import System.IO
 import Sobol
 
 main = do
+  -- We're not connected to a terminal, so we need to hFlush by default.
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+
   putStrLn "OK" -- no preparation steps
   execute sobolSequence
 

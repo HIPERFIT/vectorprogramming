@@ -6,8 +6,12 @@ import System.Exit (exitSuccess)
 import Data.Array.Nikola.Backend.CUDA (initializeCUDACtx)
 import qualified American.Nikola as AMN
 
+import System.IO
 
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
+  hSetBuffering stderr LineBuffering
   initializeCUDACtx
   putStrLn "OK"
   execute AMN.binomCompiled
