@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -18,7 +18,7 @@ BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
 
 LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
 
-source $SURVEYTOOLS_DIR/bin/loadHSENV.sh
+source $SURVEYTOOLS_DIR/bin/loadHSENV
 
 setup() {
   $SURVEYTOOLS_DIR/setup/install-hsenv --nikola --accelerate-github --vanilla 7.4.2 vanilla --vanilla 7.6.1 vanilla
@@ -93,7 +93,7 @@ show_usage() {
   echo "  --plot          Plot the lastest benchmark execution"
   echo "  --revdeps       Count reverse dependencies"
   echo "  --thebigbutton  Alias for '--setup --benchmark --plot'"
-  echo "  --nightly       Alias for '-- clean --setup --benchmark --plot'"
+  echo "  --nightly       Alias for ' --benchmark --plot'"
   echo "  --usage"
 }
 
@@ -113,8 +113,8 @@ while [ $# -gt 0 ]; do
       ;;
     --nightly)
       (
-      clean
-      setup
+      #clean
+      #setup
       benchmark
       plot
       ) &> $BUILDROOT/logs/$LOGTAG-Nightly

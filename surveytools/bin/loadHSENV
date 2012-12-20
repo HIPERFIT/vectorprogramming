@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Assumes that $HSENVROOT is a defined environment variable
+# Assumes that $ROOT is a defined environment variable
 
 sourceit () {
-  HSENV=$1
-  source $HSENVROOT/$HSENV/.hsenv_$HSENV/bin/activate
+  HSENV_=$1
+  source $ROOT/build/hsenvs/$HSENV_/.hsenv_$HSENV_/bin/activate
 }
 
 loadHSENV () {
@@ -26,6 +26,9 @@ loadHSENV () {
       ;;
     vanilla)
       sourceit "vanilla-GHC7.4.2"
+      ;;
+    buildtools)
+      sourceit "buildtools-GHC7.4.2"
       ;;
     *)
       echo "Unknown parameter $1"
