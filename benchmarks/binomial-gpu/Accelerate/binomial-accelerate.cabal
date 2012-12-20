@@ -1,10 +1,10 @@
-name:                benchmark-binomial-gpu-Accelerate
+name:                binomial-accelerate
 version:             0.1.0.0
 author:              Martin Dybdal, Ken Friis Larsen
 build-type:          Simple
 cabal-version:       >=1.8
 
-executable benchmark-binomial-gpu-Accelerate
+executable binomial-accelerate
   main-is: Main.hs
-  build-depends:       base, accelerate, accelerate-cuda, benchmarkrunner
+  build-depends:       base, accelerate, accelerate-cuda
   ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

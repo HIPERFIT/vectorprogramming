@@ -2,13 +2,15 @@
 
 module Main where
 
+import Control.Monad (when, forever)
+import System.Exit (exitSuccess)
+
 import Data.List (foldl')
 import Data.Array.Repa hiding ((-^), (*^))
 import Data.Array.Repa.Eval
 
 import Prelude hiding (map, zipWith)
 
-import BenchmarkRunner.Main (runTest)
 import Control.Monad.Identity (runIdentity)
 
 type F = Double
@@ -25,8 +27,6 @@ c *^ v = map (c *) v
 
 pmax v c = map (max c) v
 ppmax = zipWith max
-
-main = runTest binom
 
 force :: (Target r2 e,
           Load r1 sh e) => Int -> Array r1 sh e -> Array r2 sh e
@@ -82,3 +82,15 @@ repa_tail arr = extract (Z :. 1) (Z :. len - 1) arr
   where (Z :. len) = extent arr
 {-# INLINE repa_head #-}
 repa_head arr = arr `unsafeIndex` (Z :. 0)
+
+
+main = do
+  putStrLn "OK" -- no preparation steps
+  execute binom
+
+execute :: (Read a, Show b) => (a -> b) -> IO ()
+execute f = forever $ do
+  str <- getLine
+  when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
+  putStrLn $ "RESULT " Prelude.++ (take 150 . show . f . read $ str)
+

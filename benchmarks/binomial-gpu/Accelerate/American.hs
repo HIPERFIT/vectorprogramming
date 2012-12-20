@@ -1,34 +1,33 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-module American (binom, FloatRep) where
-import Data.Array.Accelerate as A
+module American (binomAcc, FloatRep) where
+
 import Prelude               as P
+import Data.Array.Accelerate as A
 import Data.List(foldl1')
 
 -- Pointwise manipulation of vectors an scalars
 infixl 7 ^*^
 infixl 6 ^+^
+(^*^), (^+^) :: (Elt a, IsNum a) => Acc (Vector a) -> Acc (Vector a) -> Acc (Vector a)
 v1 ^*^ v2 = A.zipWith (*) v1 v2
 v1 ^+^ v2 = A.zipWith (+) v1 v2
 
 infixl 7 *^
 infixl 6 -^
+(-^), (*^) :: (Elt a, IsNum a) => Exp a -> Acc (Vector a) -> Acc (Vector a)
 c -^ v = A.map (c -) v
 c *^ v = A.map (c *) v
 
+pmax :: (Elt a, IsScalar a) => Acc (Vector a) -> Exp a -> Acc (Vector a)
 pmax v c = A.map (A.max c) v
+
+ppmax :: (Elt a, IsScalar a) => Acc (Vector a) -> Acc (Vector a) -> Acc (Vector a)
 ppmax = A.zipWith A.max
 
-vtake i v = A.take (A.constant i) v
-vdrop i v = A.drop (A.constant i) v
-
 type FloatRep = Float
---type FloatRep = Double -- I would like to use Double, but then I get a large numbers of of ptxas errors like:
-                          -- ptxas /tmp/tmpxft_00006c13_00000000-2_dragon26988.ptx, line 83; warning : Double is not supported. Demoting to float
-                          -- and I just compute NaN
 
 
-binom :: Int -> Acc (Vector FloatRep)
-binom expiry = first
+binomAcc :: Int -> Acc (Vector FloatRep)
+binomAcc expiry = first
   where
     -- Actually don't want to share these definitions: they are relatively
     -- cheap so by parameterising by 'i' we effectively "force inline" into each

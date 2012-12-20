@@ -1,12 +1,17 @@
 module Main where
 
-import qualified Data.Array.Nikola.Backend.CUDA as C
-import American
+import Control.Monad (when, forever)
+import System.Exit (exitSuccess)
+
+import Data.Array.Nikola.Backend.CUDA (initializeCUDACtx)
+import qualified American.Nikola as AMN
+
 
 main = do
-  C.initializeCUDACtx
+  initializeCUDACtx
   putStrLn "OK"
-  execute (binomRun $ binom defaultModel)
+  execute AMN.binomCompiled
+
 
 execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do

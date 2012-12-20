@@ -48,3 +48,5 @@ results/
 .shake.database
 *.swp
 .shelly/
+temp.cu
+temp.fatbin

@@ -1,13 +1,23 @@
 module Main where
 
-import American
-import BenchmarkRunner.Main(runTest)
+import Control.Monad (when, forever)
+import System.Exit (exitSuccess)
 
 import qualified Data.Array.Accelerate as A
---import Data.Array.Accelerate.Interpreter (run)
-import Data.Array.Accelerate.CUDA (run)
+import qualified Data.Array.Accelerate.CUDA as A
 
-main = runTest go
-  where
-    go :: Int -> FloatRep
-    go n = head $ A.toList $ run (binom n)
+import American
+
+binom :: Int -> FloatRep
+binom = head . A.toList . A.run . binomAcc
+
+main = do
+  putStrLn "OK" -- no preparation steps
+  execute binom
+
+execute :: (Read a, Show b) => (a -> b) -> IO ()
+execute f = forever $ do
+  str <- getLine
+  when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
+  putStrLn $ "RESULT " ++ (take 150 . show . f . read $ str)
+

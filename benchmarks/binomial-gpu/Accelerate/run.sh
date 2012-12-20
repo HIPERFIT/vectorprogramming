@@ -1,4 +1,3 @@
 #!/bin/bash
-HSENV_=accelerate-github-GHC7.6.1
-buildBenchmark $HSENV_
-runBenchmark $HSENV_ benchmark-binomial-gpu-Accelerate
+
+exec ./dist_*/build/binomial-accelerate/binomial-accelerate $@

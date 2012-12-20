@@ -10,11 +10,11 @@ double american_put_pricer(int expiry) {
   double S; 
   double S0=100; double r=0.03; double alpha=0.07; double sigma=0.2; 
 
-  double capT=1; double strike=100; 
+  double strike=100; 
 
-  const int n=252*expiry;
+  const int n=256*expiry;
 
-  double dt=capT/n;
+  double dt=((double)expiry)/n;
 
   double u=exp(alpha*dt+sigma*sqrt(dt)); 
   double d=exp(alpha*dt-sigma*sqrt(dt)); 
@@ -41,14 +41,6 @@ double american_put_pricer(int expiry) {
   }
 
   return putA[0];
-
-  /* cout << "\nThe put price is " << putA[0] << "\n \n"; */
-
-  /* time(&t2); */
-
-  /* cout << Nrep << " iterations took " <<  1000*difftime(t2,t1) << " milliseconds\n" << endl; */
-
-  /* return 0;  */
 }
 
 
