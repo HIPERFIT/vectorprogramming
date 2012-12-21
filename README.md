@@ -20,7 +20,7 @@ benchmarks  : executable experiments.
 
 experiments : every case starts here. Can be every kind of experiment
 
-surveytools : scripts for gathering survey data. See [wiki page](wiki/Surveytools)
+surveytools : scripts for gathering survey data. See [wiki page](vectorprogramming/wiki/Surveytools)
 
 results     : output from surveytools
 
