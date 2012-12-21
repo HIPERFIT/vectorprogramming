@@ -17,10 +17,10 @@ benchmarks  : executable experiments.
    - [language1]
    - ...
  - ...
- 
+
 experiments : every case starts here. Can be every kind of experiment
 
-surveytools : scripts for gathering survey data
+surveytools : scripts for gathering survey data. See [wiki page](wiki/Surveytools)
 
 results     : output from surveytools
 
