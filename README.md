@@ -7,25 +7,27 @@ GPUs, DSLs, vectorization, financial applications and functional programming.
 Directory organisation
 ======================
 
-benchmarks  : executable experiments.
- - [experiment0]
-   - [language0]
-   - [language1]
-   - ...
- - [experiment1]
-   - [language0]
-   - [language1]
-   - ...
- - ...
+* /benchmarks  : executable experiments.
+  - /<experiment0>
+    - /<insance0>
+      - /run.sh
+      - /setup.sh
+    - /...
+  - /<instance1>
+    - /...
+  - /<experiment1>
+    - /...
 
-experiments : every case starts here. Can be every kind of experiment
+* /experiments - every case starts here. Can be every kind of experiment
 
-surveytools : scripts for gathering survey data. See [wiki page](vectorprogramming/wiki/Surveytools)
+* /surveytools - scripts for gathering survey data. See [the wiki page](vectorprogramming/wiki/Surveytools).
 
-results     : output from surveytools
+* /results -output from surveytools
 
-build       : build files for surveytools
- - hsenvs   : Local GHC installations
- - ghcs     : Cache of GHC installation files
+* /build - build files for surveytools
+  - /hsenvs - Local GHC installations
+  - /ghcs - Cache of GHC installation files
+  - /logs - Logfiles from all scripts, i.e. installation/setup and benchmark running.
 
-tex         : reporting
+
+* tex - report text and code
