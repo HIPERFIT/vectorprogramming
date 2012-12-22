@@ -127,14 +127,12 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --nightly)
-      LOGTAG=$(date +%Y-%m-%d)-Nightly
-      LOGDIR=$BUILDROOT/logs/$LOGTAG
       (
       #clean
       #setup
       benchmark
       plot
-      ) &> $LOGDIR/Survey-Nightly
+      ) &> /dev/null
       shift
       ;;
     --setup)
