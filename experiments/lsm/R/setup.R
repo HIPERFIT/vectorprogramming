@@ -1,7 +1,12 @@
 ## Rolfs code
 ## http://www.math.ku.dk/~rolf/FAMOES/
-N.paths <- 10000
+
+# Simulation parameters
+N.paths <- 200
 N.points <-252
+
+
+# Option parameters
 S.0<-S0<-100
 S.vol<-0.2
 r<-0.03
@@ -10,7 +15,7 @@ Maturity <- 1
 t.vec<-Maturity*0:N.points/N.points
 dt<-Maturity/N.points
 
- options(object.size=2000*(N.points+1)*N.paths)
+options(object.size=2000*(N.points+1)*N.paths)
 #S.matrix<-matrix(scan('LS.testcasedata'),ncol=4,byrow=T)
 S.matrix<-matrix(ncol=(N.points+1),nrow=(2*N.paths))
 S.matrix[,1]<-S.0

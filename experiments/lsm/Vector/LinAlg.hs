@@ -1,4 +1,4 @@
-module LinAlg (polyfit, polyval) where
+module LinAlg (polyfit, polyval, polyvals) where
 
 import Data.Vector hiding ((++))
 import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or)
@@ -7,11 +7,13 @@ import Debug.Trace
 import qualified Data.Packed.Matrix as HM
 import qualified Numeric.LinearAlgebra.Algorithms as HM
 
-polyval :: Vector Double -> Vector Double -> Double
-polyval p xs = sum $ zipWith3 (\p' n' x' -> p'*x'**(fromIntegral n')) p pows xs
+polyvals p = map (polyval p)
+
+polyval :: Vector Double -> Double -> Double
+polyval p x = sum $ zipWith (\p' n' -> p'*x**(fromIntegral n')) p pows
   where
    n = length p
-   pows = fromList [n-1..0]
+   pows = reverse $ fromList [0..n-1]
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
 vander :: Vector Double -> Int -> Vector (Vector Double)
@@ -23,14 +25,15 @@ vander xs degree = transpose $ generate (degree + 1) (\x -> map (** (fromIntegra
 -- * Solve system A*c = y for c
 --  - This can be done by LU, Cholesky or QR decomposition
 polyfit :: Vector Double -> Vector Double -> Int -> Vector Double
-polyfit xs ys degree = traceShow ys $ c --zipWith (/) c scale
+polyfit xs ys degree = c --zipWith (/) c scale
   where
     a = vander xs degree
 --    scale = map (sqrt . sum . (map (\x -> x*x))) $ transpose a
 --    lhs = transpose $ zipWith (\as s -> map (/s) as) (transpose a) scale
-    c = lstsq_HMatrix a ys -- solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
+--    c = lstsq_cholesky a ys 
+    c = lstsq_HMatrix a ys --solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
 
-mdim a = (HM.rows a, HM.cols a)
+--mdim a = (HM.rows a, HM.cols a)
 
 lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
 lstsq_HMatrix a b = fromList . Prelude.map Prelude.head . HM.toLists $ HM.linearSolveLS amat bmat
@@ -64,7 +67,7 @@ nullMatrix a = null a || or (map null a)
 
 cholesky :: Vector (Vector Double) -> Vector (Vector Double)
 cholesky a | nullMatrix a = empty
-cholesky a = merge l11 l21 l22
+cholesky a = traceShow l11 $ merge l11 l21 l22
   where
     l11 = sqrt a11
     l21 = map (\x -> x / l11) a21

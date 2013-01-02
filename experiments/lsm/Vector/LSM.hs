@@ -7,24 +7,29 @@ import Control.Monad
 import Control.DeepSeq
 import LinAlg
 
-m :: Int
-m = 50            -- time steps
-reg = 9
+-- Simulation parameters
+n_paths :: Int
+n_paths = 20000          -- time steps
+n_points :: Int
+n_points = 252
+reg = 2
 
-r,vol,s0,t,v0_right,dt,df :: Double
-r   = 0.06               -- short rate
+-- American put option parameters
+r,vol,s0,t,dt,df :: Double
+r   = 0.03               -- short rate
 vol = 0.2                -- volatility
-s0  = 36.0               -- initial stock level
+s0  = 100.0               -- initial stock level
 t   = 1.0                -- time - to - maturity
-v0_right = 4.48637       -- American Put Option ( 500 steps bin . model)
-dt  = t/(fromIntegral m) -- length of time interval
+dt  = t/(fromIntegral n_points) -- length of time interval
 df  = exp(-r*dt)         -- discount factor per time interval
+k   = 100.0              -- strike price
 
 -- ^ Generate @n@ samples from a mean=0, stddev=1 normal distribution
 rng :: Int -> IO (Vector Double)
 rng n = do
   gen <- newStdGen
-  return . DV.fromList . take n $ normals gen
+  let list = DV.fromList . take (n `div` 2) $ normals gen
+  return $ list DV.++ (DV.reverse list)
 
 -- ^ Monadic unfoldr. Stops unfolding after N steps and includes the
 -- seed in the result.
@@ -35,52 +40,62 @@ unfoldrNM f n seed = do
   xs <- unfoldrNM f (n-1) x
   return (seed : xs)
 
-
-testUnfold :: IO [Int]
-testUnfold = unfoldrNM (\x -> return $ x + 1) 5 0
+-- testUnfold :: IO [Int]
+-- testUnfold = unfoldrNM (\x -> return $ x + 1) 5 0
 
 -- ^ Generate paths
 genPaths :: Int -> Int -> IO (Vector(Vector Double))
 genPaths m n = DV.fromList `fmap` unfoldrNM iter m initvec
   where
+    coef1 = dt*(r-0.5*vol*vol)
+    coef2 = vol*sqrt(dt)
     initvec :: Vector Double
     initvec = DV.generate n (const s0)
 
     iter :: Vector Double -> IO (Vector Double)
     iter prev = do
       ran <- rng n
-      return $ DV.zipWith (\s x -> s * exp((r-(vol**2)/2)*dt + vol*x*sqrt(dt))) prev ran
+      return $ DV.zipWith (\s x -> s * exp(coef1 + x*coef2)) prev ran
 
 iv :: Vector Double -> Vector Double
-iv = DV.map (\x -> max (40-x) 0)
+iv = DV.map (\x -> max (k-x) 0)
 
 average :: Vector Double -> Double
 average xs = DV.sum xs / (fromIntegral $ DV.length xs)
 
+pick :: Vector (Bool, a) -> Vector a
+pick = DV.map snd . DV.filter fst
+
 lsm :: Int -> Int -> IO Double
-lsm m n_paths = do
-  s <- genPaths m n_paths
-  s <- readPaths
-  let v = iv (DV.last s) :: Vector Double
-  res <- DV.foldM lsm' v (DV.reverse $ DV.init s)
+lsm n_points n_paths = do
+  s <- genPaths n_points n_paths
+  let init_disccashflow = iv (DV.last s) :: Vector Double
+  res <- DV.foldM lsm' init_disccashflow (DV.reverse $ DV.init s)
   return . average $ res
  where 
-  exercise_decision c h v | h > c = h
-                          | otherwise = v
+  exercise_decision ev iv v | iv > 0 && iv > ev = iv
+                            | otherwise = v
 
   lsm' :: Vector Double -> Vector Double -> IO (Vector Double)
-  lsm' v s = do
-    let h = iv s
-        v' = DV.map (*df) $ v
-        rg = polyfit s v' reg
-        c = polyval rg s
-    return $ DV.zipWith (exercise_decision c) h v'
+  lsm' disccashflow s = do
+    let intrinsic_value = iv s
+        p = DV.map (>0) intrinsic_value
+        default_out = DV.map (*df) disccashflow
+        y = pick $ DV.zip p default_out
+        spick = pick $ DV.zip p s
+        rg = polyfit spick y reg
+        estimatedtimevalue = polyvals rg s
+    print $ DV.take 10 estimatedtimevalue
+    return $ DV.zipWith3 exercise_decision 
+                estimatedtimevalue
+                intrinsic_value
+                default_out
 
 main :: IO ()
-main = print =<< lsm m n_paths
+main = print =<< lsm n_points n_paths
  where
-   m = 50 -- time steps
-   n_paths = 100
+   n_points = 252 -- time steps
+   n_paths = 1000
 
 
 -- main :: IO ()
@@ -98,16 +113,16 @@ main = print =<< lsm m n_paths
 --     printPath :: Int -> Vector Double -> IO ()
 --     printPath i xs = zipWithM_ (\x -> putStrLn . ((show i ++ "," ++ show x ++ ",") ++) . show) [0..] $ DV.toList xs
 
-readPaths :: IO (Vector (Vector Double))
-readPaths = do
-  content <- readFile "paths.csv"
-  let processline :: String -> Vector Double
-      processline line = DV.fromList . map read $ words line
-  return . DV.fromList . map processline $ lines content
+-- readPaths :: IO (Vector (Vector Double))
+-- readPaths = do
+--   content <- readFile "paths.csv"
+--   let processline :: String -> Vector Double
+--       processline line = DV.fromList . map read $ words line
+--   return . DV.fromList . map processline $ lines content
                       
 -- main = writePaths =<< genPaths 50 (4*4096)
 
 --instance VU.Unbox a => NFData (VU.Vector a)
 
-instance NFData a => NFData (DV.Vector a) where
-  rnf v = DV.foldl' (\x y -> y `deepseq` x) () v
+-- instance NFData a => NFData (DV.Vector a) where
+--   rnf v = DV.foldl' (\x y -> y `deepseq` x) () v
