@@ -1,12 +1,73 @@
+% Disposition for introduction:
+% \begin{itemize}
+% \item Where does performance and programmer efficiency come from
+% \item The free lunch is over
+% \item (Embarassingly parallel problems)
+% \item Why the language-based approach?
+% \item Parallel Functional Programming
+% \item What is a "vector language"?
+% \item Our strategy: implement real world example applications, study
+%   limitations of current approaches, extend and modify until we get
+%   better results.
+% \item Report Outline
+% \end{itemize}
+
 \chapter{Introduction}
-\begin{itemize}
-\item The free lunch is over
-\item Areas where high-performance computing is found fruitful
-\item Embarassingly parallel problems
-\item Why the language-based approach?
-\item Parallel Functional Programming
-\item What is a "vector language"?
-\end{itemize}
+Ever since the first electronic computers was built during the Second
+World War, there has been a wish for tackling larger and more complex
+problems, which in turn has created an increasing demand for
+performance improvements and increased programmer
+productivity. Performance improvements originate from improvements in
+either hardware or the employed algorithms. Programmer productivity,
+on the other hand, correlates with the features of the used
+programming language. A language providing high programmer efficiency
+should make it easy to implement and reason about algorithms, make it
+hard to make mistakes and when a mistake happens, make it easy to
+uncover the cause of it. \todo{reformulate prev. sentence}
+
+For a handful of decades, we have been able to increase performance
+through hardware improvements of sequential processors and we thus
+have been able to stick with more or less the same model of
+computation. Recently, hardware developers have faced physical
+barriers, making further performance improvements of sequential
+processors impractical, and they have had to go new ways to obtain the
+desired speed-up. These new architectures calls for new algorithms and
+models of computation, as well as new languages and programming tools
+to keep the software development complexity at a tolerable level.
+
+We will focus on software development for \textit{graphics processing
+  units} (GPUs), which were originally intended solely for computer
+graphics, but have in recent years been found useful in many other
+applications. They have gained so much popularity that they are a main
+ingredient in quite a few of todays largest
+supercomputers. \todo{Which applications?}
+
+Even though we think of graphics processors as \textit{modern
+  hardware}, the software development tools in widespread for
+programming them are far from modern. CUDA and OpenCL, the two main
+languages for programming GPUs are low-level languages with manual
+memory management, limited abstractions, no \todo{critise
+even more!}. Alternative approaches have been tried out, but none of them
+have found as widespread use as CUDA and OpenCL. Such higher level
+languages include Theano, Accelerate, Nikola, Obsidian, Intel Array
+Building Blocks, Qilin and Copperhead.
+
+\todo{describe the shared characteristica of these languages}
+\todo{define parallel functional programming}
+\todo{define ''vector language''}
+
+We want to join in and contribute to the development of these
+languages, and we believe that such an endeavour should start with
+evaluating current state of the art, such that we can make sure our
+contributions will be relevant and beneficial. Thus, the first part of
+this report is a survey of some of the existing parallel functional
+programming languages. We have taken the strategy of implementing some
+real world example applications from the financial sector, to study
+the limitations of current approaches.
+
+\todo{Which kind of problems we have found}
+
+\todo{Something about what we have done to alleviate those problems}
 
 \section{Report outline}
 The report is structured as follows. This introductory chapter is
@@ -16,7 +77,7 @@ and one on hardware platforms such as GPUs. The rest of the report
 after these introductory chapters is divided into two independent
 parts. The first part contains a survey of currently used vector
 languages and their implementation techniques. The second part
-describes our own efforts into \ldots
+describes our own efforts into \todo{\ldots}
 
 %%% Local Variables: 
 %%% mode: latex
