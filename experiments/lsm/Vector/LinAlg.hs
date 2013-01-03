@@ -36,16 +36,19 @@ polyfit xs ys degree = c --zipWith (/) c scale
 --mdim a = (HM.rows a, HM.cols a)
 
 lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
-lstsq_HMatrix a b = fromList . Prelude.map Prelude.head . HM.toLists $ HM.linearSolveLS amat bmat
+lstsq_HMatrix a b = x
   where
     aT = transpose a
     c = aT `matProd` a
     d = aT `matVecProd` b
-    amat :: HM.Matrix Double
-    amat = HM.fromLists . toList $ map toList c
-    bmat :: HM.Matrix Double
---    bmat = HM.fromLists $ [toList b]
-    bmat = HM.fromLists $ Prelude.map (:[]) (toList d)
+    l = cholesky_HMatrix c
+    y = forwardSubstitute l d
+    x = backwardSubstitute (transpose l) y
+
+cholesky_HMatrix :: Vector (Vector Double) -> Vector (Vector Double)
+cholesky_HMatrix a = map fromList . fromList . HM.toLists $ HM.chol amat
+  where
+    amat = HM.fromLists . toList $ map toList a
 
 lstsq_cholesky :: Vector (Vector Double) -> Vector Double -> Vector Double
 lstsq_cholesky a b = x
@@ -67,7 +70,7 @@ nullMatrix a = null a || or (map null a)
 
 cholesky :: Vector (Vector Double) -> Vector (Vector Double)
 cholesky a | nullMatrix a = empty
-cholesky a = traceShow l11 $ merge l11 l21 l22
+cholesky a = merge l11 l21 l22
   where
     l11 = sqrt a11
     l21 = map (\x -> x / l11) a21

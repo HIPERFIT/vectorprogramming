@@ -85,7 +85,6 @@ lsm n_points n_paths = do
         spick = pick $ DV.zip p s
         rg = polyfit spick y reg
         estimatedtimevalue = polyvals rg s
-    print $ DV.take 10 estimatedtimevalue
     return $ DV.zipWith3 exercise_decision 
                 estimatedtimevalue
                 intrinsic_value
@@ -95,7 +94,7 @@ main :: IO ()
 main = print =<< lsm n_points n_paths
  where
    n_points = 252 -- time steps
-   n_paths = 1000
+   n_paths = 20000
 
 
 -- main :: IO ()
