@@ -57,7 +57,7 @@ cd $PROGRAMDIR
 ) 2>&1| tee $LOGFILE-Setup
 
 # Actually run the benchmark
-TIMEOUTMINS=1
+TIMEOUTMINS=20
 echo running $PROGRAMDIR/run.sh
 #cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER $PROGRAMDIR/run.sh \
 cat $BENCHROOT/$BENCHMARK/inputs | timeout --foreground $(($TIMEOUTMINS*60)) $RUNNER $PROGRAMDIR/run.sh \

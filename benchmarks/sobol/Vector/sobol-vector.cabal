@@ -8,5 +8,5 @@ cabal-version:       >=1.8
 
 executable sobol-vector
   main-is:       Main.hs
-  build-depends: base, vector
+  build-depends: base, vector, deepseq
   ghc-options:   -threaded -optlo-O3 -fllvm
