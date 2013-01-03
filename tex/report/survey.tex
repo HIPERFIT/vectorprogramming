@@ -4,8 +4,8 @@ In this and the following chapters we present a small-scale survey of
 current vector languages. The survey was originally conducted to
 orient ourselves in the current landscape of parallel functional
 languages and their implementation, but the results might be of
-interest for others. We do not know of other comparisons with similar
-scope.
+interest for others. We do not know of other comparisons with a
+similar scope.
 
 \section{Languages}
 We have decided to evaluate and compare the languages Accelerate
@@ -448,8 +448,21 @@ from such an implementation.
 
 
 \section{Benchmarks}
+
+\subsection{Benchmark setup}
+Several of the libraries we have tested requires individual
+compilation steps before the actual computation can take place. We
+have decided not to include all initialization in the running times,
+and only record the time used on the actual computation and eventual
+memory allocation and transfers. This is done to make the comparison
+fair, and because we think it is more important to optimize the actual
+computation. Optimizing the compilation or interpretation performance
+is also important, but we find that to be less of priority now and it
+thus out of our current scope.
+
+\subsection{Results}
 Speed up graph. In the graph we use the sequential version written
-with Data.Vector as our basis, which the others are compared to.
+with Data.Vector as a baseline for the comparison.
 
 Accelerate is not included, because of problems in their stream fusion
 algorithm leading to running times that evolve
