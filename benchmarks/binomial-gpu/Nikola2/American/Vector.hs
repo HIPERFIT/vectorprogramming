@@ -50,7 +50,7 @@ binom expiry = V.head first
 
     -- standard econ parameters
     strike = 100
-    bankDays = 252
+    bankDays = 256
     s0 = 100
     r = 0.03; alpha = 0.07; sigma = 0.20
 
