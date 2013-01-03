@@ -44,6 +44,7 @@
 
 #include <stdexcept>
 #include <math.h>
+#include <stdio.h>
 
 #include "sobol.h"
 #include "sobol_gold.h"
@@ -53,6 +54,11 @@
 
 int main(int argc, char *argv[])
 {
+
+    // needed to work correctly with piped benchmarkrunner
+    setlinebuf(stdout);
+    setlinebuf(stdin);
+
     bool ok = true;
 
     // We will generate n_vectors vectors of n_dimensions numbers
