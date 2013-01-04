@@ -94,7 +94,7 @@ main :: IO ()
 main = print =<< lsm n_points n_paths
  where
    n_points = 252 -- time steps
-   n_paths = 20000
+   n_paths = 2000
 
 
 -- main :: IO ()

@@ -4,8 +4,8 @@ import Data.Vector hiding ((++))
 import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or)
 import qualified Prelude
 import Debug.Trace
-import qualified Data.Packed.Matrix as HM
-import qualified Numeric.LinearAlgebra.Algorithms as HM
+--import qualified Data.Packed.Matrix as HM
+--import qualified Numeric.LinearAlgebra.Algorithms as HM
 
 polyvals p = map (polyval p)
 
@@ -31,24 +31,24 @@ polyfit xs ys degree = c --zipWith (/) c scale
 --    scale = map (sqrt . sum . (map (\x -> x*x))) $ transpose a
 --    lhs = transpose $ zipWith (\as s -> map (/s) as) (transpose a) scale
 --    c = lstsq_cholesky a ys 
-    c = lstsq_HMatrix a ys --solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
+    c = lstsq_cholesky a ys --solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
 
 --mdim a = (HM.rows a, HM.cols a)
+    
+-- lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
+-- lstsq_HMatrix a b = x -- traceShow c x
+--   where
+--     aT = transpose a
+--     c = aT `matProd` a
+--     d = aT `matVecProd` b
+--     l = cholesky c
+--     y = forwardSubstitute l d
+--     x = backwardSubstitute (transpose l) y
 
-lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
-lstsq_HMatrix a b = x
-  where
-    aT = transpose a
-    c = aT `matProd` a
-    d = aT `matVecProd` b
-    l = cholesky_HMatrix c
-    y = forwardSubstitute l d
-    x = backwardSubstitute (transpose l) y
-
-cholesky_HMatrix :: Vector (Vector Double) -> Vector (Vector Double)
-cholesky_HMatrix a = map fromList . fromList . HM.toLists $ HM.chol amat
-  where
-    amat = HM.fromLists . toList $ map toList a
+-- cholesky_HMatrix :: Vector (Vector Double) -> Vector (Vector Double)
+-- cholesky_HMatrix a = map fromList . fromList . HM.toLists $ HM.chol amat
+--   where
+--     amat = HM.fromLists . toList $ map toList a
 
 lstsq_cholesky :: Vector (Vector Double) -> Vector Double -> Vector Double
 lstsq_cholesky a b = x
