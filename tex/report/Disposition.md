@@ -1,6 +1,6 @@
 Abstract
 
-Introduction and background 
+Introduction and background
  - Overview
  - Necessary finance
  - GPU architectures

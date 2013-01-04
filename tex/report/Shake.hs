@@ -16,8 +16,9 @@ main = shake shakeOptions $ do
     let baseFile = dropExtension out
     -- need [baseFile <.> "tex"]
     need [
+     "cases/binomial.tex",
+     "cases.tex",
      "defaultprelude.tex",
-     "finance.tex",
      "intro.tex",
      "master.tex",
      "ourwork.tex",
