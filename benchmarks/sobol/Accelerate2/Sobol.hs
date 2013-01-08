@@ -37,10 +37,6 @@ length arr = let (_ :. n) = arrayShape arr in n
 grayCode :: Exp Index -> Exp Elem
 grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
 
-sobolIndices :: Acc (Array DIM2 Index)
-sobolIndices = generate (constant $ arrayShape sobol_dirVs_array) 
-                          (snd . unindex2)
-
 -- Manually flattened version
 mapsobolInd_ :: Vector Index -> Acc (Array DIM2 Elem)
 mapsobolInd_ ns =
