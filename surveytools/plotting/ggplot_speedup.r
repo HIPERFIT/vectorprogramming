@@ -33,14 +33,14 @@ for(i in 1:length(csvfiles)) {
 }
 
 frame <- data.frame(Size=dataset[,1]
-                   , Time=basis_data[,2]/dataset[,2] -1
+                   , Time=basis_data[,2]/dataset[,2]
                    , Language=dataset[,8]
                    , Stddev=dataset[,5]
                    )
 
 # Dodge is used to position the bars beside each other instead of on
 # top of each other
-dodge <- position_dodge(width=0.25)
+dodge <- position_dodge(width=0.9)
 
 # Plot
 p = ggplot(data = frame, aes(x=Size, y=Time, fill=Language))
@@ -48,11 +48,12 @@ p = p + geom_bar(stat="identity", position=dodge)
 
 # Add error bars
 limits <- aes(ymax = Time + Stddev, ymin=Time - Stddev)
-p = p + geom_errorbar(limits, position=dodge, width=.1)
+p = p + geom_errorbar(limits, position=dodge, width=.3)
 
 # Configure scales
 p = p + scale_x_log10(breaks=basis_data[,1], name="Problem size (option expiry time in years)")
-p = p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
+p = p + scale_y_log10(breaks=c(0.001,0.01,0.05,0.1,0.5,1,10), name="Speed-up")
+#p = p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
 
 # Hide unnecessary grid lines from x axis
 p = p + theme(panel.grid.minor.x=element_blank())
