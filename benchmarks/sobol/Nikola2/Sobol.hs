@@ -66,9 +66,11 @@ replicateAddFirstDIM n arr =
 
 type DIM3 = DIM2 :. Exp Ix
 
-mapsobolInd_ :: Exp Int32 -> Array G DIM1 (Exp Index) -> Array D DIM2 (Exp Elem)
-mapsobolInd_ lengthn ns =
-  let 
+mapsobolInd_ :: Exp Int32 -> Array D DIM2 (Exp Elem)
+mapsobolInd_ lengthn =
+  let
+    ns = fromFunction (Z :. lengthn) (\(Z :. i) -> i)
+    
     indices :: Array D DIM2 (Exp Ix)
     indices = fromFunction (extent sobol_dirVs_array)
                            (\(Z :. i :. j) -> j)
@@ -100,8 +102,8 @@ mapsobolInd_ lengthn ns =
     f = fold doit (lift (0 :: Elem), lift True) z
   in map fst f
 
-mapsobolInd :: Exp Int32 -> Array G DIM1 (Exp Index) -> Array D DIM2 (Exp SpecReal)
-mapsobolInd lengthn ns = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ lengthn ns
+mapsobolInd :: Exp Int32 -> Array D DIM2 (Exp SpecReal)
+mapsobolInd lengthn = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ lengthn
 
-mapsobolIndr :: Exp Int32 -> Array G DIM1 (Exp Index) -> Array D DIM1 (Exp SpecReal)
-mapsobolIndr lengthn ns = reshape (Z :. lengthn) $ mapsobolInd lengthn ns
+mapsobolIndr :: Exp Int32 -> Array D DIM1 (Exp SpecReal)
+mapsobolIndr lengthn = reshape (Z :. lengthn) $ mapsobolInd lengthn

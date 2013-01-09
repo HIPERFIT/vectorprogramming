@@ -38,22 +38,25 @@ grayCode :: Exp Index -> Exp Elem
 grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
 
 -- Manually flattened version
-mapsobolInd_ :: Vector Index -> Acc (Array DIM2 Elem)
-mapsobolInd_ ns =
-  let 
+mapsobolInd_ :: Index -> Acc (Array DIM2 Elem)
+mapsobolInd_ n =
+  let
+    
+    ns = generate (index1 $ constant n) unindex1
+    
     indices :: Acc (Array DIM2 Index)
     indices = generate (constant $ arrayShape sobol_dirVs_array) 
                        (snd . unindex2)
     
-    indicesRep = replicate (constant $ Z :. length ns :. All :. All) indices
+    indicesRep = replicate (constant $ Z :. n :. All :. All) indices
     
     Z :. i :. j = arrayShape sobol_dirVs_array
     
-    nss = replicate (constant $ Z :. All :. i :. j) (use ns)
+    nss = replicate (constant $ Z :. All :. i :. j) ns
 
     ps = zipWith (testBit . grayCode) nss indicesRep
     
-    dirVsRep = replicate (constant $ Z :. length ns :. All :. All) (use sobol_dirVs_array)
+    dirVsRep = replicate (constant $ Z :. n :. All :. All) (use sobol_dirVs_array)
     
     doit :: Exp (Elem, Bool) -> Exp (Elem, Bool) -> Exp (Elem, Bool)
     doit a b =
@@ -68,5 +71,5 @@ mapsobolInd_ ns =
             b)
   in map fst $ fold doit (constant (0, True)) $ zip dirVsRep ps
 
-mapsobolInd :: Vector Index -> Acc (Array DIM2 SpecReal)
-mapsobolInd ns = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ ns
+mapsobolInd :: Index -> Acc (Array DIM2 SpecReal)
+mapsobolInd n = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ n

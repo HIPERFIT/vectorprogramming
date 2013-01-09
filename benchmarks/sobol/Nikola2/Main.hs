@@ -6,6 +6,7 @@ import Control.Monad (when, forever)
 import System.Exit (exitSuccess)
 import Control.DeepSeq(($!!), NFData(..))
 
+import qualified Data.Vector.Storable as V
 import qualified Data.Vector.CUDA.Storable as CV
 import Data.Array.Nikola.Backend.CUDA hiding (map, (++),take)
 import qualified Data.Array.Nikola.Backend.CUDA.Haskell as NH
@@ -16,17 +17,11 @@ import Data.Int
 import Sobol
 import System.IO
 
--- -- Would be nice to make the length parameter unnecessary here. We
--- -- haven't found away around that yet.
--- sobolIndRuntimeCompiled :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal
--- sobolIndRuntimeCompiled = NH.compile $ mapsobolIndr
+sobolIndPrecompiled :: Int32 -> CV.Vector SpecReal
+sobolIndPrecompiled = $(NTH.compileSig mapsobolIndr (undefined :: Int32 -> CV.Vector SpecReal))
 
-
-sobolIndPrecompiled :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal
-sobolIndPrecompiled = $(NTH.compileSig mapsobolIndr (undefined :: Int32 -> CV.Vector Int32 -> CV.Vector SpecReal))
-
-sobolSequence :: (Int32 -> CV.Vector Int32 -> CV.Vector SpecReal) -> Int -> [SpecReal]
-sobolSequence sobol n = CV.toList . sobol (Prelude.fromIntegral n) . CV.fromList $ map Prelude.fromIntegral [0..n-1]
+sobolSequence :: (Int32 -> CV.Vector SpecReal) -> Int -> V.Vector SpecReal
+sobolSequence sobol n = V.take 150 $ CV.toHostVector $ sobol (Prelude.fromIntegral n)
 
 main = do
   hSetBuffering stdin LineBuffering
@@ -36,8 +31,8 @@ main = do
   putStrLn "OK"
   execute (sobolSequence (sobolIndPrecompiled . Prelude.fromIntegral))
 
-execute :: (NFData b, Read a, Show b) => (a -> b) -> IO ()
+execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
-  putStrLn $ "RESULT " ++ (take 150 . show $!! f . read $ str)
+  putStrLn $ "RESULT " ++ (show . f . read $ str)

@@ -4,28 +4,21 @@ import Control.Monad (when, forever)
 import System.Exit (exitSuccess)
 import Control.DeepSeq(($!!), NFData(..))
 
+import qualified Data.Vector.Storable as V
 import Data.Array.Accelerate.CUDA (run)
-import Data.Array.Accelerate (constant, toList, fromList, index1, arrayShape)
+import Data.Array.Accelerate (constant, toList, fromList, index1, arrayShape, generate)
 import Data.Array.Accelerate.Array.Sugar
 import Data.Array.Accelerate.Smart
+import Data.Array.Accelerate.IO
 
 import Sobol
 import System.IO
 
 sobSeq :: Int -> Array DIM2 SpecReal
-sobSeq n = run $ mapsobolInd (fromList (Z :. n) [0..n])
+sobSeq = run . mapsobolInd
 
-to2DList :: Elt a => Array DIM2 a -> [[a]]
-to2DList arr =
-  let Z :. n :. m = arrayShape arr
-  in tile m $ toList arr
-
-tile :: Int -> [a] -> [[a]]
-tile n xs | Prelude.length xs >= n = take n xs : (tile n $ drop n xs)
-          | otherwise = [xs]
-
-sobolSequence :: Int -> [[Double]]
-sobolSequence = to2DList . sobSeq
+sobolSequence :: Int -> V.Vector Double
+sobolSequence = snd . toVectors . sobSeq
 
 main = do
   hSetBuffering stdin LineBuffering
@@ -39,3 +32,4 @@ execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
   putStrLn $ "RESULT " ++ (take 150 . show $!! f . read $ str)
+
