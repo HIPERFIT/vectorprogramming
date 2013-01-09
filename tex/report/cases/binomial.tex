@@ -1,71 +1,11 @@
-\section{Binomial option pricing}
+\section{The Binomial Algorithm}
 
-\subsection{Options}
+A relatively simple model for computing the price of an american style option
+is the \emph{standard binomial model} \todo{(citation needed) (mentioned by
+Rolf).}. The financial mathematics background for this model is beyond the
+scope of this thesis.
 
-Finance as a mathematical discipline is concerned with the pricing of assets.
-Financial assets can be material objects such as goods, or contracts on other
-assets. The \emph{stock} of a company is a common example of a financial contract.
-
-However, as this definition of a financial asset is recursive, contracts on
-other contracts are possible. An
-\emph{option} to buy or sell some other asset for some price at some point in
-time is a common example, and the one that we will invest some of our effort
-treating. These types of contracts are commonly termed \emph{financial derivatives}.
-
-
-\emph{Option} is the name used collectively for a range of different financial
-contracts that all share some features, namely that an option on an asset $A$
-gives the holder the right to exchange a certain amount of $A$'s for a certain
-strike price $k$ in a certain duration of time up until expiration time $T$.
-
-The different types of options vary then in which exact processes determine the
-size of strike price and the allowed time span where the option may be
-exercised.
-
-We make a distinction between options that grants a right to buy and those that
-grants a right to sell. A \emph{call option} on asset $A$ grants the right to
-buy $A$'s, whereas a \emph{put option} grants the right to sell.
-
-For a concrete example, consider this:
-\begin{example}[European Call Option]
-
-  European options\footnote{The continent of Europe is completely unrelated to
-  the naming of this contract.} are characterised by having a pre-determined
-  constant strike price $k$, and may be exercised only on the expiration time
-  $T$.
-
-  So, having aquired a european call option for 1 of IBM company stock with
-  strike price \$100 and expiration time January 1st, we wait.  When upon the
-  arrival of January 1st we observe that IBM stock is now exchanged valued
-  \$110, we choose to exercise our option right thus recieve 1 stock for \$100.
-  Immediately, we sell this stock on the market for \$110 and have thus earned
-  \$10. Our option was ``in the money ''.
-
-  Note that in reality, the underlying asset rarely changes hands. Instead,
-  only the net difference in strike price and market price is
-  exchanged.\footnote{A consequence of this is that you are not required to
-  actually own any quantity of the underlying asset for which you issue an
-  option for.}
-
-\end{example}
-
-The challenge of option contracts resides in how to determine their price. The
-complexity of that challenge varies along with the differences in parameters.
-
-The value of european options for instance is closely approximated by the Black
-Scholes formula (citation needed), which is a closed form analytical solution.
-
-In contrast to european options lie american options\footnote{which are
-similarly irrelevantly named}, characterised by granting the right to exercise
-at any point in time up until expiration, rather than only at expiration.
-
-This difference in granted rights makes amercan options require a different
-pricing method than european options. But as of today, only nummerical
-approximation schemes are known for this type of contract. While this may be
-detrimental for those that depend on accurate pricing of their financial
-assets, it's all the more interesting for researchers in computating to treat.
-
-\subsection{The Binomial Algorithm}
+Operationally, the model works by ...
 
 %One of the simplest algorithms for pricing American options is based
 %on a binomial probability model.
@@ -79,8 +19,3 @@ last possible exercise time as binomial tree of up and down
 movements. The root carries the current value, its two children
 carries the value after one up or down movement, and so forth. The
 leafs then represents the value at the last time step.
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "master"
-%%% End:
