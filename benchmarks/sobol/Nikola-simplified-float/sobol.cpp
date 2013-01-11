@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     if(!isFirst) {
       printf("RESULT ");
 
-      for(int i = 0; i < 10; i++)
+      for(int i = 0; i < std::min(n_indices,10); i++)
         printf("%f ", h_outputGPU[i]);
 
       printf("\n");
