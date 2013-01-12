@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec ./dist_*/build/sobol-nikola2/sobol-nikola2 $@
+exec ./dist_*/build/sobol-nikola3/sobol-nikola3 $@

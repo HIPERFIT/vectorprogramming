@@ -9,5 +9,5 @@ cabal-version:       >=1.8
 
 executable sobol-nikola3
   main-is:       Main.hs
-  build-depends: base, nikola, vector
+  build-depends: base, nikola, vector, deepseq
   ghc-options:   -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -optlo-O3 -fllvm
