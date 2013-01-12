@@ -27,7 +27,7 @@
 // Internal GPU-side constants and data structures
 ////////////////////////////////////////////////////////////////////////////////
 #define  TIME_STEPS 16
-#define  CACHE_SIZE (256)
+#define  CACHE_SIZE (1024)
 #define CACHE_DELTA (2 * TIME_STEPS)
 #define  CACHE_STEP (CACHE_SIZE - CACHE_DELTA)
 
