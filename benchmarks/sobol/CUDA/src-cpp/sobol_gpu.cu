@@ -139,7 +139,7 @@ __global__ void sobolGPU_kernel(unsigned n_vectors, unsigned n_dimensions, unsig
 extern "C"
 void sobolGPU(int n_vectors, int n_dimensions, unsigned int *d_directions, float *d_output)
 {
-    const int threadsperblock = 64;
+    const int threadsperblock = 1024;
 
     // Set up the execution configuration
     dim3 dimGrid;
