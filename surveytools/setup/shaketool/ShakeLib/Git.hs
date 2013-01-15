@@ -72,10 +72,10 @@ instance Hashable GitRepo where
   hashWithSalt = gHashWithSalt
 
 instance Rule GitRepo () where
-  validStored (GitRepo _ _ _ _) time = do
+  storedValue (GitRepo _ _ _ _) = do
     -- Git repositories older than an hour are no longer valid
     -- (future work)
-    return False
+    return Nothing
 
 gitUpdateRule :: GitRepo ->  Rules ()
 gitUpdateRule repo = do

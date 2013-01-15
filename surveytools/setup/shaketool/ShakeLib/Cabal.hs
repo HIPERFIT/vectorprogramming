@@ -56,17 +56,14 @@ cabalFile (CabalFile file _ _) = file
 cabalFile (CabalHackage nm _) = error "CabalHackage has no defined cabal file!"
 
 instance Rule CabalPackage (Version) where
-  -- Check if the recorded stored version equals the currently stored version
-  validStored pkg (storedVer)  = do
+  -- Retrieve the stored version
+  storedValue pkg = do
     out <- readProcess "ghc-pkg" ["--simple-output","list", cabalPackageName pkg] ""
     case lines out of
      -- extract currently installed version
      hd:_ -> do
-       liftIO $ putStrLn $ "ghc-pkg output: " ++ hd
-       let storedFullName = (cabalPackageName pkg ++ "-" ++ storedVer)
-       liftIO $ putStrLn $ "comparing to: " ++ storedFullName
-       return $ and $ zipWith (==) hd storedFullName
-     _ -> return False
+       return $ Just hd
+     _ -> return Nothing
 
 -- | Define a rule to build a haskell package
 hsPkgRule :: CabalPackage -> (CabalPackage -> Action ()) -> Rules ()

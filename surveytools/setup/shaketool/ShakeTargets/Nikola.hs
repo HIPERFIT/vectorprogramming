@@ -20,7 +20,7 @@ cudaMainlandCabal =   CabalFile "cuda-mainland/cuda.cabal" "cuda"
 
 cudaCabal =   CabalFile "cuda/cuda.cabal" "cuda"
                -- ["--extra-include-dirs=/usr/local/cuda/include/"]
-               ["--extra-include-dirs=/usr/local/cuda-5.0/include/"]
+--               ["--extra-include-dirs=/usr/local/cuda-5.0/include/"]
 
 nikolaCabal = CabalFile "nikola/nikola.cabal" "nikola" []
             {-   ["--disable-library-profiling",
