@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- ^
 -- Sobol sequence generation in Nikola
@@ -12,7 +13,7 @@ import Data.Bits hiding (shiftR, testBit)
 import qualified Data.List as DL
 import qualified Data.Vector as VB
 
-import Prelude hiding (map, filter, fromIntegral, zipWith, replicate, length, zip, fst, snd)
+import Prelude hiding (map, filter, fromIntegral, zipWith, replicate, zip, fst, snd)
 import qualified Prelude
 
 import Data.Array.Accelerate hiding (Elem)
@@ -28,48 +29,41 @@ sobol_divisor = Prelude.fromIntegral (2^30)
 sobol_dirVs = [ [2^k | k <- [29,28..0]]]
 
 sobol_dirVs_array :: Array DIM2 Elem
-sobol_dirVs_array = fromList (Z :. Prelude.length sobol_dirVs :. Prelude.length (head sobol_dirVs)) 
-                    $ Prelude.concat sobol_dirVs
-
-length :: Shape sh => Elt a => Array (sh :. Int) a -> Int
-length arr = let (_ :. n) = arrayShape arr in n
+sobol_dirVs_array = fromList (Z :. length sobol_dirVs :. length (head sobol_dirVs)) 
+                    $ concat sobol_dirVs
 
 grayCode :: Exp Index -> Exp Elem
 grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
+
+fromBool :: (Elt a, IsNum a) => Exp Bool -> Exp a
+fromBool b = b ? (1, 0)
+
+unindex3 :: (Elt i, IsIntegral i) => Exp DIM3 -> Exp (i, i, i)
+unindex3 ix
+  = let Z :. i :. j :. k = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
+    in  lift (fromIntegral i, fromIntegral j, fromIntegral k)
+
+fst3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp a
+fst3 e = let (x, _:: Exp b, _:: Exp c) = unlift e in x
+
+thd3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp c
+thd3 e = let (_ :: Exp a, _:: Exp b, x) = unlift e in x
 
 -- Manually flattened version
 mapsobolInd_ :: Index -> Acc (Array DIM2 Elem)
 mapsobolInd_ n =
   let
-    
-    ns = generate (index1 $ constant n) unindex1
-    
-    indices :: Acc (Array DIM2 Index)
-    indices = generate (constant $ arrayShape sobol_dirVs_array) 
-                       (snd . unindex2)
-    
-    indicesRep = replicate (constant $ Z :. n :. All :. All) indices
-    
     Z :. i :. j = arrayShape sobol_dirVs_array
+    cubeSize = constant $ Z :. n :. i :. j
     
-    nss = replicate (constant $ Z :. All :. i :. j) ns
+    sobolIndices = generate cubeSize (fst3 . unindex3)
+    directionNumberIndices = generate cubeSize (thd3 . unindex3)
 
-    ps = zipWith (testBit . grayCode) nss indicesRep
+    ps = map fromBool $ zipWith (testBit . grayCode) sobolIndices directionNumberIndices
     
-    dirVsRep = replicate (constant $ Z :. n :. All :. All) (use sobol_dirVs_array)
-    
-    doit :: Exp (Elem, Bool) -> Exp (Elem, Bool) -> Exp (Elem, Bool)
-    doit a b =
-      let xa,xb :: Exp Elem
-          ia,ib :: Exp Bool
-          (xa,ia) = (fst a, snd a)
-          (xb,ib) = (fst b, snd b)
-      in ia ? 
-           (ib ?
-              (lift (xa `xor` xb, ia),
-               a),
-            b)
-  in map fst $ fold doit (constant (0, True)) $ zip dirVsRep ps
+    directionNumbersRep = replicate (constant $ Z :. n :. All :. All) (use sobol_dirVs_array)
+
+  in fold1 xor $ zipWith (*) directionNumbersRep ps
 
 mapsobolInd :: Index -> Acc (Array DIM2 SpecReal)
 mapsobolInd n = map ((/sobol_divisor) . fromIntegral) $ mapsobolInd_ n
