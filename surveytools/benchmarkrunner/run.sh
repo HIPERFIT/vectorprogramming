@@ -63,3 +63,7 @@ echo running $PROGRAMDIR/run.sh
 cat $BENCHROOT/$BENCHMARK/inputs | timeout --foreground $(($TIMEOUTMINS*60)) $RUNNER $PROGRAMDIR/run.sh \
   --summary $SUMMARYFILE \
   --output $REPORTFILE +RTS -N1 2>&1| tee $LOGFILE-Run
+
+# In the case of incomplete output (when the benchmark does not
+# complete), this will make R's CSV-parser happy!
+echo "\n" >> $SUMMARYFILE
