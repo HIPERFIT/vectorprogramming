@@ -39,12 +39,11 @@ tex/report/*.bcf
 dist_*/
 dist/
 logs/
-summaries/
+/results
 *.hi
 *.o
 bin/
 build/
-results/
 .shake.database
 *.swp
 .shelly/
