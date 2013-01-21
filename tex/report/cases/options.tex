@@ -23,15 +23,13 @@ buy $A$'s, whereas a \emph{put option} grants the right to sell.
 
 For a concrete example, consider this:
 \begin{example}[European Call Option]
-
   European options\footnote{The continent of Europe is completely unrelated to
   the naming of this contract.} are characterised by having a pre-determined
   constant strike price $k$, and may be exercised only on the expiration time
   $T$.
 
   \begin{itemize}
-
-    \item So, having aquired a european call option for 1 of IBM company stock
+    \item So, having acquired a European call option for 1 of IBM company stock
       with strike price \$100 and expiration time January 1st, we wait.
 
     \item When upon the arrival of January 1st we observe that IBM stock is now
@@ -39,8 +37,7 @@ For a concrete example, consider this:
       recieve 1 stock for \$100.
 
     \item Immediately, we sell this stock on the market for \$110 and have thus
-      earned \$10. Our option was ``in the money ''.
-
+      earned \$10. Our option was ``in the money''.
   \end{itemize}
 
   Note that in reality, the underlying asset rarely changes hands. Instead,
@@ -48,24 +45,23 @@ For a concrete example, consider this:
   exchanged.\footnote{A consequence of this is that you are not required to
   actually own any quantity of the underlying asset for which you issue an
   option for.}
-
 \end{example}
 
 The challenge of option contracts resides in how to determine their price. The
 complexity of that challenge varies along with the differences in parameters.
-The value of european options for instance is closely approximated by the Black
-Scholes formula (citation needed), which is a closed form analytical solution.
-In contrast to european options lie american options\footnote{Which are
+The value of European options for instance is closely approximated by the Black
+Scholes formula \todo{cite}, which is a closed form analytical solution.
+In contrast to European options lie American options\footnote{Which are
 similarly irrelevantly named.}, characterised by granting the right to exercise
 at any point in time up until expiration, rather than only at expiration.
 
-This difference in granted rights makes amercan options require a different
-pricing method than european options. But as of today, only nummerical
+This difference in granted rights makes American options require a different
+pricing method than European options. But as of today, only nummerical
 approximation schemes are known for this type of contract. While this may be
 detrimental for those that depend on accurate pricing of their financial
-assets, it's all the more interesting for researchers of computing to treat.
+assets, it is all the more interesting for researchers of computing to treat.
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "master"
+%%% TeX-master: "../master"
 %%% End:
