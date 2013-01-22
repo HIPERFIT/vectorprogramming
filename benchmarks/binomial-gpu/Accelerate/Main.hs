@@ -5,12 +5,15 @@ import System.Exit (exitSuccess)
 
 import qualified Data.Array.Accelerate as A
 import qualified Data.Array.Accelerate.CUDA as A
-
+import qualified Data.Array.Accelerate.Array.Sugar as Sugar
 import American
 import System.IO
 
+fromScalar :: Sugar.Elt e => Sugar.Scalar e -> e
+fromScalar x = x Sugar.! Sugar.Z
+
 binom :: Int -> FloatRep
-binom = head . A.toList . A.run . binomAcc
+binom = fromScalar . A.run . binomAcc
 
 main = do
   hSetBuffering stdin LineBuffering
@@ -23,5 +26,5 @@ execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
-  putStrLn $ "RESULT " ++ (take 150 . show . f . read $ str)
+  putStrLn $ "RESULT " ++ (show . f . read $ str)
 

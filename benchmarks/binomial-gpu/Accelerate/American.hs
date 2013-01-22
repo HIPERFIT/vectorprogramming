@@ -26,8 +26,8 @@ ppmax = A.zipWith A.max
 type FloatRep = Float
 
 
-binomAcc :: Int -> Acc (Vector FloatRep)
-binomAcc expiry = first
+binomAcc :: Int -> Acc (Scalar FloatRep)
+binomAcc expiry = unit (first A.! (index1 0))
   where
     -- Actually don't want to share these definitions: they are relatively
     -- cheap so by parameterising by 'i' we effectively "force inline" into each
