@@ -15,7 +15,7 @@ import Sobol
 import System.IO
 
 sobSeq :: Int -> Array DIM2 SpecReal
-sobSeq = run . mapsobolInd
+sobSeq = run . sobolN
 
 sobolSequence :: Int -> V.Vector Double
 sobolSequence = snd . toVectors . sobSeq
