@@ -5,13 +5,69 @@ is the \emph{standard binomial model} \todo{(citation needed) (mentioned by
 Rolf).}. The finance background for this model is beyond the
 scope of this thesis.
 
-Operationally, the model works by estimating the price of the option in
-lattice points, connected to form a binomial tree.
+Operationally, the model works by estimating the price of the option in lattice
+points. The price estimate at each lattice point for time $t$ depends only on
+the estimates of the two neighboring points at time $t+1$. Thus, the dependency
+graph has the shape of a binomial tree. 
 
 \todo{Nice picture here, like the one in Rolfs FAMØS article.}
 
-The edge between lattice nodes signifies a certain equational relationship, and
-thus the value of a node at time $t$ may be calculated from the two adjacent
-nodes from time $t+1$.
+Since the value at expiration time $T$ is given by the contract parameters as
+the difference between the strike price $k$ and price of the underlying asset,
+prices are successively estimated from $t=T$ to $t=0$.
 
-\todo{..}
+\todo{Display the full binomial algorithm and parameters in a concise fact-box
+like format. Be sure to explain what $S(i,t)$ is.}
+
+In equations, this may be written as follows, where $x_{i,t}$ represents a
+lattice point.
+
+\begin{align*}
+v(x_{i,t}) &= h(f_{i,t}(v(x_{i,t+1})),g_{i,t}(v(x_{i+1,t+1}))) \\
+v(x_{i,T}) &= \max\{ 0, k - S(i,T) \} \tag{for a put-option}\\
+v(x_{i,T}) &= \max\{ 0, S(i,T) - k \} \tag{for a call-option}\\
+\end{align*}
+
+In our case the functions $f_{i,t},g_{i,t},h$ contain only simple constant-time
+arithmetic calculation.
+
+\subsection{Implmentation Techniques}
+
+As seen above, the value of $v(x_{i,t})$ depends only on values
+associated with time $t+1$. Therefore, for a given $t$, the evaluation of
+$v(x_{i,t})$ for each desired value of $i$ may proceed in parallel.
+
+Below, this is illustrated in pseudocode that uses only two arrays in tandem
+to hold the intermediately produced values.
+
+\todo{format nicely as pseudocode, possibly given a number to refer to in the survey later}
+\begin{verbatim}
+binom:
+  -- A,B are assumed preallocated, and T is assumed odd.
+  t <- T
+  B <- parmap (\i -> max 0 (k-S(i,T))) [0..T]
+  while t > 0
+    A <- parmap (\i -> h(f_{i,t}(B[i]),g_{i,t}(B[i+1))) [0..t]
+    t <- t -1
+    B <- parmap (\i -> h(f_{i,t}(A[i]),g_{i,t}(A[i+1))) [0..t]
+    t <- t -1
+  return B
+\end{verbatim}
+
+\todo{cite blelloch} As defined by Blelloch (citation needed), the above code
+may be reasonably assumed to have time complexities $Work(T^2/2)$ and
+$Depth(T)$, and memory complexity $O(2T)$.
+
+While the above code is both short and simple in structure, the main motive for
+pursuing parallelism is in gaining performance rather than expressivity.  To
+explore further algorithm samples, we examine the binomial pricing algorithm
+included in the CUDA developer SDK.\todo{cite cuda binom documentation}
+
+\todo{format nicely as pseudocode, possibly given a number to refer to in the survey later}
+\begin{verbatim}
+lots of pseudocode.
+\end{verbatim}
+
+Notes: Duplication of computation, fixed amount of parallelism pr option being
+priced, better scaling to pricing a larger number of options. Remark on the
+poor scaling of the first algoritm.
