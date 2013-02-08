@@ -1,11 +1,17 @@
-\section{Longstaff \& Schwartz Monte Carlo}
+\section{Longstaff \& Schwartz pricing}
 
-\todo{Somewhat crudely written:}
-Another model of american option pricing is manifest in the LSM algorithm. Here
-Monte Carlo simulation is used to generate a corpus of possible price
-developments of the underlying asset, and the option price is then calculated
-by successively applying linear regression at each time step from expiration to
+Another model of american option pricing is manifest in the Least
+Squares Monte Carlo algorithm LSM. Here Monte Carlo simulation is used
+to generate a corpus of possible price developments of the underlying
+asset, and the option price is then calculated by successively
+applying linear regression at each time step from expiration to
 initiation time.
 
 \todo{Here we explain the LSM algorithm and that we're currently looking
 explicitly at sobol sequences}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:

@@ -1,43 +1,49 @@
 \section{Option pricing}
+Finance as a mathematical discipline is concerned with the pricing of
+assets.  Financial assets can be material objects such as goods, or
+contracts on other assets. The \emph{stock} issued by a company is a
+common example of a financial contract. However, as this definition of
+a financial asset is recursive, contracts on other contracts are
+possible. An \emph{option} to buy or sell some other asset for some
+price at some point in time is a common example, and the one that we
+will invest some of our effort treating. These types of contracts are
+commonly termed \emph{financial derivatives}.
 
-Finance as a mathematical discipline is concerned with the pricing of assets.
-Financial assets can be material objects such as goods, or contracts on other
-assets. The \emph{stock} of a company is a common example of a financial contract.
+\emph{Option} is the name used collectively for a range of different
+financial contracts that all share some features, namely that an
+option on an underlying asset $A$ gives the holder the right to
+exchange $A$ for a certain strike price $K$ in a certain time interval
+up until a prespecified expiration time $T$.
 
-However, as this definition of a financial asset is recursive, contracts on
-other contracts are possible. An \emph{option} to buy or sell some other asset
-for some price at some point in time is a common example, and the one that we
-will invest some of our effort treating. These types of contracts are commonly
-termed \emph{financial derivatives}.
-
-\emph{Option} is the name used collectively for a range of different financial
-contracts that all share some features, namely that an option on an asset $A$
-gives the holder the right to exchange a certain amount of $A$'s for a certain
-strike price $k$ in a certain duration of time up until expiration time $T$.
-
-The different types of options vary then the processes that determine the
-size of strike price and the time span where the option may be exercised.
-We make a distinction between options that grants a right to buy and those that
-grants a right to sell. A \emph{call option} on asset $A$ grants the right to
-buy $A$'s, whereas a \emph{put option} grants the right to sell.
+The different types of options vary the processes that determine the
+size of strike price and the time span where the option may be
+exercised.  We make a distinction between options that grants a right
+to buy and those that grants a right to sell. A \emph{call option} on
+asset $A$ grants the right to buy $A$, whereas a \emph{put option}
+grants the right to sell.
 
 For a concrete example, consider this:
 \begin{example}[European Call Option]
   European options\footnote{The continent of Europe is completely unrelated to
   the naming of this contract.} are characterised by having a pre-determined
-  constant strike price $k$, and may be exercised only on the expiration time
+  constant strike price $K$, and may be exercised only on the expiration time
   $T$.
 
   \begin{itemize}
-    \item So, having acquired a European call option for 1 of IBM company stock
-      with strike price \$100 and expiration time January 1st, we wait.
+  \item Assume the price of a stock $A$ is quoted as $S_0=\$90$ at time
+    $t_0$, and that an European call option for the stock has a strike
+    price of $K=\$100$ and expiration time $T=t_1$.
 
-    \item When upon the arrival of January 1st we observe that IBM stock is now
-      exchanged at value \$110, we choose to exercise our option right and thus
-      recieve 1 stock for \$100.
+    % \item So, having acquired a European call option for 1 of IBM company stock
+    %   with strike price \$100 and expiration time January 1st, we wait.
+    %   \todo{What is $S_0$ in this example?}
 
-    \item Immediately, we sell this stock on the market for \$110 and have thus
-      earned \$10. Our option was ``in the money''.
+  \item When upon the arrival of $t_1$ we observe that $A$ is now
+    exchanged at value $S_1=\$105$, we choose to exercise our option right
+    and thus recieve 1 stock for \$100.
+
+    \item Immediately, we sell this stock on the market for \$105 and have thus
+      earned $S_1-K=\$5$. Our option was ``in the money''.
   \end{itemize}
 
   Note that in reality, the underlying asset rarely changes hands. Instead,
@@ -47,19 +53,22 @@ For a concrete example, consider this:
   option for.}
 \end{example}
 
-The challenge of option contracts resides in how to determine their price. The
-complexity of that challenge varies along with the differences in parameters.
-The value of European options for instance is closely approximated by the Black
-Scholes formula \todo{cite}, which is a closed form analytical solution.
-In contrast to European options lie American options\footnote{Which are
-similarly irrelevantly named.}, characterised by granting the right to exercise
-at any point in time up until expiration, rather than only at expiration.
+The challenge of option contracts resides in how to determine their
+price. The complexity of that challenge varies along with the
+differences in parameters.  The value of European options for instance
+is closely approximated by the Black-Scholes formula
+\cite{black1973pricing}, which is a closed form analytical solution.
+In contrast to European options lie American options\footnote{Which
+  are similarly irrelevantly named.}, characterised by granting the
+right to exercise at any point in time up until expiration, rather
+than only at expiration.
 
 This difference in granted rights makes American options require a different
-pricing method than European options. But as of today, only nummerical
+pricing method than European options. But as of today, only numerical
 approximation schemes are known for this type of contract. While this may be
 detrimental for those that depend on accurate pricing of their financial
 assets, it is all the more interesting for researchers of computing to treat.
+
 
 %%% Local Variables:
 %%% mode: latex
