@@ -1,5 +1,25 @@
-\section{Nikola Architecture}
-\todo{Describe the various parts of the Nikola
-architecture, i.e. the role of S.Exp, the various monads, how interfacing with
-nikola programs using various vector implementations is supposed to work, what
-substantial parts are missing...}
+\section{Nikola Frontend Architecture}
+
+\todo{Describe how the programming interface with nikola is intended to be
+used, i.e. Exp, Array, storable vectors, monad P, compilation from user
+perspective, TH same-module restriction...}
+
+Nikola presents for its clients three data types: \texttt{Exp t a},
+\texttt{Array r sh a} and the monad \texttt{P a}. It also provides type class
+machinery for compiling Nikola functions into Haskell functions that wrap an
+unsafe foreign function call to a CUDA representation of a given Nikola
+program.
+
+Following in the tradition of Repa, arrays in Nikola are parametrised by their
+representation and shape by the type variables \texttt{r} and \texttt{sh}.
+Three principal array representations are provided by Nikola: The global array,
+the delayed array, and the push array, denoted respectably by the types
+\texttt{G}, \texttt{P} and \texttt{D}.
+
+This is a source of both control and complexity, as each representation gives
+rise to different features and restrictions.
+
+\section{Nikola Backend Architecture}
+
+\todo{Describe the various parts of the Nikola architecture, i.e. the role of
+S.Exp, the various monads, how compilation works, what substantial parts are missing...}
