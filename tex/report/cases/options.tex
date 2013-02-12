@@ -25,43 +25,45 @@ grants the right to sell.
 For a concrete example, consider this:
 \begin{example}[European Call Option]
   European options\footnote{The continent of Europe is completely unrelated to
-  the naming of this contract.} are characterised by having a pre-determined
+  the naming of this class of contracts.} are characterised by having a pre-determined
   constant strike price $K$, and may be exercised only on the expiration time
   $T$.
 
   \begin{itemize}
-  \item Assume the price of a stock $A$ is quoted as $S_0=\$90$ at time
-    $t_0$, and that an European call option for the stock has a strike
-    price of $K=\$100$ and expiration time $T=t_1$.
+  \item Assume that we at time $t_0$ acquire an European call option
+    for the stock $A$ which is quoted as $S(t_0)=\$90$, and that the
+    option has a strike price of $K=\$100$ and expiration time
+    $T=t_1$.
 
     % \item So, having acquired a European call option for 1 of IBM company stock
     %   with strike price \$100 and expiration time January 1st, we wait.
     %   \todo{What is $S_0$ in this example?}
 
   \item When upon the arrival of $t_1$ we observe that $A$ is now
-    exchanged at value $S_1=\$105$, we choose to exercise our option right
-    and thus recieve 1 stock for \$100.
+    exchanged at value $S(t_1)=\$105$, we choose to exercise our option right
+    and thus recieve one $A$ for \$100.
 
     \item Immediately, we sell this stock on the market for \$105 and have thus
-      earned $S_1-K=\$5$. Our option was ``in the money''.
+      earned $S(t_1)-K=\$5$. Our option was ``in the money''.
   \end{itemize}
 
-  Note that in reality, the underlying asset rarely changes hands. Instead,
-  only the net difference in strike price and market price is
-  exchanged.\footnote{A consequence of this is that you are not required to
-  actually own any quantity of the underlying asset for which you issue an
-  option for.}
+  Note that in reality, the underlying asset rarely changes
+  hands. Instead, only the net difference in strike price and market
+  price is exchanged.\footnote{A consequence of this is that you are
+    not required to actually own any quantity of the underlying asset
+    for which you issue an option for.}
 \end{example}
 
 The challenge of option contracts resides in how to determine their
-price. The complexity of that challenge varies along with the
-differences in parameters.  The value of European options for instance
-is closely approximated by the Black-Scholes formula
-\cite{black1973pricing}, which is a closed form analytical solution.
-In contrast to European options lie American options\footnote{Which
-  are similarly irrelevantly named.}, characterised by granting the
-right to exercise at any point in time up until expiration, rather
-than only at expiration.
+price. The above option would have been appropriately priced at $\$5$
+discounted to $t_0$ prices. The complexity of the pricing challenge
+varies along with the differences in parameters.  The value of
+European options for instance is closely approximated by the
+Black-Scholes formula \cite{black1973pricing}, which is a closed form
+analytical solution.  In contrast to European options lie American
+options\footnote{Which are similarly irrelevantly named.},
+characterised by granting the right to exercise at any point in time
+up until expiration, rather than only at expiration.
 
 This difference in granted rights makes American options require a different
 pricing method than European options. But as of today, only numerical
@@ -69,6 +71,11 @@ approximation schemes are known for this type of contract. While this may be
 detrimental for those that depend on accurate pricing of their financial
 assets, it is all the more interesting for researchers of computing to treat.
 
+There are three classes of algorithms for American options, finite
+difference, lattice and Monte Carlo based methods
+\cite{ibanez2004monte}. The ensuing sections will introduce examples
+of both lattice and Monte Carlo based methods. We will not discuss
+finite difference methods.
 
 %%% Local Variables:
 %%% mode: latex
