@@ -1,12 +1,5 @@
 \chapter{Par/Seq evaluation}
 
-\todo{Here we describe our extension idea of the 'sequential' operator, what it
-would do to expressivity, and what it appears to enable for performance tuning
-(i.e. deciding the degree of parallelism). Also, we describe how we implemented
-it, or if we don't get to it, how it might be implemented.}
-
-\todo{Should we introduce 'seqpar' as notation for 'a sequence of parallel
-actions', usable just like 'sequentially', 'in parallel', 'parseqally'?}
 
 Various ways exist to treat the problem of nested parallelism, with the
 extremes being disallowing nested parallelism at all and the vectorisation
@@ -58,7 +51,7 @@ inside a version of \texttt{map} that operates on arrays with shapes.
 operators. Also, this presupposes the existence of \texttt{:+:}. Also, not at
 all done yet! Any take on a more instructive example is greatly appreciated.
 preferably one using a more likely-to-be-imlemented construct than
-\texttt{reducee}}
+\texttt{reduce}}
 
 \begin{verbatim}
 map :: sh' -> (Array r'' sh a -> Array r' sh' b)
@@ -82,11 +75,11 @@ In \texttt{rowsum1} the intention is that the \texttt{map} is executed
 sequentially, while the innermost parallelizable construct, \texttt{reduce},
 gets executed in parallel \todo{cite parallel reduce/scan source. Look through
 TIPL-2012 papers for inspiration}, exploiting the assumed associativity of the
-given operation to reduce with.  In \texttt{rowsum1} the \texttt{map} happens
+given operation to reduce with.  In \texttt{rowsum2} the \texttt{map} happens
 in parallel, running a sequential reduction for each row in the matrix. In
 \texttt{rowsum3} the entire computation is dictated to happen sequentially.
-
-The relative work/depth complexities of these three variations are given in this table:
+The relative work/depth complexities of these three variations are given in
+this table:
 
 \begin{verbatim}
 rowsum1  w(cols*rows)  d(rows*lg(cols)) <-- be sure to look up the actual depth complexity of reduce in Nesl!
@@ -99,3 +92,11 @@ On a parallel architecture, it is quite probable that different running times
 will be observed for each of the three variants, with the difference between
 \texttt{rowsum1} and \texttt{rowsum2} depending on the dimensions of the matrix
 \texttt{mat}.
+
+\section{Implementation proposals}
+
+\todo{analyse the differences between a type-based and an untyped
+implementation. Specifically, address Ken's concerns of 'sequential'
+spillover in library functions.}
+
+\section{Implications for Loop Fusion}
