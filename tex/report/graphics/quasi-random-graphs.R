@@ -16,7 +16,7 @@ sobol_sequence <- sobol(n, dim = 2)
 sobol_frame <- data.frame(x=sobol_sequence[,1],y=sobol_sequence[,2])
 
 # Plot Sobol sequence
-pdf("2D-sobol-sequence.pdf")
+pdf("2D-sobol-sequence.pdf", width=5, height=5)
 sobol_plot <- ggplot(data = sobol_frame, aes(x,y))
 sobol_plot <- sobol_plot + geom_point()
 sobol_plot <- sobol_plot + ylab("") + xlab("")
@@ -28,7 +28,7 @@ set.generator("MersenneTwister", initialization="init2002", resolution=53, seed=
 mersenne_frame <- data.frame(x=runif(n), y=runif(n))
 
 # Plot 
-pdf("2D-mersenne-sequence.pdf")
+pdf("2D-mersenne-sequence.pdf", width=5, height=5)
 mersenne_plot <- ggplot(data = mersenne_frame, aes(x,y))
 mersenne_plot <- mersenne_plot + geom_point()
 mersenne_plot <- mersenne_plot + ylab("") + xlab("")
