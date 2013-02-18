@@ -2,7 +2,7 @@
 ## http://www.math.ku.dk/~rolf/FAMOES/
 
 # Simulation parameters
-N.paths <- 200
+N.paths <- 20000
 N.points <-252
 
 
