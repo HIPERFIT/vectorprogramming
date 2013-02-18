@@ -99,9 +99,9 @@ matProd a b = sumP (zipWith (*) aRepl bRepl)
 
 matVecProd :: Monad m => Array D DIM2 Double -> Array D DIM1 Double -> m (Array D DIM1 Double)
 matVecProd xs ys = do
-  when (n /= n') $ error "matVecProd: Incompatible dimensions"
+  when (n /= m) $ traceShow (dim xs) $ traceShow (length ys) $ error "matVecProd: Incompatible dimensions"
   x <- matProd xs (reshape (Z :. n :. 1) ys)
-  return $ reshape (Z :. m) x
+  return $ reshape (Z :. n') x
    where
      (Z :. n) = extent ys
      (Z :. n' :. m) = extent xs
