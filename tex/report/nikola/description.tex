@@ -6,20 +6,31 @@ perspective, TH same-module restriction...}
 
 Nikola presents for its clients three data types: \texttt{Exp t a},
 \texttt{Array r sh a} and the monad \texttt{P a}. It also provides type class
-machinery for compiling Nikola functions into Haskell functions that wrap an
-unsafe foreign function call to a CUDA representation of a given Nikola
-program.
+machinery for compiling Nikola functions to CUDA code which is subsequently
+wrapped in regular haskell functions.
+
+Nikola expressions are embedded inside \texttt{Exp t a}, with the type variable
+\texttt{t} representing the target architecture for the expression, eg.
+\texttt{CUDA}. Thus, it is possible to have Nikola terms specialised for
+different backends.
 
 Following in the tradition of Repa, arrays in Nikola are parametrised by their
 representation and shape by the type variables \texttt{r} and \texttt{sh}.
 Three principal array representations are provided by Nikola: The global array,
 the delayed array, and the push array, denoted respectably by the types
-\texttt{G}, \texttt{P} and \texttt{D}.
+\texttt{G}, \texttt{PSH} and \texttt{D}.
 
 This is a source of both control and complexity, as each representation gives
 rise to different features and restrictions.
 
+\texttt{Array r sh a} is an associated type of the typeclass \texttt{IsArray r
+a}. The only common operation for all arrays is that of extracting their shape
+through the function \texttt{extent}.
+
+Array shapes are similar to those of Repa and Accelerate, denoted as instances of typeclass \texttt{Shape sh}.
+
 \section{Nikola Backend Architecture}
 
 \todo{Describe the various parts of the Nikola architecture, i.e. the role of
-S.Exp, the various monads, how compilation works, what substantial parts are missing...}
+S.Exp, the various monads, how compilation works, what substantial parts are
+missing...}
