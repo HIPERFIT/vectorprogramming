@@ -1,11 +1,16 @@
-module LinAlg (polyfit, polyval, polyvals) where
+module LinAlg where
 
-import Data.Vector hiding ((++))
+import Control.Monad.ST
+
+import qualified Data.Vector as B
+import Data.Vector.Unboxed hiding ((++))
+import qualified Data.Vector.Unboxed.Mutable as MU
+ 
 import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or)
 import qualified Prelude
 import Debug.Trace
---import qualified Data.Packed.Matrix as HM
---import qualified Numeric.LinearAlgebra.Algorithms as HM
+-- import qualified Data.Packed.Matrix as HM
+-- import qualified Numeric.LinearAlgebra.Algorithms as HM
 
 polyvals p = map (polyval p)
 
@@ -16,8 +21,8 @@ polyval p x = sum $ zipWith (\p' n' -> p'*x**(fromIntegral n')) p pows
    pows = reverse $ fromList [0..n-1]
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
-vander :: Vector Double -> Int -> Vector (Vector Double)
-vander xs degree = transpose $ generate (degree + 1) (\x -> map (** (fromIntegral x)) xs)
+vander :: Vector Double -> Int -> B.Vector (Vector Double)
+vander xs degree = transpose $ B.generate (degree + 1) (\x -> map (** (fromIntegral x)) xs)
 
 -- https://github.com/numpy/numpy/blob/master/numpy/lib/polynomial.py#L394
 
@@ -33,90 +38,65 @@ polyfit xs ys degree = c --zipWith (/) c scale
 --    c = lstsq_cholesky a ys 
     c = lstsq_cholesky a ys --solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
 
---mdim a = (HM.rows a, HM.cols a)
-    
--- lstsq_HMatrix :: Vector (Vector Double) -> Vector Double -> Vector Double
--- lstsq_HMatrix a b = x -- traceShow c x
---   where
---     aT = transpose a
---     c = aT `matProd` a
---     d = aT `matVecProd` b
---     l = cholesky c
---     y = forwardSubstitute l d
---     x = backwardSubstitute (transpose l) y
-
--- cholesky_HMatrix :: Vector (Vector Double) -> Vector (Vector Double)
--- cholesky_HMatrix a = map fromList . fromList . HM.toLists $ HM.chol amat
---   where
---     amat = HM.fromLists . toList $ map toList a
-
-lstsq_cholesky :: Vector (Vector Double) -> Vector Double -> Vector Double
+lstsq_cholesky :: B.Vector (Vector Double) -> Vector Double -> Vector Double
 lstsq_cholesky a b = x
   where
     aT = transpose a
     c = aT `matProd` a
     d = aT `matVecProd` b
-    l = cholesky c
+    l = transpose (cholesky c)
     y = forwardSubstitute l d
     x = backwardSubstitute (transpose l) y
 
+dim :: Unbox a => B.Vector (Vector a) -> String
 dim a = show n ++ "x" ++ show m
   where
-    n = length a
-    m = length (a ! 0)
+    n = B.length a
+    m = length (a B.! 0)
 
-nullMatrix :: Vector (Vector Double) -> Bool
-nullMatrix a = null a || or (map null a)
+nullMatrix :: B.Vector (Vector Double) -> Bool
+nullMatrix a = B.null a || B.or (B.map null a)
 
-cholesky :: Vector (Vector Double) -> Vector (Vector Double)
-cholesky a | nullMatrix a = empty
-cholesky a = merge l11 l21 l22
+-- Return the (i,j) element of the lower triangular matrix.  (We assume the
+-- lower array bound is (0,0).)
+get :: B.Vector (Vector Double) -> B.Vector (Vector Double) -> (Int, Int) -> Double
+get a l (i,j) | i == j = sqrt $ (a B.! j ! j) - dot
+              | i  > j = ((a B.! i ! j) - dot) / (l B.! j ! j)
+              | otherwise = 0
+  where dot = Prelude.sum [(l B.! i ! k) * (l B.! j ! k) | k <- [0..j-1]]
+
+cholesky :: B.Vector (Vector Double) -> B.Vector (Vector Double)
+cholesky a = runST $ do
+    l <- B.replicateM n (MU.new n)
+    Prelude.mapM_ (update l) [(i,j) | i <- [0..n-1], j <- [0..n-1]]
+    B.mapM unsafeFreeze l
   where
-    l11 = sqrt a11
-    l21 = map (\x -> x / l11) a21
-    ab = vecMult l21 l21
-    a22' = zipWith (\x ys -> map (\y -> y-x) ys) ab a22
-    l22 = cholesky a22'
-    (a11, a21, a22) = split a
-    
-    vecMult :: Vector Double -> Vector Double -> Vector Double
-    vecMult xs ys = zipWith (*) xs ys
+    n = B.length a
+    update l (i,j) = B.mapM unsafeFreeze l >>= \l' -> MU.write (l B.! i) j (get a l' (i,j))
 
-    split :: Vector (Vector Double) -> (Double, Vector Double, Vector (Vector Double))
-    split a | nullMatrix a = error "Should not happen"
-    split a = (a11, a21, a22)
-      where a11 = (a ! 0) ! 0
-            a21 = map head (tail a)
-            a22 = map tail (tail a)
-
-    merge :: Double -> Vector Double -> Vector (Vector Double) -> Vector (Vector Double)
-    merge l11 l21 l22 | nullMatrix l22 = singleton (singleton l11)
-    merge l11 l21 l22 = cons row0 rest
-      where
-       row0 = cons l11 $ replicate (length (l22 ! 0)) 0.0
-       rest = zipWith cons l21 l22
-       
 dotProd :: Vector Double -> Vector Double -> Double
 dotProd xs ys | length xs /= length ys = error "Unequal lengths in dotProd"
               | otherwise = sum $ zipWith (*) xs ys
 
-matProd :: Vector (Vector Double) -> Vector (Vector Double) -> Vector (Vector Double)
-matProd xs ys = map (\x -> map (\y -> dotProd x y) (transpose ys)) xs
+matProd :: B.Vector (Vector Double) -> B.Vector (Vector Double) -> B.Vector (Vector Double)
+matProd xs ys = B.map (\x -> convert $ B.map (\y -> dotProd x y) (transpose ys)) xs
 
-matVecProd :: Vector (Vector Double) -> Vector Double -> Vector Double
-matVecProd xs ys = map (dotProd ys) xs
+matVecProd :: B.Vector (Vector Double) -> Vector Double -> Vector Double
+matVecProd xs ys = convert $ B.map (dotProd ys) xs
 
-transpose :: Vector (Vector Double) -> Vector (Vector Double)
-transpose xs | nullMatrix xs = empty
-             | otherwise  = cons (map head xs) $ transpose (map tail xs)
+transpose :: B.Vector (Vector Double) -> B.Vector (Vector Double)
+transpose xs | nullMatrix xs = B.empty
+             | otherwise  = B.cons (convert $ B.map head xs) $ transpose (B.map tail xs)
 
-forwardSubstitute l b = foldl subst empty (zip3 (generate (length b) id) l b)
+forwardSubstitute :: B.Vector (Vector Double) -> Vector Double -> Vector Double
+forwardSubstitute l b = B.foldl subst empty (B.zip3 (B.generate (length b) id) l (convert b))
   where subst as (m, ls_m, b_m) = snoc as $ (b_m - dotProd as ls_m') / l_mm
           where
             ls_m' = take m ls_m
             l_mm :: Double
             l_mm = ls_m ! m
 
+backwardSubstitute :: B.Vector (Vector Double) -> Vector Double -> Vector Double
 backwardSubstitute u b = reverse $ forwardSubstitute ru rb
   where rb = (reverse b)
-        ru = (reverse $ map reverse u)
+        ru = (B.reverse $ B.map reverse u)

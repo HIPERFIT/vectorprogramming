@@ -1,10 +1,12 @@
-import qualified Data.Vector as DV
-import Data.Vector (Vector)
+import qualified Data.Vector.Unboxed as UB
+import Data.Vector.Unboxed (Vector)
+import qualified Data.Vector as B
 import Data.List (intersperse)
 import System.Random
 import Data.Random.Normal
 import Control.Monad
 import Control.DeepSeq
+
 import LinAlg
 
 -- Simulation parameters
@@ -24,54 +26,48 @@ dt  = t/(fromIntegral n_points) -- length of time interval
 df  = exp(-r*dt)         -- discount factor per time interval
 k   = 100.0              -- strike price
 
--- ^ Generate @n@ samples from a mean=0, stddev=1 normal distribution
-rng :: Int -> IO (Vector Double)
-rng n = do
-  gen <- newStdGen
-  let list = DV.fromList . take (n `div` 2) $ normals gen
-  return $ list DV.++ (DV.reverse list)
-
--- ^ Monadic unfoldr. Stops unfolding after N steps and includes the
--- seed in the result.
-unfoldrNM :: (Monad m) => (a -> m a) -> Int -> a -> m [a]
-unfoldrNM _ 0 seed = return [seed]
-unfoldrNM f n seed = do
-  x <- f seed
-  xs <- unfoldrNM f (n-1) x
-  return (seed : xs)
-
--- testUnfold :: IO [Int]
--- testUnfold = unfoldrNM (\x -> return $ x + 1) 5 0
+rng :: StdGen -> Int -> (Vector Double, StdGen)
+rng gen n = (list UB.++ (UB.map (*(-1)) list), g2)
+  where list = UB.unfoldrN (n `div` 2) (Just . normal) g1
+        (g1, g2) = split gen
 
 -- ^ Generate paths
-genPaths :: Int -> Int -> IO (Vector(Vector Double))
-genPaths m n = DV.fromList `fmap` unfoldrNM iter m initvec
+genPaths :: StdGen -> Int -> Int -> (B.Vector (Vector Double))
+genPaths gen m n = B.unfoldrN m iter (initvec, gen)
   where
     coef1 = dt*(r-0.5*vol*vol)
     coef2 = vol*sqrt(dt)
     initvec :: Vector Double
-    initvec = DV.generate n (const s0)
+    initvec = UB.generate n (const s0)
 
-    iter :: Vector Double -> IO (Vector Double)
-    iter prev = do
-      ran <- rng n
-      return $ DV.zipWith (\s x -> s * exp(coef1 + x*coef2)) prev ran
+    iter :: (Vector Double, StdGen) -> Maybe (Vector Double, (Vector Double, StdGen))
+    iter (prev, gen) =
+      let (ran, newgen) = rng gen n
+          result = UB.zipWith (\s x -> s * exp(coef1 + x*coef2)) prev ran
+      in Just (result, (result,newgen))
+
 
 iv :: Vector Double -> Vector Double
-iv = DV.map (\x -> max (k-x) 0)
+iv = UB.map (\x -> max (k-x) 0)
 
 average :: Vector Double -> Double
-average xs = DV.sum xs / (fromIntegral $ DV.length xs)
+average xs = UB.sum xs / (fromIntegral $ UB.length xs)
 
-pick :: Vector (Bool, a) -> Vector a
-pick = DV.map snd . DV.filter fst
+variance :: Vector Double -> Double
+variance xs = average (UB.map (\x -> (avg-x)^2) xs)
+  where avg = average xs
 
-lsm :: Int -> Int -> IO Double
-lsm n_points n_paths = do
-  s <- genPaths n_points n_paths
-  let init_disccashflow = iv (DV.last s) :: Vector Double
-  res <- DV.foldM lsm' init_disccashflow (DV.reverse $ DV.init s)
-  return . average $ res
+std :: Vector Double -> Double
+std = sqrt . variance
+
+pick :: UB.Unbox a => Vector (Bool, a) -> Vector a
+pick = UB.map snd . UB.filter fst
+
+lsm :: StdGen -> Int -> Int -> IO (Vector Double)
+lsm gen n_points n_paths = do
+  let s = genPaths gen n_points n_paths
+  let init_disccashflow = iv (B.last s) :: Vector Double
+  B.foldM lsm' init_disccashflow (B.reverse $ B.init s)
  where 
   exercise_decision ev iv v | iv > 0 && iv > ev = iv
                             | otherwise = v
@@ -79,49 +75,51 @@ lsm n_points n_paths = do
   lsm' :: Vector Double -> Vector Double -> IO (Vector Double)
   lsm' disccashflow s = do
     let intrinsic_value = iv s
-        p = DV.map (>0) intrinsic_value
-        default_out = DV.map (*df) disccashflow
-        y = pick $ DV.zip p default_out
-        spick = pick $ DV.zip p s
+        p = UB.map (>0) intrinsic_value
+        default_out = UB.map (*df) disccashflow
+        y = pick $ UB.zip p default_out
+        spick = pick $ UB.zip p s
         rg = polyfit spick y reg
         estimatedtimevalue = polyvals rg s
-    return $ DV.zipWith3 exercise_decision 
+    return $ UB.zipWith3 exercise_decision 
                 estimatedtimevalue
                 intrinsic_value
                 default_out
 
 main :: IO ()
-main = print =<< lsm n_points n_paths
- where
-   n_points = 252 -- time steps
-   n_paths = 2000
+main = do
+  gen <- newStdGen
+  disccashflow <- lsm gen n_points n_paths
+  print $ average disccashflow
+  print $ df*(UB.sum disccashflow / fromIntegral n_paths)
+  print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral n_paths)
 
 
 -- main :: IO ()
 -- main = do
 --   s <- readPaths
---   let v = iv (DV.last s) :: Vector Double
---   let v' = DV.map (*df) $ v
---   let s' = DV.last $ DV.init s
+--   let v = iv (UB.last s) :: Vector Double
+--   let v' = UB.map (*df) $ v
+--   let s' = UB.last $ UB.init s
 --   let rg = polyfit s' v' reg
 --   print rg
 
 -- writePaths :: Vector (Vector Double) -> IO ()
--- writePaths xs = zipWithM_ printPath [1..] (DV.toList $ transpose xs)
+-- writePaths xs = zipWithM_ printPath [1..] (UB.toList $ transpose xs)
 --   where
 --     printPath :: Int -> Vector Double -> IO ()
---     printPath i xs = zipWithM_ (\x -> putStrLn . ((show i ++ "," ++ show x ++ ",") ++) . show) [0..] $ DV.toList xs
+--     printPath i xs = zipWithM_ (\x -> putStrLn . ((show i ++ "," ++ show x ++ ",") ++) . show) [0..] $ UB.toList xs
 
 -- readPaths :: IO (Vector (Vector Double))
 -- readPaths = do
 --   content <- readFile "paths.csv"
 --   let processline :: String -> Vector Double
---       processline line = DV.fromList . map read $ words line
---   return . DV.fromList . map processline $ lines content
+--       processline line = UB.fromList . map read $ words line
+--   return . UB.fromList . map processline $ lines content
                       
 -- main = writePaths =<< genPaths 50 (4*4096)
 
 --instance VU.Unbox a => NFData (VU.Vector a)
 
--- instance NFData a => NFData (DV.Vector a) where
---   rnf v = DV.foldl' (\x y -> y `deepseq` x) () v
+-- instance NFData a => NFData (UB.Vector a) where
+--   rnf v = UB.foldl' (\x y -> y `deepseq` x) () v
