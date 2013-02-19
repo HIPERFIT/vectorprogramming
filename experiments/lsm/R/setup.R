@@ -23,8 +23,13 @@ S.matrix[,1]<-S.0
  coef1<-dt*(r-0.5*S.vol*S.vol)
  coef2<-S.vol*sqrt(dt)
 
+rnorm_antithetic <- function (count) {
+  ran <- rnorm(count/2)
+  return(c(ran,-ran))
+}
+
 for (k in 2:(N.points+1)){
-  dWk<-rnorm(N.paths)
+  dWk<-rnorm_antithetic(N.paths)
   S.matrix[1:N.paths,k]<- S.matrix[1:N.paths,(k-1)]*exp(coef1+ coef2*dWk)
   S.matrix[(N.paths+1):(2*N.paths),k]<- S.matrix[(N.paths+1):(2*N.paths),(k-1)]*exp(coef1-coef2*dWk)
 }
