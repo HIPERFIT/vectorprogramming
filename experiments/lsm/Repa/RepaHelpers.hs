@@ -42,6 +42,6 @@ unindex1 (Z :. e) = e
 index1 :: Int -> DIM1
 index1 e = Z :. e
 
-length :: Array D DIM1 e -> Int
+length :: Source r e => Array r DIM1 e -> Int
 length arr = let (Z :. n) = extent arr in n
 

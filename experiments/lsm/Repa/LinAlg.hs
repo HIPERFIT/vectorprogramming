@@ -76,9 +76,9 @@ cholesky a = do
       unsafeWriteMVec l (i*n + j) (get a l' (i,j))
 
 
-dotProd :: Array D DIM1 Double -> Array D DIM1 Double -> Double
+dotProd :: Monad m => Array D DIM1 Double -> Array D DIM1 Double -> m Double
 dotProd xs ys | extent xs /= extent ys = error "Unequal lengths in dotProd"
-              | otherwise = sumAllS $ zipWith (*) xs ys
+              | otherwise = sumAllP $ zipWith (*) xs ys
 
 dotProdUnsafe :: Array D DIM1 Double -> Array D DIM1 Double -> Double
 dotProdUnsafe xs ys = sumAllS $ zipWith (*) xs ys
