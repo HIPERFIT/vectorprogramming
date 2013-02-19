@@ -6,23 +6,22 @@ import qualified Data.Vector as B
 import Data.Vector.Unboxed hiding ((++))
 import qualified Data.Vector.Unboxed.Mutable as MU
  
-import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or)
+import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or, foldr)
 import qualified Prelude
 import Debug.Trace
--- import qualified Data.Packed.Matrix as HM
--- import qualified Numeric.LinearAlgebra.Algorithms as HM
 
 polyvals p = map (polyval p)
 
+{-# INLINE polyval #-}
 polyval :: Vector Double -> Double -> Double
-polyval p x = sum $ zipWith (\p' n' -> p'*x**(fromIntegral n')) p pows
+polyval ps x = foldr (\c0 p -> p + x*c0) 0.0 ps
   where
-   n = length p
-   pows = reverse $ fromList [0..n-1]
+   n = length ps
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
 vander :: Vector Double -> Int -> B.Vector (Vector Double)
-vander xs degree = transpose $ B.generate (degree + 1) (\x -> map (** (fromIntegral x)) xs)
+vander xs degree = B.map (\x -> generate (degree + 1) (\i -> x ** (fromIntegral i))) (convert xs)
+
 
 -- https://github.com/numpy/numpy/blob/master/numpy/lib/polynomial.py#L394
 
@@ -42,7 +41,7 @@ lstsq_cholesky :: B.Vector (Vector Double) -> Vector Double -> Vector Double
 lstsq_cholesky a b = x
   where
     aT = transpose a
-    c = aT `matProd` a
+    c = matTransProd aT
     d = aT `matVecProd` b
     l = transpose (cholesky c)
     y = forwardSubstitute l d
@@ -81,9 +80,15 @@ dotProd xs ys | length xs /= length ys = error "Unequal lengths in dotProd"
 matProd :: B.Vector (Vector Double) -> B.Vector (Vector Double) -> B.Vector (Vector Double)
 matProd xs ys = B.map (\x -> convert $ B.map (\y -> dotProd x y) (transpose ys)) xs
 
+-- This takes a matrix A and performs the multiplication (A x transpose A)
+-- We use it to avoid double transpositions
+matTransProd :: B.Vector (Vector Double) -> B.Vector (Vector Double)
+matTransProd xs = B.map (\x -> convert $ B.map (\y -> dotProd x y) xs) xs
+
 matVecProd :: B.Vector (Vector Double) -> Vector Double -> Vector Double
 matVecProd xs ys = convert $ B.map (dotProd ys) xs
 
+{-# INLINE transpose #-}
 transpose :: B.Vector (Vector Double) -> B.Vector (Vector Double)
 transpose xs | nullMatrix xs = B.empty
              | otherwise  = B.cons (convert $ B.map head xs) $ transpose (B.map tail xs)

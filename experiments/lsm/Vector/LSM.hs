@@ -2,11 +2,12 @@ import qualified Data.Vector.Unboxed as UB
 import Data.Vector.Unboxed (Vector)
 import qualified Data.Vector as B
 import Data.List (intersperse)
-import System.Random
-import Data.Random.Normal
+
 import Control.Monad
 import Control.DeepSeq
 
+import System.Random.Mersenne.Pure64 (newPureMT)
+import Random
 import LinAlg
 
 -- Simulation parameters
@@ -26,26 +27,28 @@ dt  = t/(fromIntegral n_points) -- length of time interval
 df  = exp(-r*dt)         -- discount factor per time interval
 k   = 100.0              -- strike price
 
-rng :: StdGen -> Int -> (Vector Double, StdGen)
-rng gen n = (list UB.++ (UB.map (*(-1)) list), g2)
-  where list = UB.unfoldrN (n `div` 2) (Just . normal) g1
-        (g1, g2) = split gen
+
+rng count = do
+  gen <- newPureMT
+  let normalsvec = normals gen (count `div` 2)
+  return $ normalsvec UB.++ (UB.reverse $ UB.map (* (-1)) normalsvec)
 
 -- ^ Generate paths
-genPaths :: StdGen -> Int -> Int -> (B.Vector (Vector Double))
-genPaths gen m n = B.unfoldrN m iter (initvec, gen)
+genPaths :: Int -> Int -> IO (B.Vector (Vector Double))
+genPaths m n = do 
+  normalsvec <- rng (m*n)
+  return $ B.unfoldrN m iter (initvec, normalsvec)
   where
     coef1 = dt*(r-0.5*vol*vol)
     coef2 = vol*sqrt(dt)
     initvec :: Vector Double
     initvec = UB.generate n (const s0)
 
-    iter :: (Vector Double, StdGen) -> Maybe (Vector Double, (Vector Double, StdGen))
-    iter (prev, gen) =
-      let (ran, newgen) = rng gen n
+    iter :: (Vector Double, Vector Double) -> Maybe (Vector Double, (Vector Double, Vector Double))
+    iter (prev, seq) =
+      let (ran, rest) = UB.splitAt n seq
           result = UB.zipWith (\s x -> s * exp(coef1 + x*coef2)) prev ran
-      in Just (result, (result,newgen))
-
+      in Just (result, (result,rest))
 
 iv :: Vector Double -> Vector Double
 iv = UB.map (\x -> max (k-x) 0)
@@ -63,9 +66,9 @@ std = sqrt . variance
 pick :: UB.Unbox a => Vector (Bool, a) -> Vector a
 pick = UB.map snd . UB.filter fst
 
-lsm :: StdGen -> Int -> Int -> IO (Vector Double)
-lsm gen n_points n_paths = do
-  let s = genPaths gen n_points n_paths
+lsm :: Int -> Int -> IO (Vector Double)
+lsm  n_points n_paths = do
+  s <- genPaths n_points n_paths
   let init_disccashflow = iv (B.last s) :: Vector Double
   B.foldM lsm' init_disccashflow (B.reverse $ B.init s)
  where 
@@ -88,10 +91,12 @@ lsm gen n_points n_paths = do
 
 main :: IO ()
 main = do
-  gen <- newStdGen
-  disccashflow <- lsm gen n_points n_paths
+  disccashflow <- lsm n_points n_paths
+  let v0 = df*(UB.sum disccashflow / fromIntegral n_paths)
+  print v0
+  let v0' = if k-s0 > v0 then k-s0 else v0
+  print v0'
   print $ average disccashflow
-  print $ df*(UB.sum disccashflow / fromIntegral n_paths)
   print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral n_paths)
 
 
