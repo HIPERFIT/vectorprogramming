@@ -47,11 +47,13 @@ Even though we think of graphics processors as \textit{modern
   hardware}, the software development tools in widespread use for
 programming them are far from modern. CUDA and OpenCL, the two main
 languages for programming GPUs are low-level languages with manual
-memory management, limited abstractions, no \todo{critise
-even more!}. Alternative approaches have been tried out, but none of them
-have found as widespread use as CUDA and OpenCL. Such higher level
-languages include Theano, Accelerate, Nikola, Obsidian, Intel Array
-Building Blocks, Qilin and Copperhead.
+memory management, limited abstractions, no support for stream fusion,
+and they require tedious hand optimization, as you for instance have
+to stream line your memory access to get decent
+performance. Alternative approaches have been tried out, but none of
+them have found as widespread use as CUDA and OpenCL. Such higher
+level languages include Theano, Accelerate, Nikola, Obsidian, Intel
+Array Building Blocks, Qilin and Copperhead.
 
 \todo{describe the shared characteristica of these languages}
 \todo{define parallel functional programming}
@@ -66,7 +68,11 @@ have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
 current approaches.
 
-% PLC: Should we have these in the introduction? wouldn't they fit better in their respective sections?
+% PLC: Should we have these in the introduction? wouldn't they fit
+% better in their respective sections?
+
+% MD: Yes we should, but only as overview/teaser. I think it would be
+% easier to read, when it is clear what's to come
 \todo{Which kind of problems we have found}
 \todo{Something about what we have done to alleviate those problems}
 
