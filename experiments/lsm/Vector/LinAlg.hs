@@ -14,9 +14,7 @@ polyvals p = map (polyval p)
 
 {-# INLINE polyval #-}
 polyval :: Vector Double -> Double -> Double
-polyval ps x = foldr (\c0 p -> p + x*c0) 0.0 ps
-  where
-   n = length ps
+polyval ps x = foldl (\c0 p -> p + x*c0) 0.0 $ reverse ps
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
 vander :: Vector Double -> Int -> B.Vector (Vector Double)
@@ -43,9 +41,9 @@ lstsq_cholesky a b = x
     aT = transpose a
     c = matTransProd aT
     d = aT `matVecProd` b
-    l = transpose (cholesky c)
-    y = forwardSubstitute l d
-    x = backwardSubstitute (transpose l) y
+    g = cholesky c
+    y = forwardSubstitute g d
+    x = backwardSubstitute (transpose g) y
 
 dim :: Unbox a => B.Vector (Vector a) -> String
 dim a = show n ++ "x" ++ show m

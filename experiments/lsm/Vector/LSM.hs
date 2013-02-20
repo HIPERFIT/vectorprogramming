@@ -70,7 +70,7 @@ lsm :: Int -> Int -> IO (Vector Double)
 lsm  n_points n_paths = do
   s <- genPaths n_points n_paths
   let init_disccashflow = iv (B.last s) :: Vector Double
-  B.foldM lsm' init_disccashflow (B.reverse $ B.init s)
+  B.foldM lsm' init_disccashflow (B.reverse $ B.init (B.tail s))
  where 
   exercise_decision ev iv v | iv > 0 && iv > ev = iv
                             | otherwise = v
@@ -92,39 +92,31 @@ lsm  n_points n_paths = do
 main :: IO ()
 main = do
   disccashflow <- lsm n_points n_paths
-  let v0 = df*(UB.sum disccashflow / fromIntegral n_paths)
-  print v0
+  let v0 = df * average disccashflow
   let v0' = if k-s0 > v0 then k-s0 else v0
   print v0'
-  print $ average disccashflow
-  print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral n_paths)
+  print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral $ UB.length disccashflow)
 
 
--- main :: IO ()
--- main = do
---   s <- readPaths
---   let v = iv (UB.last s) :: Vector Double
---   let v' = UB.map (*df) $ v
---   let s' = UB.last $ UB.init s
---   let rg = polyfit s' v' reg
---   print rg
+-- We should obtain these values from paths1.csv
+-- 7.62729165745
+-- 1.55644862876
+
+-- readPaths :: IO (B.Vector (Vector Double))
+-- readPaths = do
+--   content <- readFile "paths1.csv"
+--   let processline :: String -> Vector Double
+--       processline line = UB.fromList . map read $ wordsWhen (==',') line
+--   return . B.fromList . map processline $ lines content
+
+-- wordsWhen     :: (Char -> Bool) -> String -> [String]
+-- wordsWhen p s =  case dropWhile p s of
+--                       "" -> []
+--                       s' -> w : wordsWhen p s''
+--                             where (w, s'') = break p s'
 
 -- writePaths :: Vector (Vector Double) -> IO ()
 -- writePaths xs = zipWithM_ printPath [1..] (UB.toList $ transpose xs)
 --   where
 --     printPath :: Int -> Vector Double -> IO ()
 --     printPath i xs = zipWithM_ (\x -> putStrLn . ((show i ++ "," ++ show x ++ ",") ++) . show) [0..] $ UB.toList xs
-
--- readPaths :: IO (Vector (Vector Double))
--- readPaths = do
---   content <- readFile "paths.csv"
---   let processline :: String -> Vector Double
---       processline line = UB.fromList . map read $ words line
---   return . UB.fromList . map processline $ lines content
-                      
--- main = writePaths =<< genPaths 50 (4*4096)
-
---instance VU.Unbox a => NFData (VU.Vector a)
-
--- instance NFData a => NFData (UB.Vector a) where
---   rnf v = UB.foldl' (\x y -> y `deepseq` x) () v
