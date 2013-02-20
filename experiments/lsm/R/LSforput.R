@@ -4,7 +4,7 @@ source("setup.R")
 
 alpha.ls.vec<-0*0:N.points
 alpha.ls.vec[N.points+1]<-K
-exercisetime.vec<-0/0+0*1:(2*N.paths) # ~ikke exerciset
+exercisetime.vec<-0/0+0*1:(N.paths) # ~ikke exerciset
 disccashflow.vec<-Put.sim.matrix[,(N.points+1)]
 exercisetime.vec[disccashflow.vec>0]<-t.vec[(N.points+1)]
 

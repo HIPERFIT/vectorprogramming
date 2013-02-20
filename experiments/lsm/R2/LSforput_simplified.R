@@ -16,7 +16,7 @@ for (k in N.points:2){ # fold
   intrinsicvalue<-pmax(K-Sk,0)
   pick<-intrinsicvalue>0
   X<-S.matrix[pick,k]
-  RHS<-cbind(X,X*X)
+
 
   if(length(X) <= 2) {
     # It seems that this happens very rarely, at least for large
@@ -27,16 +27,16 @@ for (k in N.points:2){ # fold
   }
   
 
-  RHS<-cbind(X,X*X) 
-  Y<-exp(-r*dt)*disccashflow.vec[pick]
 
+  Y<-exp(-r*dt)*disccashflow.vec[pick]
+#  RHS<-cbind(X,X*X) 
   #est<-lsfit(RHS,Y, intercept=T)$coef
 #  Rprof(append=TRUE)
   est<-polyfit(X,Y, 3)
+
 #  Rprof(NULL)
   # polyval
   estimatedtimevalue<-est[1]+est[2]*Sk+est[3]*Sk*Sk
-
 
   exercise<-(pick) & (intrinsicvalue>estimatedtimevalue)
   notexercise<-!exercise
@@ -44,6 +44,8 @@ for (k in N.points:2){ # fold
   disccashflow.vec[notexercise]<-exp(-r*dt)*disccashflow.vec[notexercise]
 
   disccashflow.vec[exercise]<-intrinsicvalue[exercise]
+
+
 }
 
 putprice<-exp(-r*dt)*mean(disccashflow.vec)
