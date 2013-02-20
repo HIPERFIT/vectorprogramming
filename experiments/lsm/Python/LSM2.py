@@ -43,6 +43,9 @@ def IV(S):
 
 ## Valuation by LSM
 S = GenS(Npaths) # generate stock price paths
+# savetxt("paths.csv", S, delimiter=",")
+# S = loadtxt("paths1.csv", delimiter=",")
+
 h = IV(S)   # inner value matrix
 
 disccashflow = IV(S[Npoints+1,:])   # value matrix
