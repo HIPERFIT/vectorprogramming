@@ -4,30 +4,56 @@
 used, i.e. Exp, Array, storable vectors, monad P, compilation from user
 perspective, TH same-module restriction...}
 
-Nikola presents for its clients three data types: \texttt{Exp t a},
-\texttt{Array r sh a} and the monad \texttt{P a}. It also provides type class
-machinery for compiling Nikola functions to CUDA code which is subsequently
-wrapped in regular haskell functions.
 
-Nikola expressions are embedded inside \texttt{Exp t a}, with the type variable
-\texttt{t} representing the target architecture for the expression, eg.
-\texttt{CUDA}. Thus, it is possible to have Nikola terms specialised for
-different backends.
+Nikola presents for its clients three data types: \texttt{Exp t a},
+\texttt{Array r sh a} and the program monad \texttt{P a}. These parts are all
+backend agnostic. It also provides a type class directed \texttt{compile}
+function for compiling Nikola functions to CUDA code which is subsequently
+wrapped as regular haskell functions.
+
+Nikola expressions are represented by the \texttt{Exp t a} type, with the
+phantom type variable \texttt{t} representing the target architecture for the
+expression, eg.  \texttt{CUDA}. Thus, it is possible to have Nikola terms
+specialised for different backends. This is unusual, as programming languages
+are typically assumed universal in the sense that every well-typed expression
+is executable on every supported machine architecture. Nikola is the first
+programming language we have witnessed to explicitly encode term portability in
+the type system.
 
 Following in the tradition of Repa, arrays in Nikola are parametrised by their
 representation and shape by the type variables \texttt{r} and \texttt{sh}.
 Three principal array representations are provided by Nikola: The global array,
 the delayed array, and the push array, denoted respectably by the types
-\texttt{G}, \texttt{PSH} and \texttt{D}.
+\texttt{G}, \texttt{PSH} and \texttt{D}. 
 
 This is a source of both control and complexity, as each representation gives
-rise to different features and restrictions.
+rise to different features and restrictions. The global array represent a certain
+manifest range of memory cells, from which it is only safe to read. Push arrays
+and delayed arrays however, represent array computations rather than actual
+areas in memory - only at the Nikola-Haskell border are they manifest into
+memory. An important consequence of this is that terms composed of Delayed and
+Push arrays undergo fusion by construction.
+
+What actions arrays may be composed with is modeled with the use of type
+classes. 
+\begin{itemize}
+\item The \texttt{Source r e} type class specifies an \texttt{index}
+function that allow a consumer to extract values of type \texttt{e} from an
+array with representation \texttt{r} and contents \texttt{e}.
+\item The \texttt{Target r e} type class enables mutable access of \texttt{r}-arrays in the \texttt{P} monad.
+\item The \texttt{Load r e} type class enables manifestation of \texttt{r}-arrays into
+\texttt{Target r' e} arrays in the \texttt{P} monad.
+\end{itemize}
+
+A protruding difference between Push arrays and Delayed arrays is their
+perspective on the arrays they represent. A Delayed array is simply a function
+from indices to values. ..............
+A Push array is a stream of index/value pairs.
 
 \texttt{Array r sh a} is an associated type of the typeclass \texttt{IsArray r
 a}. The only common operation for all arrays is that of extracting their shape
-through the function \texttt{extent}.
-
-Array shapes are similar to those of Repa and Accelerate, denoted as instances of typeclass \texttt{Shape sh}.
+through the function \texttt{extent}. Array shapes are similar to those of
+Repa and Accelerate, denoted as instances of typeclass \texttt{Shape sh}.
 
 \section{Nikola Backend Architecture}
 
