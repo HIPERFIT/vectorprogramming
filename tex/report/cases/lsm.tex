@@ -141,50 +141,81 @@ where $\ldots b_3b_2b_1$ is the binary representation of $i$. This
 simple algorithm is presented in Figure \ref{alg:sobol-inductive},
 where \textsc{ToBitVector} converts an integer $i$ to its binary
 representation as an array of integers. As each iteration is
-independent the algorithm is easy to parallelise.
+independent, we can parallelise this by mapping
+\textsc{SobolInductive} over the indices.
 
 \begin{algorithm}
   \begin{algorithmic}
-    \Function{SobolInductive}{$v$,$n$}
-    \For{$i \gets 0$ to $n-1$}
-    \State $A[i] \gets$ \textbf{fold} $\oplus$ 0 (\textbf{zipWith} ($\times$) (\textsc{ToBitVector} i) $v$)
-    \EndFor
+    \Function{SobolInductive}{$v$,$i$}
+    \State \Return \textbf{fold} $\oplus$ 0 (\textbf{zipWith} ($\times$) $v$ (\textsc{ToBitVector} $i$))
     \EndFunction
   \end{algorithmic}
-  \caption{Inductive Sobol generator.}
+  \caption{Generate element $i$ of the Sobol sequence using vector
+    $v$ as direction numbers.}
   \label{alg:sobol-inductive}
 \end{algorithm}
 
-If one seeks for a sequential algorithm, we can improve by \todo{ref}
-using the Gray code binary representation instead of the ordinary,
-whereby a recursive definition of Sobol sequences can be made, as it
-has been shown that
+% \begin{algorithm}
+%   \begin{algorithmic}
+%     \Function{SobolInductive}{$v$,$n$}
+%     \ParFor{$i \gets 0$ to $n-1$}
+%     \State $A[i] \gets$ \textbf{fold} $\oplus$ 0 (\textbf{zipWith} ($\times$) (\textsc{ToBitVector} i) $v$)
+%     \EndParFor
+%     \EndFunction
+%   \end{algorithmic}
+%   \caption{Inductive Sobol generator.}
+%   \label{alg:sobol-inductive}
+% \end{algorithm}
+
+If one seeks for a sequential algorithm, we can improve by using the
+Gray code binary representation of the index instead of the ordinary,
+whereby a recursive definition of Sobol sequences can be made
+\todo{ref}. It has been shown that
 $$x_{i+1} = x_n \oplus v_c$$
-where $c$ refers to \todo{...}
+where $c = \mathit{lsb}(n)$ is the index of the least set bit in
+$n$. A sequential algorithm using this strategy is presented in Figure
+\ref{alg:sobol-recursive}.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{SobolRecursive}{$v$,$A$,$i$,$n$}
+    \State $A[i] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $i$)
+    \State $j \gets i + 1$
+    \While{$j < i + n$ \textbf{and} $j < length[A]$}
+    \State $c \gets \mathrm{lsb}(j)$
+    \State $A[j] \gets A[j-1] \oplus v_c$
+    \State $j \gets j + 1$
+    \EndWhile
+    \EndFunction
+  \end{algorithmic}
+  \caption{Generate elements $i$ through $i+n-1$ of the Sobol
+    sequence and store results at the appropriate indices of $A$}
+  \label{alg:sobol-recursive}
+\end{algorithm}
 
 You will not obtain the same sequence using this approach though, but
 it has been shown \todo{cite} that Gray code based sequences also
-displays the property of low discrepancy. As conversion to Gray code
-representation is done through single shift and an exclusive-or
-operation, this makes for a cheap sequential algorithm.
+displays the property of low discrepancy, as it is merely a scrambling
+(reordering) of prefixes of the original Sobol sequence. As conversion
+to Gray code representation is done through single shift and an
+exclusive-or operation, this makes for a cheap sequential algorithm.
 
 The two approaches can be combined to achieve an alternative parallel
 implementation. The sequence that needs to be generated is divided in
 chunks onto each processing element, the inductive algorithm is used
 to initialize each of the chunks and the recursive algorithm is then
-used to fill out the space. The algorithm is shown in Figure \ref{alg:sobol-parallel-1}
+used to fill out the space. The algorithm is shown in Figure
+\ref{alg:sobol-parallel-1}
 
 \begin{algorithm}
-  \todo{add gray code, define $v_c$}
+  \todo{remember to normalise to $(0,1]$}
   \begin{algorithmic}
-    \Function{SobolInductive}{$v$,$n$}
-    \State $m \gets$ number of processor core
+    \Function{SobolParRecurse}{$v$,$n$}
+    \State $m \gets$ number of processor cores
     \State $r \gets \lfloor n/m \rfloor$
     \ParFor{$p \gets 0$ to $m-1$}
-    \State $A[p\cdot r] \gets$ \textbf{fold} $\oplus$ 0 (\textbf{zipWith} ($\cdot$) (\textsc{ToBitVector} i) $v$)
-    \For{$i <- p\cdot r + 1$ to $p\cdot r + min(r, n-r\cdot p)$}
-    \State $A[i] \gets A[i - 1] \oplus v_c$ 
-    \EndFor
+    \State $start \gets p\cdot r$
+    \State \textsc{SobolRecursive}($v$,$A$,$start$,$\min(r,n-start)$)
     \EndParFor
     \EndFunction
   \end{algorithmic}
@@ -195,12 +226,59 @@ used to fill out the space. The algorithm is shown in Figure \ref{alg:sobol-para
 The problem with this algorithm is that its memory behavior is not
 suitable for GPUs. Programs that does not coalesce memory accesses,
 such that all cores act on the same block simultaneously, incurs a big
-performance penalty. 
+performance penalty. With this algorithm, each thread will write very
+dispersed, as each thread will fill out each its own region of the
+array A.
 
-Luckily, an alternative implementation has been found by Thomas
-Bradley et al. \todo{cite parallelisation techniques for random number
-  generators}. They have found that \todo{}
+Luckily, an alternative strategy has been shown by Thomas Bradley et
+al. \cite{bradley2010parallelisation} \todo{It seems that this might
+  actually be a chapter from the book ``GPU Computing Gems Emerald
+  Edition'', change citation accordingly?}.
 
+\begin{algorithm}
+  \todo{remember to normalise to $(0,1]$}
+  \todo{define that $m$ is per SM}
+  \begin{algorithmic}
+    \Function{SobolSkipping}{$v$,$n$}
+    \State $m \gets$ number of processor cores
+    \State $r \gets \lfloor n/m \rfloor$
+    \ParFor{$p \gets 0$ \textbf{to} $m-1$}
+    \State $A[p] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $p$)
+    \State $i \gets p + m$
+    \While{$i < n$}
+    \State $A[i] \gets A[i - 1] \oplus \ldots$
+    \State $i <- i + m$
+    \EndWhile
+    \EndParFor
+    \EndFunction
+  \end{algorithmic}
+  \caption{Parallel Sobol sequence generator.}
+  \label{alg:sobol-parallel-1}
+\end{algorithm}
+
+
+\subsection{Sampling the standard normal distribution}
+The Sobol sequence generator as well as most other PRNG's and QRNG's
+draws samples uniformly from the interval $(0,1]$ ($0$ is not
+included, as we often want to avoid negative samples). In our
+application we need samples from the standard normal distribution,
+$\mathcal{N}(0,1)$, and thus a transformation is necessary. We have
+not looked closely at this particular aspect, and thus have just
+settled on using the pretty simple Box-Muller transformation. With
+Box-Muller a pair of independent random variates $u,v$ drawn uniformly
+from $(0,]$ can be transformed into two values $x,y$ of the standard normal
+distribution by:
+
+\begin{equation*}
+  x =\sqrt{-2 \ln u} \cos(2 \pi v) \quad\quad
+  y = \sqrt{-2 \ln u} \sin(2 \pi v)
+\end{equation*}
+
+It is thus easy to parallelise, as there are only dependency between
+every two samples, but the $\cos$ and $\sin$ operations are quite
+expensive. \todo{maybe a footnote on using CUDA's
+  \emph{sincospi}-function that implements $\mathrm{sincospi}(x) = \sin(\pi \cdot x)$ and
+  $\cos(\pi \cdot x)$}
 
 \subsection{Least Squares solvers}
 \todo{LU, QR and Cholesky decomposition}
