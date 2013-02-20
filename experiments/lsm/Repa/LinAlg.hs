@@ -7,24 +7,22 @@ import Control.Monad.ST
 
 import Data.Array.Repa
 import Data.Array.Repa.Eval
-import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, reverse, null, replicate, tail, head, zip3, take, or, (++))
+import Prelude hiding (sum, zipWith, zipWith3, length, map, foldl, foldr, reverse, null, replicate, tail, head, zip3, take, or, (++))
 import qualified Prelude
 
+import qualified Data.Vector.Unboxed as UB
 
 import RepaHelpers  
 
 polyvals :: Array D DIM1 Double -> Array D DIM1 Double -> Array D DIM1 Double
 polyvals p = map (polyval p)
 
+{-# INLINE polyval #-}
 polyval :: Array D DIM1 Double -> Double -> Double
-polyval p x = sumAllS $ zipWith (\p' n' -> p'*x**(fromIntegral n')) p pows
-  where
-   size = extent p
-   n = unindex1 size
-   pows = fromFunction size (\(Z :. i) -> n - i)
+polyval ps x = UB.foldl (\c0 p -> p + x*c0) 0.0 $ toUnboxed $ computeUnboxedS $ reverse ps
 
 -- http://facstaff.unca.edu/mcmcclur/class/LinearII/presentations/html/leastsquares.html
-vander :: Array D DIM1 Double -> Int -> Array D DIM2 Double
+vander :: Array U DIM1 Double -> Int -> Array D DIM2 Double
 vander xs degree = fromFunction (Z :. n :. degree + 1) (\(Z :. i :. j) -> xs ! (Z :. i) ** (fromIntegral j))
   where
     n = unindex1 $ extent xs
@@ -32,23 +30,18 @@ vander xs degree = fromFunction (Z :. n :. degree + 1) (\(Z :. i :. j) -> xs ! (
 -- * Create Vandermonde matrix A
 -- * Solve system A*c = y for c
 --  - This can be done by LU, Cholesky or QR decomposition
-polyfit :: Array D DIM1 Double -> Array D DIM1 Double -> Int -> IO (Array D DIM1 Double)
-polyfit xs ys degree = c --zipWith (/) c scale
-  where
-    a = vander xs degree
---    scale = map (sqrt . sum . (map (\x -> x*x))) $ transpose a
---    lhs = transpose $ zipWith (\as s -> map (/s) as) (transpose a) scale
---    c = lstsq_cholesky a ys 
-    c = lstsq_cholesky a ys --solveWithHMatrix (matProd (transpose lhs) lhs) ((transpose lhs) `matVecProd` ys)
+polyfit :: Array U DIM1 Double -> Array U DIM1 Double -> Int -> IO (Array D DIM1 Double)
+polyfit xs ys degree = lstsq_cholesky a ys
+  where a = vander xs degree
 
-lstsq_cholesky :: Array D DIM2 Double -> Array D DIM1 Double -> IO (Array D DIM1 Double)
+lstsq_cholesky :: Array D DIM2 Double -> Array U DIM1 Double -> IO (Array D DIM1 Double)
 lstsq_cholesky a b = do 
-  let aT = transpose a
-  c <- aT `matProd` a
-  d <- aT `matVecProd` b
+  aT <- computeUnboxedP $ transpose a
+  c <- matTransProd aT
+  d <- (delay aT) `matVecProd` b
   l <- cholesky (delay c)
   let y = forwardSubstitute (delay l) d
-      x = backwardSubstitute (transpose l) y
+      x = backwardSubstitute (delay l) y
   return x
 
 dim :: Source r e => Array r DIM2 e -> String
@@ -97,7 +90,17 @@ matProd a b = sumP (zipWith (*) aRepl bRepl)
       (Z :.colsA :.rowsA) = extent a
       (Z :.colsB :.rowsB) = extent b
 
-matVecProd :: Monad m => Array D DIM2 Double -> Array D DIM1 Double -> m (Array D DIM1 Double)
+matTransProd  :: Monad m
+              => Array U DIM2 Double
+              -> m (Array U DIM2 Double)
+matTransProd a = sumP (zipWith (*) aRepl bRepl)
+    where
+      aRepl = extend (Z :.All :.colsA :.All) a
+      bRepl = extend (Z :.rowsA :.All :.All) a
+      (Z :.colsA :.rowsA) = extent a
+
+
+matVecProd :: Monad m => Array D DIM2 Double -> Array U DIM1 Double -> m (Array D DIM1 Double)
 matVecProd xs ys = do
   when (n /= m) $ traceShow (dim xs) $ traceShow (length ys) $ error "matVecProd: Incompatible dimensions"
   x <- matProd xs (reshape (Z :. n :. 1) ys)

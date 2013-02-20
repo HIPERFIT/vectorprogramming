@@ -4,7 +4,7 @@ module RepaHelpers where
 import Data.Array.Repa
 
 import Prelude hiding (zipWith)
-
+import qualified Data.Vector.Unboxed as UB
 
 empty :: Array D DIM1 e
 empty = fromFunction (Z :. 0) undefined
@@ -44,4 +44,18 @@ index1 e = Z :. e
 
 length :: Source r e => Array r DIM1 e -> Int
 length arr = let (Z :. n) = extent arr in n
+
+
+zipWith3 :: (Shape sh, Source r1 a, Source r2 b, Source r3 c)
+        => (a -> b -> c -> d)
+        -> Array r1 sh a -> Array r2 sh b -> Array r3 sh c
+        -> Array D sh d
+zipWith3 f arr1 arr2 arr3
+ = let  get ix  = f (arr1 `unsafeIndex` ix) (arr2 `unsafeIndex` ix) (arr3 `unsafeIndex` ix)
+        {-# INLINE get #-}
+        
+   in   fromFunction 
+                (intersectDim (extent arr1) (intersectDim (extent arr2) (extent arr3)))
+                get
+
 

@@ -6,13 +6,14 @@ import Data.List (intersperse)
 import Control.Monad
 import Control.DeepSeq
 
-import System.Random.Mersenne.Pure64 (newPureMT)
+import System.Exit
+import System.Random.Mersenne.Pure64 (newPureMT, pureMT, PureMT)
 import Random
 import LinAlg
 
 -- Simulation parameters
 n_paths :: Int
-n_paths = 20000          -- time steps
+n_paths = 20000
 n_points :: Int
 n_points = 252
 reg = 2
@@ -28,21 +29,21 @@ df  = exp(-r*dt)         -- discount factor per time interval
 k   = 100.0              -- strike price
 
 
-rng count = do
-  gen <- newPureMT
+rng gen count =
   let normalsvec = normals gen (count `div` 2)
-  return $ normalsvec UB.++ (UB.reverse $ UB.map (* (-1)) normalsvec)
+  in normalsvec UB.++ (UB.reverse $ UB.map (* (-1)) normalsvec)
 
 -- ^ Generate paths
-genPaths :: Int -> Int -> IO (B.Vector (Vector Double))
-genPaths m n = do 
-  normalsvec <- rng (m*n)
+genPaths :: PureMT -> Int -> Int -> IO (B.Vector (Vector Double))
+genPaths gen m n = do 
   return $ B.unfoldrN m iter (initvec, normalsvec)
   where
     coef1 = dt*(r-0.5*vol*vol)
     coef2 = vol*sqrt(dt)
     initvec :: Vector Double
     initvec = UB.generate n (const s0)
+
+    normalsvec = rng gen (m*n)
 
     iter :: (Vector Double, Vector Double) -> Maybe (Vector Double, (Vector Double, Vector Double))
     iter (prev, seq) =
@@ -68,7 +69,8 @@ pick = UB.map snd . UB.filter fst
 
 lsm :: Int -> Int -> IO (Vector Double)
 lsm  n_points n_paths = do
-  s <- genPaths n_points n_paths
+  gen <- newPureMT
+  s <- genPaths gen n_points n_paths
   let init_disccashflow = iv (B.last s) :: Vector Double
   B.foldM lsm' init_disccashflow (B.reverse $ B.init (B.tail s))
  where 
