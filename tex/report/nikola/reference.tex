@@ -1,73 +1,112 @@
-\section{Nikola module overiew reference}
+\section{Nikola module overiew reference} \label{section:nikola-reference}
 
 In this section we provide a small overview of central modules and namespaces
 in Nikola for reference. These modules all reside in the
 \texttt{Data.Array.Nikola} namespace.
 
-\paragraph{Frontend}
-\begin{itemize}
+\subsection{Frontend modules}
+\begin{description}
 
-  \item \texttt{Exp} module. Exports the type \texttt{Exp t a} and typeclass
+  \item[\texttt{Exp}] module. Exports the type \texttt{Exp t a} and typeclass
     \texttt{IfThenElse} for use with rebindable syntax. The type \texttt{Exp t
     a} will sometimes appear as qualified name \texttt{E.Exp} in case of
     ambiguity.
 
-  \item \texttt{Array} module. Defines \texttt{IsArray r e} typeclass with
+  \item[\texttt{Array}] module. Defines \texttt{IsArray r e} typeclass with
     associated type \texttt{Array r sh e}. It also defines the
     \texttt{Source r e} typeclass for arrays that support indexing.
 
-  \item \texttt{Shape} module. Defines types \texttt{Z}, \texttt{sh :. a}
-    and the typeclass \texttt{Shape}, with instances for \texttt{Z} and
+  \item[\texttt{Shape}] module. Defines types \texttt{Z}, \texttt{sh :. a}
+    and the typeclass \texttt{Shape sh}, with instances for \texttt{Z} and
     \texttt{sh :. a}.
 
-  \item \texttt{Repr} namespace. Contains modules definining the array
+  \item[\texttt{Repr}] namespace. Contains modules definining the array
     representations for Push, Delayed and Global arrays through
     \texttt{IsArray} instances.
 
-  \item \texttt{Backend.CUDA.Haskell} and \texttt{Backend.CUDA.TH} modules.
+  \item[\texttt{Backend.CUDA.Haskell}, \texttt{Backend.CUDA.TH}] modules.
     Define the \texttt{compile} function for runtime and compiletime usage
     respectively.
 
-\end{itemize}
+\end{description}
 
-\paragraph{Backend}
-\begin{itemize}
+\subsection*{Backend modules}
+\begin{description}
 
-  \item \texttt{Language.Syntax} module. Exports the \texttt{Exp} datatype,
-    which is a first-order abstract syntax for primitive Nikola expressions. It
-    contains constructs for manipulating memory arrays, looping and annonymous
-    functions. It also exports the datatypes \texttt{Type} and \texttt{ScalarType}
-    used as church style type annotations for \texttt{Exp} values. In the case
-    of ambiguity we quailfy \texttt{Exp} as \texttt{S.Exp}.
+  \item[\texttt{Language.Syntax}] module. Exports the \texttt{Exp} datatype,
+    which is a first-order abstract syntax for primitive Nikola expressions.
+    The abstract syntax contains constructs for manipulating memory arrays,
+    looping and annonymous functions. It also exports the datatypes
+    \texttt{Type} and \texttt{ScalarType} used as church style type annotations
+    for \texttt{Exp} values. In the case of ambiguity we quailfy \texttt{Exp}
+    as \texttt{S.Exp}.
 
-  \item \texttt{Language.Check} module. Contains a type checker and simple type
+  \item[\texttt{Language.Check}] module. Contains a type checker and simple type
     inference for \texttt{Exp} values. Also defines the typeclass
     \texttt{MonadCheck m}, to allow type checking to be performed in any monad
     that defines how to access to the typing environment
 
-  \item \texttt{Language.Monad} module. Defines the continuation passing
+  \item[\texttt{Language.Monad}] module. Defines the continuation passing
     \texttt{R r a} monad, and the type alias \texttt{type P a = R Exp a}.
     Also defines the combinators \texttt{shift} and \texttt{reset} for
     delimited continuations \cite{waddler1994monads}.
 
-  \item \texttt{Language.Reify} module. Exports the \texttt{Reifiable a b}
+  \item[\texttt{Language.Reify}] module. Exports the \texttt{Reifiable a b}
     typeclass. It provides the operation \texttt{reify :: a -> R b b},
     which is the central piece in converting frontend data types
     \texttt{Exp t a} and \texttt{Array r sh e} to primitive \texttt{Exp}.
 
-  \item \texttt{Language.Optimize} namespace and module. Provides various
+  \item[\texttt{Language.Optimize}] namespace and module. Provides various
     optimizations on Nikola \texttt{S.Exp} values exclusively. Most notable is
     the detection of let-sharing, see \cite{mainland2010nikola}. Marking
     parallel for-loops at the top level to be translated to CUDA kernels is
     also treated as an optimisation in Nikola.
 
-  \item \texttt{Backend.C.Codegen} module. Generates C code from \texttt{S.Exp}
+  \item[\texttt{Backend.C.Codegen}] module. Generates C code from \texttt{S.Exp}
     values, represented as C abstract syntax.
 
-\end{itemize}
+\end{description}
 
 Apart from these modules Nikola also provides various implementations of
 vectors in the \texttt{Data.Vector.CUDA} namespace. These vectors are
 stored in device memory and integrate with \texttt{compile} to allow
 control of the timing of host-device data transfers.
 
+Furthermore these vector implementations are integrated with Repa as additional
+array representation types in modules in the \texttt{Data.Array.Repa.Repr.CUDA}
+namespace.
+
+\subsection{Array representation capabilities.}
+
+The operations that arrays may be used with is modeled with the use of type
+classes.
+
+\begin{itemize}
+
+  \item The \texttt{Source r e} type class specifies an \texttt{index}
+    function that allow a consumer to extract values of type \texttt{e} from an
+    array with representation \texttt{r} and contents \texttt{e}.
+
+    Instances:
+    \begin{itemize}
+      \item \texttt{Source D e}
+      \item \texttt{IsElem e => Source G e}
+    \end{itemize}
+
+  \item The \texttt{Target r e} type class enables mutable access of
+    \texttt{r}-arrays in the \texttt{P} monad.
+
+    Instances:
+    \begin{itemize}
+      \item \texttt{IsElem e => Target G e}
+    \end{itemize}
+
+  \item The \texttt{Load r sh e} type class enables manifestation of
+    \texttt{r}-arrays into \texttt{Target r' e} arrays in the \texttt{P} monad.
+
+    Instances:
+    \begin{itemize}
+      \item \texttt{Shape sh => Load sh D}
+      \item \texttt{Shape sh => Load sh PSH}
+    \end{itemize}
+\end{itemize}
