@@ -66,4 +66,4 @@ cat $BENCHROOT/$BENCHMARK/inputs | timeout --foreground $(($TIMEOUTMINS*60)) $RU
 
 # In the case of incomplete output (when the benchmark does not
 # complete), this will make R's CSV-parser happy!
-echo "\n" >> $SUMMARYFILE
+echo $'\n' >> $SUMMARYFILE
