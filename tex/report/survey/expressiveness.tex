@@ -1,0 +1,76 @@
+\chapter{Evaluation: Expressiveness}
+% ``How tight is the correspondence to the Rolfs R-code?''
+
+\todo{Compare the "coding experience" of R and CUDA. what is the level of
+abstraction? Tools available? How advanced tools are required to debug? }
+
+\section{CUDA/C}
+
+\todo{maybe these tow paragraphs are better suited in language introduction?}
+
+Since CUDA/C is close to a one-to-one mapping of hardware abilities to language
+primitives, it is possible though not necessarily easy to implement anything
+that the hardware is capable of running.
+
+Every single resource must be explicitly managed -- there is not even a
+function call stack. While this enables the coding of very fast algorithms,
+programs are also more tightly coupled with the parameters of the hardware, and
+to assumptions about input size. So even though a CUDA programmer has access to
+highly optimised linear algebra libraries such as CUBLAS \cite{CUBLAS2013},
+optimisations such as loop fusion must be coded by hand, ruling out using such
+libraries. This optimisation often has profound effects on performance
+\cite{mainlandhaskell}.
+
+When implementing the binomial option pricer in CUDA, we relied on example code
+from the CUDA SDK provided by Nvidia \cite{CUDAbinomial}, as we assumed this to
+be a good sample of real-world CUDA code. This example code was in fact
+specialised to price a portfolio of options rather than a single option, and as
+seen in the performance evaluation it scales less well than Nikola.
+\todo{check that this is actually true once the performance section has been written.}
+
+Adapting the CUDA pricer to use just a single option proved to be a substantial
+and error prone effort for us.
+
+\section{R}
+
+\section{Repa}
+\section{Accelerate}
+
+Accelerate provides a variety of array operations: Both scans, segmented
+scans, folds, permutations, maps and zips.
+
+Reductions (folds) are defined on arrays of arbitrary rank by performing the
+reduction on the innermost operation, yielding an array with rank one less.
+Maps are all elementwise regardless of the shape of the input array, and scans
+are only defined on one-dimensional arrays.
+
+Accelerate employs a meticulus partitioning of functions on arrays and functions
+on scalar values. Array functions are all embedded in the \texttt{Acc a} type,
+while scalars are embedded in the \texttt{Exp a} type. So, everything that is
+capable of reducing an array or producing an array is carefully placed inside
+\texttt{Acc}, and the functions usable for elementwise computation must
+reside in \texttt{Exp}. Thus, the lack of nested parallelism is directly
+encoded in the type system.
+
+
+
+\section{Nikola}
+
+For both Accelerate and Nikola it were allowed to write nested loops only to
+the extent that they may be unfolded in their entirety at compile-time. For the
+binomial pricer this is not a problem, as the number of loop iterations is a
+simple function of the number of days simulated.  \todo{Nikola also has a
+seq-loop construct?} However, for Accelerate this unfolding resulted in it
+having to compile a CUDA kernel representing each loop iteration, greatly
+dominating the execution time. To overcome this required some (nontrivial?)
+rewriting of the code.
+
+Because of the heavy syntactical overloading of Haskell employed by Nikola, the
+code was/is? required to be divided into more small modules than is usually
+required/desirable.
+
+Repa and Vector are entirely CPU based, and are thus just normally executed
+Haskell code without any explicit recompilation. As a result they suffered none
+of the expressive shortcomings of Nikola and Accelerate. Thus, they closely
+mirror the reference R code.
+

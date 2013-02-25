@@ -52,12 +52,12 @@ sobolN n =
   let
     Z :. i :. j = arrayShape sobol_dirVs_array
     cubeSize = constant $ Z :. n :. i :. j
-    
+
     sobolIndices = generate cubeSize (fst3 . unindex3)
     directionNumberIndices = generate cubeSize (thd3 . unindex3)
 
     ps = map fromBool $ zipWith (testBit . grayCode) sobolIndices directionNumberIndices
-    
+
     directionNumbersRep = replicate (constant $ Z :. n :. All :. All) (use sobol_dirVs_array)
 
     xs :: Acc (Array DIM2 Elem)
