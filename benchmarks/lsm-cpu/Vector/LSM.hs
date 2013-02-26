@@ -1,3 +1,5 @@
+module LSM where
+
 import qualified Data.Vector.Unboxed as UB
 import Data.Vector.Unboxed (Vector)
 import qualified Data.Vector as B
@@ -67,12 +69,15 @@ std = sqrt . variance
 pick :: UB.Unbox a => Vector (Bool, a) -> Vector a
 pick = UB.map snd . UB.filter fst
 
-lsm :: Int -> Int -> IO (Vector Double)
+lsm :: Int -> Int -> IO Double
 lsm  n_points n_paths = do
   gen <- newPureMT
   s <- genPaths gen n_points n_paths
   let init_disccashflow = iv (B.last s) :: Vector Double
-  B.foldM lsm' init_disccashflow (B.reverse $ B.init (B.tail s))
+  disccashflow <- B.foldM lsm' init_disccashflow (B.reverse $ B.init (B.tail s))
+  let v0 = df * average disccashflow
+  let putprice = if k-s0 > v0 then k-s0 else v0
+  return putprice
  where 
   exercise_decision ev iv v | iv > 0 && iv > ev = iv
                             | otherwise = v
@@ -91,13 +96,15 @@ lsm  n_points n_paths = do
                 intrinsic_value
                 default_out
 
-main :: IO ()
-main = do
-  disccashflow <- lsm n_points n_paths
-  let v0 = df * average disccashflow
-  let v0' = if k-s0 > v0 then k-s0 else v0
-  print v0'
-  print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral $ UB.length disccashflow)
+
+
+-- main :: IO ()
+-- main = do
+--   disccashflow <- lsm n_points n_paths
+--   let v0 = df * average disccashflow
+--   let v0' = if k-s0 > v0 then k-s0 else v0
+--   print v0'
+--   print $ 1.96 * std(UB.map (df*) disccashflow)/sqrt(fromIntegral $ UB.length disccashflow)
 
 
 -- We should obtain these values from paths1.csv

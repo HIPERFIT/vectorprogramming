@@ -1,9 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Main where
+module LSM where
 
 import Data.List (intersperse)
 import Control.Monad
-import Control.DeepSeq
 
 import Prelude hiding ((++), reverse, take, map, zipWith, zipWith3, length)
 import qualified Prelude
@@ -86,12 +85,15 @@ std = sqrt . variance
 pick :: (Unbox a, Monad m, Source r a) => Array D DIM1 Bool -> Array r DIM1 a -> m (Array U DIM1 a)
 pick p xs = selectP (index p . index1) (index xs . index1) (length xs)
 
-lsm :: Int -> Int -> IO (Array U DIM1 Double)
+lsm :: Int -> Int -> IO Double
 lsm n_points n_paths = do
   gen <- newPureMT
   s <- genPaths gen n_points n_paths
   init_disccashflow <- computeUnboxedP $ iv (DV.last s)
-  DV.foldM lsm' init_disccashflow (DV.reverse $ DV.init (DV.tail s))
+  disccashflow <- DV.foldM lsm' init_disccashflow (DV.reverse $ DV.init (DV.tail s))
+  let v0 = df * average disccashflow
+  let putprice = if k-s0 > v0 then k-s0 else v0
+  return putprice
  where 
   exercise_decision :: Double -> Double -> Double -> Double
   exercise_decision ev iv v = if iv > 0 && iv > ev then iv else v
@@ -112,10 +114,10 @@ lsm n_points n_paths = do
                intrinsic_value 
                default_out
 
-main :: IO ()
-main = do
-  disccashflow <- lsm n_points n_paths
-  let v0 = df * average disccashflow
-  let v0' = if k-s0 > v0 then k-s0 else v0
-  print v0'
-  print $ 1.96 * std(map (df*) disccashflow)/sqrt(fromIntegral $ length disccashflow)
+-- main :: IO ()
+-- main = do
+--   disccashflow <- lsm n_points n_paths
+--   let v0 = df * average disccashflow
+--   let v0' = if k-s0 > v0 then k-s0 else v0
+--   print v0'
+--   print $ 1.96 * std(map (df*) disccashflow)/sqrt(fromIntegral $ length disccashflow)
