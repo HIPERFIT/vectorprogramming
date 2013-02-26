@@ -40,7 +40,7 @@ Accelerate provides a variety of array operations: Both scans, segmented
 scans, folds, permutations, maps and zips.
 
 Reductions (folds) are defined on arrays of arbitrary rank by performing the
-reduction on the innermost operation, yielding an array with rank one less.
+reduction on the innermost dimension, yielding an array with rank one less.
 Maps are all elementwise regardless of the shape of the input array, and scans
 are only defined on one-dimensional arrays.
 
@@ -52,7 +52,65 @@ capable of reducing an array or producing an array is carefully placed inside
 reside in \texttt{Exp}. Thus, the lack of nested parallelism is directly
 encoded in the type system.
 
+While this restriction probably makes it easy to ensure efficient execution of
+the individual contructs, it impairs the composability of the language
+constructs significantly, as the programmer needs to manually transform
+algorithms with a naturally nested defintion into something that will fit into
+the view of Accelerate.
 
+Consider this small example, derived from a problem we actually encountered
+while exploring the sobol sequence generation case:
+
+Suppose we have a function \texttt{f} performing a simple vector operation,
+such as multiplying a scalar.
+
+\begin{verbatim}
+f :: Vector a -> b -> Vector c
+f as b = map ((*) b) as
+\end{verbatim}
+
+Now, if we want to do scalar multiplication with a vector of scalars, in
+\texttt{Data.Vector} haskell, this is what we could reasonably write:
+
+\begin{verbatim}
+g :: Vector a -> Vector b -> Vector (Vector c)
+g as bs = map (f as) bs
+\end{verbatim}
+
+If we set out to code this program in Accelerate we would have a similar
+\texttt{f}:
+
+\begin{verbatim}
+f :: Acc (Vector a) -> Exp b -> Acc (Vector c)
+f as b = map ((*) b) as
+\end{verbatim}
+
+But since we don't have nested arrays in Accelerate, we need to model the
+\texttt{Vector (Vector c)} type  as \texttt{Acc (Array DIM2 c)}. Thus we end up
+wanting the function \texttt{g} below, defined using \texttt{f}.
+
+\begin{verbatim}
+g' :: Acc (Vector a) -> Acc (Vector b) -> Acc (Array (Z :. Ix :. Ix) c)
+\end{verbatim}
+
+But there seems to be no way to construct a high-dimensional array from array
+functions of lower dimension. So we need to rewrite \texttt{f} itself:
+
+\begin{verbatim}
+g' as bs = generate
+  (constant $ (size as) :. (size bs))
+  (\ (Z :. ia :. ib) -> bs ! (Z :. ib) * as ! (Z :. ia))
+\end{verbatim}%$
+
+Furthermore, this is only possible because \texttt{f} is itself defined by an
+elementwise operation. Had \texttt{f} been defined by a reduction such as
+\texttt{fold}, the transformation would have been even more elaborate and
+require replication of both vector \texttt{as} and \texttt{bs} and zipping to
+properly distribute \texttt{b} into the folding operation.
+
+\todo{It would be really nice to have a proper explanation of this, preferably
+with an illustration of the replication. But that is definitely beyond our
+current schedule}
 
 \section{Nikola}
 
