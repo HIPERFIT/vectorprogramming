@@ -1,6 +1,6 @@
 #!/bin/bash
 
-loadHSENV "vanilla"
+loadHSENV "accelerate"
 
 cabal install --only-dependencies
 cabal configure

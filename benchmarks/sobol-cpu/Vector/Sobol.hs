@@ -22,21 +22,42 @@ sobol_dirVs = VB.fromList [fromList [2^k | k <- [29,28..0]]]
 grayCode :: Index -> Elem
 grayCode ix = fromIntegral (ix `xor` (ix `shiftR` 1))
 
-fromBool :: Bits a => Bool -> a
+fromBool :: Num a => Bits a => Bool -> a
 fromBool True = 1
 fromBool False = 0
 
 bitVec :: Elem -> Vector Elem
-bitVec e = map (fromBool . (/=0)) $ zipWith (.&.) pow2s $ replicate sobol_bit_count e
+bitVec e = generate sobol_bit_count f
   where
-    pow2s :: Vector Elem
-    pow2s = generate sobol_bit_count (\i -> bit i)
+    f :: Int -> Elem
+    f i = fromBool $ (e .&. bit i) /= 0
 
-sobolInd :: Vector Elem -> Index -> SpecReal
-sobolInd dirVs ix = normalise $ foldl1 xor $ zipWith (*) dirVs (bitVec $ grayCode ix)
+sobolInd :: Vector Elem -> Index -> Elem
+sobolInd dirVs ix = foldl1 xor $ zipWith (*) dirVs (bitVec $ grayCode ix)
+
+normalise :: Elem -> SpecReal
+normalise = ((/sobol_divisor ) . fromIntegral)
+
+lsb0_help ell c | (c .&. 1 == 0) = ell
+                | otherwise = lsb0_help (ell+1) (c `shiftR` 1)
+
+-- PROBLEM: min{ k | (rep n)[k] == 0}
+-- lsb0 :: Index -> Index
+lsb0 n = lsb0_help 0 n
+
+sobolRec :: Vector Elem -> Index -> Elem -> Elem
+sobolRec dirVs i e = e `xor` (dirVs ! lsb0 i)
+
+-- sobolSequence :: Index -> VB.Vector SpecReal
+-- sobolSequence num_iters = VB.generate num_iters (sobolInd (sobol_dirVs VB.! 0))
+
+sobolSequence_ :: Vector Elem -> Index -> Vector SpecReal
+sobolSequence_ dirVs n = unfoldrN n step (1, first)
   where
-    normalise :: Elem -> SpecReal
-    normalise = ((/sobol_divisor ) . fromIntegral)
+    first = 0 --sobolInd dirVs 1
+    step (i,x) = let x' = sobolRec dirVs i x
+                 in Just (normalise x', (i+1, x'))
+    
 
-sobolSequence :: Index -> VB.Vector SpecReal
-sobolSequence num_iters = VB.generate num_iters (sobolInd (sobol_dirVs VB.! 0))
+sobolSequence :: Index -> Vector SpecReal
+sobolSequence = sobolSequence_ (sobol_dirVs VB.! 0)
