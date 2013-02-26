@@ -1,3 +1,4 @@
+
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Sobol where
@@ -10,6 +11,7 @@ import Data.Bits
 import Data.Typeable (Typeable)
 
 import Data.Array.Repa
+import Unfold
 
 type Elem = Word32
 type SpecReal = Double
@@ -39,14 +41,30 @@ bitVec e = computeUnboxedS $ fromFunction (Z :. sobol_bit_count) (f . unindex1)
    f :: Int -> Elem
    f i = fromBool $ (e .&. bit i) /= 0
 
-sobolInd :: Array U DIM1 Elem -> Index -> SpecReal
-sobolInd dirVs ix = normalise $ foldAllS xor 0 xs
+sobolInd :: Array U DIM1 Elem -> Index -> Elem
+sobolInd dirVs ix = foldAllS xor 0 xs
   where
     xs :: Array D DIM1 Elem
     xs = zipWith (*) dirVs (bitVec $ grayCode ix)
     
-    normalise :: Elem -> SpecReal
-    normalise = ((/sobol_divisor ) . fromIntegral)
+lsb0_help ell c | (c .&. 1 == 0) = ell
+                | otherwise = lsb0_help (ell+1) (c `shiftR` 1)
 
-sobolSequence_ :: Index -> Array U DIM1 SpecReal
-sobolSequence_ num_iters = computeUnboxedS $ fromFunction (Z :. num_iters) $ \(Z :. i) -> sobolInd sobol_dirVs_array i
+-- PROBLEM: min{ k | (rep n)[k] == 0}
+-- lsb0 :: Index -> Index
+lsb0 n = lsb0_help 0 n
+
+sobolRec :: Array U DIM1 Elem -> Index -> Elem -> Elem
+sobolRec dirVs i e = e `xor` (dirVs ! (Z :. lsb0 (i-1)))
+
+
+normalise :: Elem -> SpecReal
+normalise = ((/sobol_divisor ) . fromIntegral)
+
+sobolSequence_ :: Monad m => Array U DIM1 Elem -> Index -> m (Array U DIM1 SpecReal)
+sobolSequence_ dirVs n = unfoldChunkedP n (sobolRec dirVs) (sobolInd dirVs) normalise
+
+sobolSequence :: Monad m => Index -> m (Array U DIM1 SpecReal)
+sobolSequence = sobolSequence_ sobol_dirVs_array
+
+

@@ -13,11 +13,12 @@ main = do
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
-  execute sobolSequence_
+  execute sobolSequence
 
-execute :: (Read a, Show b) => (a -> b) -> IO ()
+execute :: (Read a, Show b) => (a -> IO b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
-  putStrLn $ "RESULT " Prelude.++ (take 150 . show . f . read $ str)
+  result <- f . read $ str
+  putStrLn $ "RESULT " Prelude.++ (take 150 . show $ result)
 
