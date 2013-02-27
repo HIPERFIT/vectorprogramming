@@ -50,11 +50,8 @@ Adapting the CUDA pricer to use just a single option proved to be a substantial
 and error prone effort for us.
 
 \section{R}
-
 \section{Repa}
 \section{Accelerate}
-
-\todo{mention accelerate backend/frontend partitioning, because it is a relevant contrast with Nikola.}
 
 Accelerate provides a variety of array operations: Both scans, segmented scans,
 folds, permutations, maps and zips. Arrays may be multidimensional, denoted by
@@ -67,8 +64,8 @@ are only defined on one-dimensional arrays.
 
 Accelerate is characterised by a clean division between the frontend and the
 various backends that exist. The Accelerate language thus is completely backend
-agnostic, and backends simply export a function such as \texttt{run :: Acc a ->
-a}.
+agnostic, and backends simply export a function such as \hbox{\texttt{run :: Acc a ->
+a}.}
 
 Accelerate employs a meticulus partitioning of functions on arrays and functions
 on scalar values. Array functions are all embedded in the \texttt{Acc a} type,
@@ -176,13 +173,15 @@ representations, using the operations result in quite elaborate types. These
 are often too compilcated for type inference to resolve and require a
 programmer supplied type signature.
 
+Nikola has a lot of overall structure in common with Repa. As with Repa, the
+programmer has access to mutable arrays in addition to the common pure array
+operations.
+
 Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
-leveraging the \textt{RebindableSyntax} GHC-extension. Also, in our programming
+leveraging the \texttt{RebindableSyntax} GHC-extension. Also, in our programming
 experience we were less required to interact with the value lifting machinery
 than we were in Accelerate. Value lifting in Nikola is subject to the same
 documentation inadequacies as we encountered with Accelerate.
-
-%Nikola has a lot of overall structure in common with Repa
 
 While Nikola does not present any means for expressing nested parallelism, it
 does not explicitly ban it either in the style of Accelerate's
@@ -192,6 +191,18 @@ Accelerate.
 
 There is no way to define recursive functions in Nikola. Trying to do so
 will result in compilation not terminating.
+
+Nikola functions are compiled to CUDA code, linked dynamically into the running
+haskell program and then wrapped as a haskell function of corresponding type.
+Exactly which types are possible is determined using the typeclass
+\texttt{Compilable a b}, denoting informally that a value of type \texttt{a}
+may be compiled into one of type \texttt{b}. This typeclass is not yet
+implemented for a lot of the possible choices of array representations and
+combinations. Trying to compile a function with an instance missing often
+resulted in very lengthy and elaborate type errors, that were hard for us to
+decode. Luckily our ability to decode compilation-related type errors improved
+over time while implementing our case studies, but they are nevertheless still
+unpleasant.
 
 %%% Local Variables:
 %%% mode: latex
