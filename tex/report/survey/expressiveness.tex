@@ -1,5 +1,3 @@
-
-
 % \subsection{Ease of use and expressiveness}
 
 % How easy is the language to use? And how expressive is it? Our
@@ -20,16 +18,13 @@
 % \item How high-level is it on the scale from ``R'' to ``CUDA''?
 % \end{itemize}
 
-
-\chapter{Evaluation: Expressiveness}
+\chapter{Language Discussions}
 % ``How tight is the correspondence to the Rolfs R-code?''
 
 \todo{Compare the "coding experience" of R and CUDA. what is the level of
 abstraction? Tools available? How advanced tools are required to debug? }
 
 \section{CUDA/C}
-
-\todo{maybe these tow paragraphs are better suited in language introduction?}
 
 Since CUDA/C is close to a one-to-one mapping of hardware abilities to language
 primitives, it is possible though not necessarily easy to implement anything
@@ -59,13 +54,21 @@ and error prone effort for us.
 \section{Repa}
 \section{Accelerate}
 
-Accelerate provides a variety of array operations: Both scans, segmented
-scans, folds, permutations, maps and zips.
+\todo{mention accelerate backend/frontend partitioning, because it is a relevant contrast with Nikola.}
+
+Accelerate provides a variety of array operations: Both scans, segmented scans,
+folds, permutations, maps and zips. Arrays may be multidimensional, denoted by
+a type variable in the same style as Repa.
 
 Reductions (folds) are defined on arrays of arbitrary rank by performing the
 reduction on the innermost dimension, yielding an array with rank one less.
 Maps are all elementwise regardless of the shape of the input array, and scans
 are only defined on one-dimensional arrays.
+
+Accelerate is characterised by a clean division between the frontend and the
+various backends that exist. The Accelerate language thus is completely backend
+agnostic, and backends simply export a function such as \texttt{run :: Acc a ->
+a}.
 
 Accelerate employs a meticulus partitioning of functions on arrays and functions
 on scalar values. Array functions are all embedded in the \texttt{Acc a} type,
@@ -89,7 +92,7 @@ such as multiplying a scalar.
 
 \begin{verbatim}
 f :: Vector a -> b -> Vector c
-f as b = map ((*) b) as
+f as b = map (b *) as
 \end{verbatim}
 
 Now, if we want to do scalar multiplication with a vector of scalars, in
@@ -105,7 +108,7 @@ If we set out to code this program in Accelerate we would have a similar
 
 \begin{verbatim}
 f :: Acc (Vector a) -> Exp b -> Acc (Vector c)
-f as b = map ((*) b) as
+f as b = map (b *) as
 \end{verbatim}
 
 But since we don't have nested arrays in Accelerate, we need to model the
@@ -113,17 +116,19 @@ But since we don't have nested arrays in Accelerate, we need to model the
 wanting the function \texttt{g} below, defined using \texttt{f}.
 
 \begin{verbatim}
-g' :: Acc (Vector a) -> Acc (Vector b) -> Acc (Array (Z :. Ix :. Ix) c)
+g :: Acc (Vector a) -> Acc (Vector b) -> Acc (Array DIM2 c)
 \end{verbatim}
 
 But there seems to be no way to construct a high-dimensional array from array
 functions of lower dimension. So we need to rewrite \texttt{f} itself:
 
 \begin{verbatim}
-g' as bs = generate
-  (constant $ (size as) :. (size bs))
-  (\ (Z :. ia :. ib) -> bs ! (Z :. ib) * as ! (Z :. ia))
-\end{verbatim}%$
+g as bs = generate
+  (index2 $ (size as) (size bs))
+  (\ix ->
+  let (Z :. ia :. ib) = unlift ix
+  in bs ! (Z :. ib) * as ! (Z :. ia))
+\end{verbatim}
 
 Furthermore, this is only possible because \texttt{f} is itself defined by an
 elementwise operation. Had \texttt{f} been defined by a reduction such as
@@ -136,26 +141,57 @@ with an illustration of the replication. But that is definitely beyond our
 current schedule}
 \todo{Add Accelerate Sobol-example as appendix, reference it here - hand drawing?!}
 
+This sharp division between scalar and array operations is easily the biggest
+hindrance to the expressiveness of Accelerate, and therefore very relevant to
+our interest in language research. However, as this is a pervasive part of the
+architecture of Accelerate, removing the distinction of \texttt{Acc} and
+\texttt{Exp} would result in an entirely different language, and every single
+backend would have to be rewritten.
+
+\todo{The above paragraph sounds a bit corny..}
+
+The embedding of Accelerate leaves some things to be desired. It is for
+instance not easily possible to pattern match on tuples and shapes, as these
+need to be properly lifted and unlifted to be used (see above in function \texttt{g}).
+
+Also, lifting using \texttt{lift :: Lift c e => e -> c (Plain e)} uses the
+\texttt{Plain} associated type, the definition of which is not shown in the
+auto-generated documentation of instances. Although the documentation
+generation system is arguably to blame for this, it does none the less make it
+more difficult to easily use value lifting confidently.
+
+There is no way to define recursive functions in Accelerate. Trying to do so
+will result in compilation not terminating.
+
 \section{Nikola}
 
-For both Accelerate and Nikola it were allowed to write nested loops only to
-the extent that they may be unfolded in their entirety at compile-time. For the
-binomial pricer this is not a problem, as the number of loop iterations is a
-simple function of the number of days simulated.  \todo{Nikola also has a
-seq-loop construct?} However, for Accelerate this unfolding resulted in it
-having to compile a CUDA kernel representing each loop iteration, greatly
-dominating the execution time. To overcome this required some (nontrivial?)
-rewriting of the code.
+Nikola does not provide the variety array operations that Accelerate does: Only
+a few mapping operations are provided, and an iteration construct.  Nikola has
+in common with Repa the differentiation of arrays by type parameter.
 
-Because of the heavy syntactical overloading of Haskell employed by Nikola, the
-code was/is? required to be divided into more small modules than is usually
-required/desirable.
+To exploit this, operations such as \texttt{map} and \texttt{zipWith} are
+implemented using typeclasses with a single function specified.  While this
+architecture allows for specialisation of operations to different array
+representations, using the operations result in quite elaborate types. These
+are often too compilcated for type inference to resolve and require a
+programmer supplied type signature.
 
-Repa and Vector are entirely CPU based, and are thus just normally executed
-Haskell code without any explicit recompilation. As a result they suffered none
-of the expressive shortcomings of Nikola and Accelerate. Thus, they closely
-mirror the reference R code.
+Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
+leveraging the \textt{RebindableSyntax} GHC-extension. Also, in our programming
+experience we were less required to interact with the value lifting machinery
+than we were in Accelerate. Value lifting in Nikola is subject to the same
+documentation inadequacies as we encountered with Accelerate.
 
+%Nikola has a lot of overall structure in common with Repa
+
+While Nikola does not present any means for expressing nested parallelism, it
+does not explicitly ban it either in the style of Accelerate's
+\texttt{Acc}/\texttt{Exp} division. Thus, extending the expressive power of
+Nikola in this aspect appears at first to be a less elaborate endeavour than in
+Accelerate.
+
+There is no way to define recursive functions in Nikola. Trying to do so
+will result in compilation not terminating.
 
 %%% Local Variables:
 %%% mode: latex
