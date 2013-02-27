@@ -164,18 +164,17 @@ will result in compilation not terminating.
 
 Nikola does not provide the variety array operations that Accelerate does: Only
 a few mapping operations are provided, and an iteration construct.  Nikola has
-in common with Repa the differentiation of arrays by type parameter.
+a lot of overall structure in common with Repa. As with Repa, arrays
+implementations and shape are represented in the array type, and the programmer
+has access to mutable arrays in addition to the common pure array operations.
 
-To exploit this, operations such as \texttt{map} and \texttt{zipWith} are
-implemented using typeclasses with a single function specified.  While this
-architecture allows for specialisation of operations to different array
-representations, using the operations result in quite elaborate types. These
-are often too compilcated for type inference to resolve and require a
-programmer supplied type signature.
+To exploit the ability do differentiate according to array representations,
+operations such as \texttt{map} and \texttt{zipWith} are implemented using
+typeclasses.  While this architecture allows for specialisation of operations
+to different array representations, using the operations result in quite
+elaborate types. These are often too compilcated for type inference to resolve
+and require a programmer supplied type signature.
 
-Nikola has a lot of overall structure in common with Repa. As with Repa, the
-programmer has access to mutable arrays in addition to the common pure array
-operations.
 
 Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
 leveraging the \texttt{RebindableSyntax} GHC-extension. Also, in our programming
