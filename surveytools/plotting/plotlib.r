@@ -17,7 +17,7 @@ create_speedup_plot <- function (frame, greyscale, uselineplot, xlabel) {
     if(uselineplot) {
       p <- p + geom_line(stat="identity")
       p <- p + geom_point(size=3)
-      p <- p + geom_errorbar(limits, width=0.04)
+      p <- p + geom_errorbar(limits, width=0.07)
     } else {
       # Bar
       # Dodge is used to position the bars beside each other instead of on
@@ -41,6 +41,10 @@ create_speedup_plot <- function (frame, greyscale, uselineplot, xlabel) {
 
     # No legend title
     p <- p + theme(legend.title = element_blank())
+
+    # Select nice shapes
+    # See possibilities here: http://www.cookbook-r.com/Graphs/Shapes_and_line_types/
+    p <- p + scale_shape_manual(values=c(15,16,17,18,4))
     
     return(p)
 }
@@ -84,6 +88,10 @@ create_time_plot <- function (data, greyscale, uselineplot, xlabel) {
 
     # No legend title
     p <- p + theme(legend.title = element_blank())
+
+    # Select nice shapes
+    # See possibilities here: http://www.cookbook-r.com/Graphs/Shapes_and_line_types/
+    p <- p + scale_shape_manual(values=c(15,16,17,18,4))
     
     return(p)
 }
