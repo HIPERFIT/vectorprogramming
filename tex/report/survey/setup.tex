@@ -1,6 +1,6 @@
 \chapter{Survey Setup}
 In this and the following chapters we present a small-scale survey of
-current vector languages. The survey was originally conducted to
+a few current vector languages. The survey was originally conducted to
 orient ourselves in the current landscape of parallel functional
 languages and their implementation, but the results might be of
 interest for others. We do not know of other comparisons with a
@@ -11,32 +11,25 @@ We have decided to evaluate and compare the languages Accelerate
 \cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
 Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
 package\footnote{\url{http://hackage.haskell.org/package/vector}}. We
-compare these four libraries to the R programming language and NVIDIA's
-CUDA platform, which are some of the languages currently used by
-financial engineers. The R language is used for expressing financial
-algorithms succinctly, while CUDA is used for performance reasons,
-which is why we have chosen to include both of these. Because of time
-constraints, we have had to limit ourselves more than we had originally
+compare these four libraries to the R programming language and
+NVIDIA's CUDA platform, which are some of the languages currently used
+by financial engineers \todo{cite - that both are used in
+  finance}. The R language is used for expressing financial algorithms
+succinctly, while CUDA is used for performance reasons, which is why
+we have chosen to include both of these. Because of time constraints,
+we have had to limit ourselves more than we had originally
 intended. This means we have had to leave out languages such as
 Feldspar\cite{axelsson2010feldspar},
 Obsidian\cite{svensson2011obsidian}, Data Parallel Haskell \cite{},
 Copperhead\cite{Catanzaro2011} and NESL\cite{nesl} from the survey,
-although they might have provided further insights.
+although they might have provided further insights. Also, as noted
+previously, we have not been able to implement the complete Longstaff
+and Schwartz algorithm in neither Nikola or Accelerate \todo{make sure
+  this is indeed written down somewhere}.
 
 \todo{Why only Haskell? Are there any languages we have left out
   entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
   aren't they here?}
-
-We will now look a bit closer on each of the chosen languages. If you
-already have experience in this area, you can skip this section.
-
-\subsection{Data.Vector}
-
-\subsection{Repa}
-
-\subsection{Accelerate}
-
-\subsection{Nikola}
 
 \section{Programming language surveys}
 To make a fair comparison, we have to be objective in our evaluation
@@ -76,67 +69,13 @@ From the survey we want to uncover three main questions about each
 language, and it is from answers to these questions that we will make
 a comparison. The three questions revolve around the health of
 project, the expressiveness and ease of use of the language, and the
-performance of the language. The following three sections will pose
+performance of the language. The following three chapters will pose
 these questions and describe how we have decided to test them.
 
-\todo{Should we also include an evaluation on ``Performance
-  \textit{guarantees}''? That is, an evaluation of the theoretical
-  aspects and cost models?}
 
-\subsection{Project Health}
-How good is the project health? That is,
-we want to determine how likely is it that development on the language
-will continue and that it will keep getting funding and interest from
-developers.
-
-Subquestions include:
-\begin{itemize}
-\item Quality of documentation. Good documentation gives better acessibility for new users and developers.
-\item Code review. Our own assesment of the standard of the code.
-\item Portability. More portable progams have a wider potential user audience.
-\item Installation process. A cumbersome installation process is deterring for newcomers.
-\item Number of dependencies (incl. GHC extensions). ``Bad health is transitive''.
-\item Number of users (reverse dependencies). The bigger the audience, the more people with some interest in the project continuing.
-\item Number of contributors.
-\item How easy is it to start contributing?
-\item Latest project activity (e.g. which version of GHC does it compile on?)
-\item Licensing
-\item Funding
-\end{itemize}
-
-\todo{Document the procedures and scripts that were used to collect reverse dependencies and to carry out installs}
-
-\subsection{Ease of use and expressiveness}
-
-How easy is the language to use? And how expressive is it? Our
-aim is to find a language that might be suitable for a financial
-engineer and we thus want a suitably high-level language. It should
-be near the complexity level of R. We still want the language to
-expressive enough to cover the domain of financial algorithms.
-
-Subquestions include
-\begin{itemize}
-\item Which programs can we write, and which can't we write?
-  \begin{itemize}
-  \item Can we write nested loops?
-  \item Does it include all of: scans, folds, zip/map, stencils?
-  \item Do we have access to general recursion?
-  \end{itemize}
-\item How good are the error messages?
-\item How high-level is it on the scale from ``R'' to ``CUDA''?
-\end{itemize}
-
-\subsection{Performance} How does the languages compare in a
-performance benchmark?
-\begin{itemize}
-\item Benchmark of binomial pricer on expiry = 1,2,4,8,16,32,64,128 years.
-\item Benchmark of Longstaff and Schwartz
-\item Which optimizations are performed?
-\item How many in-code optimiser hints (inlining-statements, forcing
-  of delayed arrays etc.) are necessary to get decent performance?
-\item How does the performance of a naive implementation (no
-  optimiser hints) compare to an optimised version?
-\end{itemize}
+% \todo{Should we also include an evaluation on ``Performance
+%   \textit{guarantees}''? That is, an evaluation of the theoretical
+%   aspects and cost models?}
 
 
 %\begin{itemize}
@@ -146,7 +85,6 @@ performance benchmark?
 %\item How do we measure these things, e.g. how do we evaluate ``project health''?
 %\item Why didn't we include some languages, but included others?
 %\end{itemize}
-
 
 %%% Local Variables:
 %%% mode: latex

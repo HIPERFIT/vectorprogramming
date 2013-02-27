@@ -1,5 +1,38 @@
-
 \chapter{Evaluation: Project Health}
+
+When we ask ``How good is the health of project X?'' What we want to
+determine is how likely is it that development on the language will
+continue and that it will keep getting funding and interest from
+developers and researchers.
+
+There are several metrics to consider, some are qualitative others
+quantitative. The qualitative metrics we will consider is:
+
+\begin{itemize}
+\item What is the quality and status of the documentation? Good
+  documentation gives better acessibility for new users and
+  developers.
+\item What is the quality of the code base? Users will more likely
+  become contributors if the code is easy to start hacking on.
+\item How portable is each of the languages? More portable progams
+  have a wider potential user audience.
+\item How hard is it to install? A cumbersome installation process is
+  deterring for newcomers.
+\end{itemize}
+
+Quantitative questions include:
+\begin{itemize}
+\item Number of dependencies (incl. GHC extensions). ``Bad health is transitive''.
+\item Number of users (reverse dependencies). The bigger the audience, the more people with some interest in the project continuing.
+\item Number of contributors.
+\item How easy is it to start contributing?
+\item Latest project activity (e.g. which version of GHC does it compile on?)
+\item Licensing
+\item Funding
+\end{itemize}
+
+\todo{Document the procedures and scripts that were used to collect reverse dependencies and to carry out installs}
+
 
 \section{Accelerate}
 \subsection{Source Quality}
