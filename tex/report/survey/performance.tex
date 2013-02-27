@@ -1,6 +1,73 @@
 \chapter{Performance}
-We will now look at how the different languages compare in performance
-and which optimisations they employ.
+We will now look at how the different languages compare in
+performance. We will start by taking a brief look at which
+optimisations are implemented in each language, and what we can expect.
+
+\section{Optimisations}
+
+\subsection{Deforestation}
+Stream fusion, program composition or deforestation is a technique
+that aims composing several functions into one to optimize away
+intermediate datastructures\footnote{which it what gives it the name
+  deforestation: intermediate tree structures are removed} and thus
+avoid expensive memory access.
+
+A simple example is that of computing sum of squares:
+\begin{verbatim}
+foldl (+) 0 (map (^2) xs)
+\end{verbatim}
+where the unoptimized program would have to write all the squared
+numbers into memory during the computation of map and then read back
+from memory during the summation. Fusing the \verb|map| into the
+\verb|foldl| avoids this intermediate array:
+\begin{verbatim}
+foldl (\a b -> a + b^2) 0 xs
+\end{verbatim}
+
+This optimization is at the heart of both the Nikola and Repa
+architectures, where it happens through the use of delayed
+arrays. Data.Vector also performs some stream fusion by employing GHC
+rewrite rules. Fusion is currently being implemented in
+Accelerate. The newest version on Hackage (0.12.1.0) does not perform
+any fusion, but the development repository contains a not completely
+functional implementation, so it will possibly be part of the next
+release.
+
+On GPU hardware this also means that several kernels can be merged
+into one, and the overhead involved in kernel launches can thus also
+be avoided.
+
+In CUDA this optimization must be done by hand \todo{Cite someone that
+  says nvcc doesn't provide deforestation/fusion}
+
+\subsection{Prefix sum, tree reduction}
+Accelerate comes with a number of built in parallel algorithms, that
+runs efficiently on GPUs. Such as
+
+\subsection{Strided memory access}
+Because of limited caches in GPUs, out of order memory access incurs a
+huge performance penalty. We must thus make sure that memory accesses
+inside GPU warps are coalesced.
+
+Accelerate guarantees this approach, as long as you use the built in
+high order functions, and avoid using the array lookup function
+\begin{verbatim}
+(!) :: (Shape ix, Elt e) => Acc (Array ix e) -> Exp ix -> Exp e
+\end{verbatim}
+
+\todo{Nikola??} 
+
+\subsection{Limit branch divergence}
+Accelerate goes a long way to restrict the possible programs you can
+write, such that they can make certain performance guarantees. For
+instance, they do not allow you to write sequential loops running on
+the GPU as this may allow one thread to diverge letting the remaining
+threads in a block waiting. This is problematic, as certain problems
+are more efficiently expressed using nested loops, and you thus need
+to manually flatten, giving a performance penalty.
+
+Nikola on the other hand, does not make such limitations and lets the
+programmer himself evaluate \todo{complete this}
 
 \section{Benchmark setup}
 
@@ -12,7 +79,7 @@ The hardware specifications is as follows:
 
 \begin{itemize}
 \item 2 $\times$ AMD Opteron\texttrademark\ 6274 processors (16 cores each, clocked at 2,2 Ghz)
-\item 125-132 GB of main memory \todo{What is the real value here? /proc/meminfo says 125 GB}
+\item 125-132 GB of main memory \todo{What is the real value here? /proc/meminfo says 125 GB - but an odd number?}
 \item Quad SLI consisting of two GeForce GTX 690 (each a dual-head GPU). See full specifications in Table \ref{tab:hardware}.
 \end{itemize}
 
@@ -43,30 +110,6 @@ The hardware specifications is as follows:
 \todo{Introduce our suite of survey tools, how execution time are
 measured, criterion, Individual GHC installations for each library}
 
-\section{Optimisations}
-
-\subsection{Data.Vector}
-The documentation on Data.Vector is scarce, what we know is that it
-performs some fusion, and a single comment reveals that they use the
-foldr/build deforestation algorithm introduced in ().
-
-\subsection{Accelerate}
-Fusion is currently being implemented in Accelerate. The newest
-version on Hackage (0.12.1.0) does not perform any fusion, but the
-development repository contains a not completely functional
-implementation, so it will possibly be part of the next release.
-
-Accelerate goes a long way to restrict the possible programs you can
-write, such that they can make certain performance guarantees. For
-instance, they do not allow you to write sequential loops running on
-the GPU as this may allow one thread to diverge letting the remaining
-threads in a block waiting.
-
-This is problematic, as certain problems are more efficiently
-expressed using nested loops, and you thus need to manually flatten,
-giving a performance penalty. Techniques have been developed to
-minimise thread divergence, and as such they could possibly benefit
-from such an implementation.
 
 \section{Benchmarks}
 \subsection{Benchmark setup}
