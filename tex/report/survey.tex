@@ -394,66 +394,7 @@ At least Roman Leshchinskiy. \todo{Depends on darcs.}
 
 
 \input{survey/expressiveness.tex} % Delegate to separate file for peace of mind.
-\chapter{Performance}
-We will now look at how the different languages compare in performance
-and which optimisations they employ.
-
-\section{Optimisations}
-
-\subsection{Data.Vector}
-The documentation on Data.Vector is scarce, what we know is that it
-performs some fusion, and a single comment reveals that they use the
-foldr/build deforestation algorithm introduced in ().
-
-\subsection{Accelerate}
-Fusion is currently being implemented in Accelerate. The newest
-version on Hackage (0.12.1.0) does not perform any fusion, but the
-development repository contains a not completely functional
-implementation, so it will possibly be part of the next release.
-
-Accelerate goes a long way to restrict the possible programs you can
-write, such that they can make certain performance guarantees. For
-instance, they do not allow you to write sequential loops running on
-the GPU as this may allow one thread to diverge letting the remaining
-threads in a block waiting.
-
-This is problematic, as certain problems are more efficiently
-expressed using nested loops, and you thus need to manually flatten,
-giving a performance penalty. Techniques have been developed to
-minimise thread divergence, and as such they could possibly benefit
-from such an implementation.
-
-\section{Benchmarks}
-\subsection{Benchmark setup}
-Several of the libraries we have tested requires individual
-compilation steps before the actual computation can take place. We
-have decided not to include all initialization in the running times,
-and only record the time used on the actual computation and eventual
-memory allocation and transfers. This is done to make the comparison
-fair, and because we think it is more important to optimize the actual
-computation. Optimizing the compilation or interpretation performance
-is also important, but we find that to be less of priority now and it
-thus out of our current scope.
-
-\subsection{Results}
-Speed up graph. In the graph we use the sequential version written
-with Data.Vector as a baseline for the comparison.
-
-Accelerate is not included, because of problems in their stream fusion
-algorithm leading to running times that evolve
-exponentially. Disabling fusion lead to CUDA exceptions.
-
-We see that the overhead incurred by using Nikola makes both
-sequential implementations (R and Data.Vector) faster for the smallest
-cases, and only when we reach the largest example (128 years expiry
-time) Nikola catches up.
-
-Repa is the best performing, even though it does not perform any GPU
-computations. We are not sure why Repa gives so varied speed-ups for
-different input sizes, but it might be because of our somewhat
-arbitrary threshold for which problem sizes should be executed in
-parallel and which should be executed sequentially.
-
+\input{survey/performance.tex}
 
 \chapter{Conclusion}
 What are our recommended choice of languages for different use-cases?

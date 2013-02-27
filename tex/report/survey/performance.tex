@@ -1,0 +1,106 @@
+\chapter{Performance}
+We will now look at how the different languages compare in performance
+and which optimisations they employ.
+
+\section{Benchmark setup}
+
+\subsection{Hardware}
+All benchmarks have been performed on a computer provided by the
+HIPERFIT research center running Ubuntu 12.04 LTS and CUDA 5.0.
+
+The hardware specifications is as follows:
+
+\begin{itemize}
+\item 2 $\times$ AMD Opteron\texttrademark\ 6274 processors (16 cores each, clocked at 2,2 Ghz)
+\item 125-132 GB of main memory \todo{What is the real value here? /proc/meminfo says 125 GB}
+\item Quad SLI consisting of two GeForce GTX 690 (each a dual-head GPU). See full specifications in Table \ref{tab:hardware}.
+\end{itemize}
+
+\begin{table}
+  \centering
+  \begin{tabular}{ll}
+    Memory & $2 \times 2048$ MiB \\
+    Multiprocessors & $2 \times 8$ SMs\\
+    Cores per SM & 192 cores \\
+    CUDA cores & $2 \times 1536$ cores\\
+    Clock rate & 915 Mhz \\
+    RAM technology & GDDR5 \\
+    Memory bandwidth & $2 \times 192.3$ GB/s \\
+    \hline
+  \end{tabular}
+  \caption{Geforce GTX 690 specification}
+  \label{tab:hardware}
+\end{table}
+
+% Ideally we would have evaluated all benchmarks on two different GPUs,
+% to make sure we were not optimizing for the behavior of a single
+% unit. We did however only have access to this machine with CUDA
+% version >= 4.0 (which was a requirement for \todo{Was it Nikola,
+%   Accelerate or both?}. The other machine we have access to only
+% provides CUDA 3.2.
+
+\subsection{Software and compilation}
+\todo{Introduce our suite of survey tools, how execution time are
+measured, criterion, Individual GHC installations for each library}
+
+\section{Optimisations}
+
+\subsection{Data.Vector}
+The documentation on Data.Vector is scarce, what we know is that it
+performs some fusion, and a single comment reveals that they use the
+foldr/build deforestation algorithm introduced in ().
+
+\subsection{Accelerate}
+Fusion is currently being implemented in Accelerate. The newest
+version on Hackage (0.12.1.0) does not perform any fusion, but the
+development repository contains a not completely functional
+implementation, so it will possibly be part of the next release.
+
+Accelerate goes a long way to restrict the possible programs you can
+write, such that they can make certain performance guarantees. For
+instance, they do not allow you to write sequential loops running on
+the GPU as this may allow one thread to diverge letting the remaining
+threads in a block waiting.
+
+This is problematic, as certain problems are more efficiently
+expressed using nested loops, and you thus need to manually flatten,
+giving a performance penalty. Techniques have been developed to
+minimise thread divergence, and as such they could possibly benefit
+from such an implementation.
+
+\section{Benchmarks}
+\subsection{Benchmark setup}
+Several of the libraries we have tested requires individual
+compilation steps before the actual computation can take place. We
+have decided not to include all initialization in the running times,
+and only record the time used on the actual computation and eventual
+memory allocation and transfers. This is done to make the comparison
+fair, and because we think it is more important to optimize the actual
+computation. Optimizing the compilation or interpretation performance
+is also important, but we find that to be less of priority now and it
+thus out of our current scope.
+
+\subsection{Results}
+Speed up graph. In the graph we use the sequential version written
+with Data.Vector as a baseline for the comparison.
+
+Accelerate is not included, because of problems in their stream fusion
+algorithm leading to running times that evolve
+exponentially. Disabling fusion lead to CUDA exceptions.
+
+We see that the overhead incurred by using Nikola makes both
+sequential implementations (R and Data.Vector) faster for the smallest
+cases, and only when we reach the largest example (128 years expiry
+time) Nikola catches up.
+
+Repa is the best performing, even though it does not perform any GPU
+computations. We are not sure why Repa gives so varied speed-ups for
+different input sizes, but it might be because of our somewhat
+arbitrary threshold for which problem sizes should be executed in
+parallel and which should be executed sequentially.
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:
