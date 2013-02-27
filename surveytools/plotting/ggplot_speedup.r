@@ -9,7 +9,7 @@ library(scales, quietly=TRUE)
 source("plotlib.r")
 
 uselineplot <- TRUE
-greyscale <- TRUE
+greyscale <- FALSE
 
 # read arguments following --args (--args included)
 args <- commandArgs(trailingOnly = TRUE)
@@ -19,12 +19,22 @@ basisfile <- args[3] # which of graphs should be treated as basis (zero) which t
 
 
 # Store the resulting graph in the given directory
-size <- 8
+size <- 4
 
+# Xlabel
+con <- file(paste(dir, "/xlabel", sep=""))
+open(con);
+xlabel <- readLines(con, n = 1, warn = FALSE)
 
 # The graph to measure the other against
 basis_data <- read.csv(paste(dir, "/", basisfile, sep=""))
 basis <- cbind(basis_data, Language=basisfile)
+
+formatLanguageName <- function(csv_filename) {
+  benchmarkname <- file_path_sans_ext(csv_filename)
+  lang <- strsplit(benchmarkname, "-")
+  return(lang[[1]][3])
+}
 
 # Collect remaining results in a data frame
 csvfiles <- list.files(dir)
@@ -41,7 +51,7 @@ for(i in 1:length(csvfiles)) {
       n <- min(length(data[,1]), length(basis_data[,1]))
 
       newframe <- data.frame(Size=data[1:n,1]
-                             , Language=file_path_sans_ext(csv)
+                             , Language=formatLanguageName(csv)
                              , AbsoluteTime=data[1:n,2]
                              , AbsoluteStddevLB=data[1:n,2]-data[1:n,6]
                              , AbsoluteStddevUB=data[1:n,2]+data[1:n,7]
@@ -55,8 +65,8 @@ for(i in 1:length(csvfiles)) {
 }
 
 # Plot
-p <- create_speedup_plot(frame, greyscale, uselineplot)
+p <- create_speedup_plot(frame, greyscale, uselineplot, xlabel)
 saveplot(p, paste(dir, "/speedup-graph.pdf", sep=""), size)
 
-p <- create_time_plot(frame, greyscale, uselineplot)
+p <- create_time_plot(frame, greyscale, uselineplot, xlabel)
 saveplot(p, paste(dir, "/time-graph.pdf", sep=""), size)

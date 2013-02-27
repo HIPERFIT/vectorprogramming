@@ -111,36 +111,93 @@ The hardware specifications is as follows:
 measured, criterion, Individual GHC installations for each library}
 
 
+% \subsection{Benchmark setup}
+% Several of the libraries we have tested requires individual
+% compilation steps before the actual computation can take place. We
+% have decided not to include all initialization in the running times,
+% and only record the time used on the actual computation and eventual
+% memory allocation and transfers. This is done to make the comparison
+% fair, and because we think it is more important to optimize the actual
+% computation. Optimizing the compilation or interpretation performance
+% is also important, but we find that to be less of priority now and it
+% thus out of our current scope.
+
+
 \section{Benchmarks}
-\subsection{Benchmark setup}
-Several of the libraries we have tested requires individual
-compilation steps before the actual computation can take place. We
-have decided not to include all initialization in the running times,
-and only record the time used on the actual computation and eventual
-memory allocation and transfers. This is done to make the comparison
-fair, and because we think it is more important to optimize the actual
-computation. Optimizing the compilation or interpretation performance
-is also important, but we find that to be less of priority now and it
-thus out of our current scope.
+We will now present the results of our benchmarks. We have two plots
+for each benchmark: One showing the actual time used on each
+computation, and one showing relative performances.
 
-\subsection{Results}
-Speed up graph. In the graph we use the sequential version written
-with Data.Vector as a baseline for the comparison.
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/speedup-graph.pdf}\label{fig:binomial-cpu-speedup}}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/time-graph.pdf}\label{fig:binomial-cpu-time}}
+\end{adjustbox}
+  \caption{\textbf{(a)}  \textbf{(b)} }
+\label{fig:binomial-cpu}
+\end{figure}
 
-Accelerate is not included, because of problems in their stream fusion
-algorithm leading to running times that evolve
-exponentially. Disabling fusion lead to CUDA exceptions.
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/speedup-graph.pdf}\label{fig:binomial-gpu-speedup}}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/time-graph.pdf}\label{fig:binomial-gpu-time}}
+\end{adjustbox}
+  \caption{\textbf{(a)}  \textbf{(b)} }
+\label{fig:binomial-gpu}
+\end{figure}
 
-We see that the overhead incurred by using Nikola makes both
-sequential implementations (R and Data.Vector) faster for the smallest
-cases, and only when we reach the largest example (128 years expiry
-time) Nikola catches up.
+\begin{figure}
+	\centering
+  \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph.pdf}\label{fig:sobol-cpu-speedup}}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph.pdf}\label{fig:sobol-cpu-time}}
+\end{adjustbox}  
+  \caption{\textbf{(a)}  \textbf{(b)} }
+\label{fig:sobol-cpu}
+\end{figure}
 
-Repa is the best performing, even though it does not perform any GPU
-computations. We are not sure why Repa gives so varied speed-ups for
-different input sizes, but it might be because of our somewhat
-arbitrary threshold for which problem sizes should be executed in
-parallel and which should be executed sequentially.
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph.pdf}\label{fig:sobol-gpu-speedup}}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph.pdf}\label{fig:sobol-gpu-time}}
+\end{adjustbox}
+  \caption{\textbf{(a)}  \textbf{(b)} }
+\label{fig:sobol-gpu}
+\end{figure}
+
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/speedup-graph.pdf}\label{fig:lsm-cpu-speedup}}
+	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/time-graph.pdf}\label{fig:lsm-cpu-time}}
+\end{adjustbox}
+  \caption{\textbf{(a)}  \textbf{(b)} }
+\label{fig:lsm-cpu}
+\end{figure}
+
+
+
+
+% Speed up graph. In the graph we use the sequential version written
+% with Data.Vector as a baseline for the comparison.
+
+% Accelerate is not included, because of problems in their stream fusion
+% algorithm leading to running times that evolve
+% exponentially. Disabling fusion lead to CUDA exceptions.
+
+% We see that the overhead incurred by using Nikola makes both
+% sequential implementations (R and Data.Vector) faster for the smallest
+% cases, and only when we reach the largest example (128 years expiry
+% time) Nikola catches up.
+
+% Repa is the best performing, even though it does not perform any GPU
+% computations. We are not sure why Repa gives so varied speed-ups for
+% different input sizes, but it might be because of our somewhat
+% arbitrary threshold for which problem sizes should be executed in
+% parallel and which should be executed sequentially.
 
 
 %%% Local Variables:
