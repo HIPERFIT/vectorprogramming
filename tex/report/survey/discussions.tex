@@ -19,10 +19,6 @@
 % \end{itemize}
 
 \chapter{Language Discussions}
-% ``How tight is the correspondence to the Rolfs R-code?''
-
-\todo{Compare the "coding experience" of R and CUDA. what is the level of
-abstraction? Tools available? How advanced tools are required to debug? }
 
 \section{CUDA/C}
 
@@ -57,7 +53,9 @@ to say that the focus of R lies mainly on expressivity in the domain of
 statistics and data analysis, while performance is secondary.
 
 R is a very dynamic language, complete with anonymous functions, general
-recursion and an immense library of high level operations.
+recursion and an immense library of high level operations. R programs execute
+on the CPU in their entirety. We are not aware of any efforts to exploit CUDA
+or OpenCL from inside of R programs.
 
 R has become very popular in scientific fields that are not primarily centered
 on computer programming, such as biology and statistics\cite{}. That in itself
@@ -68,6 +66,26 @@ larger example of LSM was able to offload much work to the built-in linear
 algebra routines.
 
 \section{Repa}
+
+Repa is a library that attempts to bring high performance data parallelism to
+Haskell, using the multithreaded runtime. As a result, Repa features all the
+expressive power of Haskell.
+
+The main contribution of Repa towards this end is that arrays in Repa are
+parametrised by their internal representation and shape in the type:
+\texttt{Array r sh a}.  This enables using different algorithms for processing
+different array representations, and restricting certain operations for certain
+representations. For example we have delayed arrays, which are simply
+represented by a function from indices to values together with an index domain.
+These arrays support indexing, but each index operation will pay the cost of
+computing the function.
+
+Repa provides two main operations for manifesting arrays to memory:
+\texttt{computeS} and \texttt{computeP} for sequential and parallel filling
+respectively. Repa uses a pool of worker threads, called a gang, to carry out
+computation. Thus, it doesn't support nested parallelism, issuing a warning if
+\texttt{computeP} is issued more than once.
+
 \section{Accelerate}
 
 Accelerate provides a variety of array operations: Both scans, segmented scans,
