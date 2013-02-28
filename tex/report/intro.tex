@@ -39,25 +39,45 @@ at a tolerable level.
 We will focus on software development for \textit{graphics processing
   units} (GPUs), which were originally intended solely for computer
 graphics, but have in recent years been found useful in many other
-applications, such as \todo{Which applications?}. They have gained so
-much popularity that they are a main ingredient in quite a few of
-todays largest supercomputers.
+applications, such as bioinformatics, medical image analysis,
+computational finance and simulation in engineering and the sciences
+\cite{hwy2011emerald, hwu2011jade, owens2007survey}. They have gained
+so much popularity that they are a main ingredient in quite a few of
+todays largest supercomputers \cite{Top500}.
 
 Even though we think of graphics processors as \textit{modern
   hardware}, the software development tools in widespread use for
-programming them are far from modern. CUDA and OpenCL, the two main
-languages for programming GPUs are low-level languages with manual
-memory management, limited abstractions, no support for stream fusion,
-and they require tedious hand optimization, as you for instance have
-to stream line your memory access to get decent
-performance. Alternative approaches have been tried out, but none of
-them have found as widespread use as CUDA and OpenCL. Such higher
-level languages include Theano, Accelerate, Nikola, Obsidian, Intel
-Array Building Blocks, Qilin and Copperhead.
+programming them are far from modern. CUDA
+\cite{nvidia2012programming} and OpenCL \cite{munshi2011opencl}, the
+two main languages for programming GPUs are low-level languages with
+manual memory management, limited abstractions, and they require
+tedious hand optimization, as you for instance have to streamline your
+memory access to get decent performance. The low-level nature of these
+languages makes it hard to do any better, as automated code analysis
+is difficult with generalized loops and pointers. The NVIDIA CUDA
+compiler thus cannot make the optimizations with largest impact on
+performance, such as stream fusion (deforestation), that removes
+intermediate data structures and thus removes the need for very costly
+memory transactions.
 
-\todo{describe the shared characteristica of these languages}
-\todo{define parallel functional programming}
-\todo{define ''vector language''}
+\section{Vector programming languages}
+Alternative approaches to GPU programming have been tried out, but
+none of them have found as widespread use as programming directly in
+CUDA or OpenCL. Such higher level languages include Theano\cite{bergstra2010theano},
+Accelerate\cite{chakravarty2011accelerating},
+Nikola\cite{mainland2010nikola}, Obsidian\cite{svensson2011obsidian},
+Intel Array Building Blocks \cite{newburn2011intel}, Bohrium
+\cite{homepage:bohrium} and Copperhead \cite{Catanzaro2011}.
+
+We call these languages ``Vector languages'' as they share the
+characteristica of lifting operations to work collectively on vectors
+rather than individually on primitive values (such as integers and
+floating point number). In Nikola and Accelerate this is implemented
+by making it impossible to evaluate a primitive expression without
+lifting it to work on vectors.
+
+Applying the same operation to a large number of elements is the main
+force of GPUs, and this thus \todo{..}
 
 We want to join in and contribute to these languages, and we believe
 that such an endeavour should start with evaluating current state of
@@ -66,15 +86,38 @@ and beneficial. Thus, the first part of this report is a survey of
 some of the existing parallel functional programming languages. We
 have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
-current approaches.
+current approaches. 
 
+\section{GPU hardware}
+Introduce concepts:
+ * Memory coalescing
+ * Grid of blocks
+ * Streaming multiprocessors
+ * Host/Device
+ * Memory structure
+
+\section{Contributions}
 % PLC: Should we have these in the introduction? wouldn't they fit
 % better in their respective sections?
 
 % MD: Yes we should, but only as overview/teaser. I think it would be
 % easier to read, when it is clear what's to come
 \todo{Which kind of problems we have found}
+
+We have found that the lack of nesting in a language such as
+Accelerate is too limiting to implement the algorithms that we want,
+without sacrificing code clarity. We suggest moving back a step on
+ladder and give the programmer more control.
+
 \todo{Something about what we have done to alleviate those problems}
+
+\todo{List our contributions:}
+
+* Example where the Accelerate breaks down, and code does not seem to
+  be written clearly
+
+* An alternative approach to specifying 
+
 
 \section{Report outline}
 The remainder of the report is structured as follows. This
