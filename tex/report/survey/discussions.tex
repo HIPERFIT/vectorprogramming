@@ -47,10 +47,10 @@ and error prone effort for us.
 
 \section{R}
 
-The R programming language is designed as a tool for exploring data sets
-statistically, and for coding prototypes of data analysis programs.  It is safe
-to say that the focus of R lies mainly on expressivity in the domain of
-statistics and data analysis, while performance is secondary.
+The R programming language is designed as a tool for exploring data sets using
+statistics and plotting, and for coding prototypes of data analysis programs.
+It is safe to say that the focus of R lies mainly on expressivity in the domain
+of statistics and data analysis, while performance is secondary.
 
 R is a very dynamic language, complete with anonymous functions, general
 recursion and an immense library of high level operations. R programs execute
@@ -76,15 +76,15 @@ parametrised by their internal representation and shape in the type:
 \texttt{Array r sh a}.  This enables using different algorithms for processing
 different array representations, and restricting certain operations for certain
 representations. For example we have delayed arrays, which are simply
-represented by a function from indices to values together with an index domain.
+represented by an index domain and a function that maps indices to values.
 These arrays support indexing, but each index operation will pay the cost of
 computing the function.
 
 Repa provides two main operations for manifesting arrays to memory:
-\texttt{computeS} and \texttt{computeP} for sequential and parallel filling
-respectively. Repa uses a pool of worker threads, called a gang, to carry out
-computation. Thus, it doesn't support nested parallelism, issuing a warning if
-\texttt{computeP} is issued more than once.
+\texttt{computeS} and \texttt{computeP} for sequential and parallel array
+manifestation respectively. Repa uses a pool of worker threads, called a gang,
+to carry out computation. Thus, it doesn't support nested parallelism and issues
+a warning if \texttt{computeP} is issued more than once.
 
 \section{Accelerate}
 
@@ -197,16 +197,16 @@ will result in compilation not terminating.
 
 \section{Nikola}
 
-Nikola does not provide the variety array operations that Accelerate does: Only
+Nikola does not provide the variety of array operations that Accelerate does: Only
 a few mapping operations are provided, and an iteration construct.  Nikola has
-a lot of overall structure in common with Repa. As with Repa, arrays
+a lot of overall structure in common with Repa. As with Repa, an array's
 implementations and shape are represented in the array type, and the programmer
 has access to mutable arrays in addition to the common pure array operations.
 
 To exploit the ability do differentiate according to array representations,
 operations such as \texttt{map} and \texttt{zipWith} are implemented using
 typeclasses.  While this architecture allows for specialisation of operations
-to different array representations, using the operations result in quite
+to different array representations, actually using the operations results in quite
 elaborate types. These are often too compilcated for type inference to resolve
 and require a human programmer to supply a type signature.
 
