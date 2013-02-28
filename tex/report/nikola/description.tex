@@ -4,7 +4,6 @@
 used, i.e. Exp, Array, storable vectors, monad P, compilation from user
 perspective, TH same-module restriction...}
 
-
 The Nikola language is made up of three data types: \texttt{Exp t a},
 \texttt{Array r sh a} and the program monad \texttt{P a}. These parts are all
 backend agnostic. It also provides a type class directed \texttt{compile}
@@ -45,7 +44,6 @@ What distinguishs push arrays and delayed arrays is their perspective on the
 arrays they represent. A delayed array is simply a function from indices to
 values, while a push array may be viewed as a stream of index/value pairs, that
 may appear in potentially any ordering.
-
 
 
 \section{Nikola Backend Architecture}
