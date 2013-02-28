@@ -86,7 +86,7 @@ and beneficial. Thus, the first part of this report is a survey of
 some of the existing parallel functional programming languages. We
 have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
-current approaches. 
+current approaches.
 
 \section{GPU hardware}
 Introduce concepts:
@@ -113,10 +113,31 @@ ladder and give the programmer more control.
 
 \todo{List our contributions:}
 
-* Example where the Accelerate breaks down, and code does not seem to
-  be written clearly
+\begin{itemize}
 
-* An alternative approach to specifying 
+\item A survey comparing of the vector languages CUDA, R, Repa, Accelerate and
+  Nikola. The comparison is based on how well they performed with our cases,
+  both in terms of expressivity and performance, and the surrounding community
+  of developers and users.
+
+\item We found Nikola to be the most promising candidate for useful extensions.
+
+\item We have implemented prototypes of folding, unfolding and nested maps in
+  Nikola. While there is yet some way to an acceptable implementation, we
+  outline a way to it.
+
+\item We present an alternative way of expressing nested data parallelism, that
+  doesn't involve an elaborate code transformation like \cite{nesl}, and
+  doesn't impair the compositionality of the language. Like above, we have yet
+  to actually test the method in practise.
+
+\end{itemize}
+
+%
+%* Example where the Accelerate breaks down, and code does not seem to
+%  be written clearly
+%
+%* An alternative approach to specifying
 
 
 \section{Report outline}
