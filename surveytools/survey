@@ -55,6 +55,7 @@ benchmark() {
     done
     #copy the plot settings to summarydir to make the plot generation self contained
     cp $experiment/plot_baseline $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
+    cp $experiment/xlabel $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
 
   done
 
