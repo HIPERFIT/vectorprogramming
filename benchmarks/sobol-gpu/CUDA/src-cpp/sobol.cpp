@@ -78,6 +78,22 @@ int main(int argc, char *argv[])
     char inBuf[200]; // ridiculously large input buffer.
     printf("OK\n");
 
+
+    unsigned int *h_directions = 0;
+    try
+    {
+        h_directions = new unsigned int [n_dimensions * n_directions];
+    }
+    catch (std::exception e)
+    {
+        std::cerr << "Caught exception: " << e.what() << std::endl;
+        std::cerr << "Unable to allocate CPU memory (try running with fewer vectors/dimensions)" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize the direction numbers (done on the host)
+    initSobolDirectionVectors(n_dimensions, h_directions);
+
     while (true) {
 
       fgets(inBuf, 200, stdin);
@@ -98,12 +114,10 @@ int main(int argc, char *argv[])
       }
 
     // Allocate memory for the arrays
-    unsigned int *h_directions = 0;
     float        *h_outputGPU  = 0;
 
     try
     {
-        h_directions = new unsigned int [n_dimensions * n_directions];
         h_outputGPU  = new float [n_vectors * n_dimensions];
     }
     catch (std::exception e)
@@ -140,9 +154,6 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Initialize the direction numbers (done on the host)
-    initSobolDirectionVectors(n_dimensions, h_directions);
-
     // Copy the direction numbers to the device
     checkCudaErrors(cudaMemcpy(d_directions, h_directions, n_dimensions * n_directions * sizeof(unsigned int), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaDeviceSynchronize());
@@ -154,11 +165,6 @@ int main(int argc, char *argv[])
 
     checkCudaErrors(cudaMemcpy(h_outputGPU, d_output, n_vectors * n_dimensions * sizeof(float), cudaMemcpyDeviceToHost));
 
-    // Cleanup and terminate
-    delete h_directions;
-    checkCudaErrors(cudaFree(d_directions));
-    checkCudaErrors(cudaFree(d_output));
-
     printf("RESULT ");
 
     for(int i = 0; i < 10; i++)
@@ -166,10 +172,15 @@ int main(int argc, char *argv[])
 
     printf("\n");
 
+
+    // Cleanup and terminate
+    checkCudaErrors(cudaFree(d_directions));
+    checkCudaErrors(cudaFree(d_output));
+
     delete h_outputGPU;
 
     }
-
+    delete h_directions;
     cudaDeviceReset();
     exit(EXIT_SUCCESS);
 }
