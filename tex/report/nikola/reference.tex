@@ -7,24 +7,24 @@ in Nikola for reference. These modules all reside in the
 \subsection{Frontend modules}
 \begin{description}
 
-  \item[\texttt{Exp}] module. Exports the type \texttt{Exp t a} and typeclass
+  \item[\texttt{Exp}, module.] Exports the type \texttt{Exp t a} and typeclass
     \texttt{IfThenElse} for use with rebindable syntax. The type \texttt{Exp t
     a} will sometimes appear as qualified name \texttt{E.Exp} in case of
     ambiguity.
 
-  \item[\texttt{Array}] module. Defines \texttt{IsArray r e} typeclass with
+  \item[\texttt{Array}, module.] Defines \texttt{IsArray r e} typeclass with
     associated type \texttt{Array r sh e}. It also defines the
     \texttt{Source r e} typeclass for arrays that support indexing.
 
-  \item[\texttt{Shape}] module. Defines types \texttt{Z}, \texttt{sh :. a}
+  \item[\texttt{Shape}, module.] Defines types \texttt{Z}, \texttt{sh :. a}
     and the typeclass \texttt{Shape sh}, with instances for \texttt{Z} and
     \texttt{sh :. a}.
 
-  \item[\texttt{Repr}] namespace. Contains modules definining the array
+  \item[\texttt{Repr}, namespace.] Contains modules definining the array
     representations for Push, Delayed and Global arrays through
     \texttt{IsArray} instances.
 
-  \item[\texttt{Backend.CUDA.Haskell}, \texttt{Backend.CUDA.TH}] modules.
+  \item[\texttt{Backend.CUDA.Haskell}, \texttt{Backend.CUDA.TH}, modules.]
     Define the \texttt{compile} function for runtime and compiletime usage
     respectively.
 
@@ -33,7 +33,7 @@ in Nikola for reference. These modules all reside in the
 \subsection*{Backend modules}
 \begin{description}
 
-  \item[\texttt{Language.Syntax}] module. Exports the \texttt{Exp} datatype,
+  \item[\texttt{Language.Syntax}, module.] Exports the \texttt{Exp} datatype,
     which is a first-order abstract syntax for primitive Nikola expressions.
     The abstract syntax contains constructs for manipulating memory arrays,
     looping and annonymous functions. It also exports the datatypes
@@ -41,29 +41,29 @@ in Nikola for reference. These modules all reside in the
     for \texttt{Exp} values. In the case of ambiguity we quailfy \texttt{Exp}
     as \texttt{S.Exp}.
 
-  \item[\texttt{Language.Check}] module. Contains a type checker and simple type
+  \item[\texttt{Language.Check}, module.] Contains a type checker and simple type
     inference for \texttt{Exp} values. Also defines the typeclass
     \texttt{MonadCheck m}, to allow type checking to be performed in any monad
     that defines how to access to the typing environment
 
-  \item[\texttt{Language.Monad}] module. Defines the continuation passing
+  \item[\texttt{Language.Monad}, module.] Defines the continuation passing
     \texttt{R r a} monad, and the type alias \texttt{type P a = R Exp a}.
     Also defines the combinators \texttt{shift} and \texttt{reset} for
     delimited continuations \cite{wadler1994monads}.
 
-  \item[\texttt{Language.Reify}] module. Exports the \texttt{Reifiable a b}
+  \item[\texttt{Language.Reify}, module.] Exports the \texttt{Reifiable a b}
     typeclass. It provides the operation \texttt{reify :: a -> R b b},
     which is the central piece in converting frontend data types
     \texttt{Exp t a} and \texttt{Array r sh e} to primitive \texttt{Exp}.
 
-  \item[\texttt{Language.Optimize}] namespace and module. Provides various
+  \item[\texttt{Language.Optimize}, namespace and module.] Provides various
     optimizations on Nikola \texttt{S.Exp} values exclusively. Most notable is
     the detection of let-sharing, see \cite{mainland2010nikola}. Marking
     parallel for-loops at the top level to be translated to CUDA kernels is
     also treated as an optimisation in Nikola.
 
-  \item[\texttt{Backend.C.Codegen}] module. Generates C code from \texttt{S.Exp}
-    values, represented as C abstract syntax.
+  \item[\texttt{Backend.C.Codegen}, module.] Generates C code from
+    \texttt{S.Exp} values, represented as C abstract syntax.
 
 \end{description}
 
