@@ -1,54 +1,64 @@
 \chapter{General-purpose programming of GPUs}
 \label{chap:gpgpu}
+Graphics processing units (GPUs) where originally produced for
+computer graphics applications, such as computer games or CGI. In the
+last decade they were found useful outside this field, as the problems
+in computer graphics had many similarities to problems in science and
+engineering.
 
-The contents in this section is based on a text previously written by
-Martin Dybdal, one of the authors (see \cite{dybdal2011opencl}).
+GPUs show a high degree of data parallelism, originating from their
+\textit{single instruction, multiple data}-architecture (SIMD), where
+a set of computation units executes the same program on each their own
+data item.
 
-GPUs show a high degree of data parallelism, which makes them
-economical worthwhile for many domains in both the sciences and the
-industry, as this is a characteristic of problems in these
-domains. GPUs efficiency originate from their \textit{single
-  instruction, multiple data}-architecture (SIMD), where a set of
-computation units executes the same program on each their own data
-item. In this chapter we will look at the architecture of a modern
-NVIDIA GPU and introduce the necessary concepts.
+Many tasks in scientific and engineering, such as simulation and ...,
+are data-parallel nature. For instance, when simulating physical
+systems, there are often many millions of interacting agents
+(e.g. reacting atoms in chemistry) that has to be updated in each step
+of the simulation. In other cases we might want to run the same
+simulation thousands of times and average the outcomes.
 
-% \section{Programming interfaces}
-% Originally, the only programming interfaces for GPUs were based on
-% concepts such as textures and shader programs. Applications outside
-% the graphics domain had to be encoded to fit the models of graphics
-% programming interfaces such as OpenGL or DirectX and developers needed
-% deep knowledge about the GPU-architecture \cite{nvidia2009fermi}.
+Originally, the only programming interfaces for GPUs were based on
+concepts such as textures and shader programs. Applications outside
+the graphics domain had to be encoded to fit the models of graphics
+programming interfaces such as OpenGL or DirectX and developers needed
+deep knowledge about the GPU-architecture
+\cite{nvidia2009fermi}. \todo{Make sure that this citation makes
+  sense, it is taken from the old report}
 
-% Several frameworks has since been developed for GPGPU
-% programming. NVIDIA developed CUDA for its line of graphics cards and
-% AMD/ATI developed the Stream SDK (initially called ``Close to metal'')
-% for their cards. To break with the situation where there was no
-% portable interface for GPU-programming, Apple took initiative to the
-% creation of OpenCL. OpenCL is an open standard for programming
-% heterogeneous systems with several kinds of processors, both CPUs and
-% GPUs. There are OpenCL implementations available for, newer NVIDIA and
-% ATI GPUs, the x86 and x86\_64 CPU-architectures and the Cell
-% processor.
+Since scientists started to use GPUs for research projects, several
+programming frameworks have been developed. The two most prominent and
+widely used today are OpenCL and CUDA.
 
-% Although CUDA and OpenCL are more general than the graphics frameworks
-% used previously, they are still low-level interfaces in today's
-% terms. The programmer himself is responsible for administering memory
-% usage himself and manually moving data between main memory and GPU
-% memory. To write even simple programs it is large amounts of
-% surrounding code are necessary. This includes: initialization of
-% OpenCL and connected devices, compilation of GPU specific code,
-% invocation of GPU-functions (kernels) and data-transfers to and from
-% the GPU. To use the GPU effectively, a certain level of knowledge
-% about the architecture of graphics processing units is also
-% necessary. For instance, using the local caches incorrectly or
-% misaligning memory accesses between work items can cause huge
-% performance penalties.
+In this chapter we will look at the architecture of a modern NVIDIA
+GPU and the programming model of NVIDIA's CUDA framework. The chapter
+is an edited version of a text on GPUs previously produced by one of
+the authors, Martin Dybdal (see \cite{dybdal2011opencl}).
+
+\section{GPU hardware}
+\label{sec:gpu_hardware}
+The execution of a GPU program has to be conducted by an accompanied
+program executing on the CPU. The traditional CPU is referred to as
+the \textit{host} and the GPU is called the \textit{device}. Other
+concepts such as pointers or arrays are often prefixed with either of
+these to specify where they reside.
+
+A CUDA device is divided into a number of \textit{streaming
+  multiprocessors} (SMs), each of which are in turn divided into
+individual CUDA cores. It is these CUDA cores that performs the actual
+computation on a GPU. How these concepts are related is shown in
+Figure \ref{fig:gpu_terminology}, together with the three
+corresponding layers of GPU-memory. Each CUDA core has an amount of
+register space available, which are memory local to the current thread
+executing on that core. To communicate and synchronize between other
+threads, each streaming multiprocessor provides an amount of shared
+memory, which are a bit slower than registers. As a last layer, the
+GPU provides a large amount of global memory, shared between all SMs,
+with the drawback of very long access times.
 
 \begin{figure*}
   \centering
   \includegraphics[width=\textwidth]{graphics/cuda-structure}
-  \vspace{2mm}
   \caption{CUDA GPU terminology: Host, devices, streaming
     multiprocessors and CUDA cores. The arrows show the possible path
     of data movement. The host can command movement of data to and
@@ -57,25 +67,65 @@ NVIDIA GPU and introduce the necessary concepts.
   \label{fig:gpu_terminology}
 \end{figure*}
 
-\section{CUDA}
-The execution of a GPU program has to be conducted by an accompanied
-program executing on the CPU. The traditional CPU is referred to as
-the \textit{host} and the GPU is called the \textit{device}. Other
-concepts such as pointers or arrays are often prefixed with either of
-these to specify where they reside.
+The architecture of NVIDIAs latest line of GPGPU devices is named
+Kepler. The current Kepler based GPUs consists of up to 2880 CUDA
+cores grouped into streaming multiprocessors of 192
+cores each \cite{nvidia2012keplerGK110}. 
 
-An CUDA device is divided into streaming multiprocessors (SM, or just
-``multiprocessor''), which are in turn divided into individual CUDA
-cores. CUDA cores performs the actual computation on a GPU. How these
-concepts are related is shown in Figure \ref{fig:gpu_terminology}.
-Since modern GPUs contains hundreds or thousands of cores, GPU
-programs must be written such that their work can be executed
-independently and in parallel on as many of these cores as possible. A
-single thread of execution on a CUDA core is the smallest unit of work
-on a GPU. These threads are arranged into equal sized groups called
-\textit{blocks} and blocks are arranged into an $3$-dimensional
-grid. A \textit{block} is executed on a single multiprocessor, which
-provides shared memory accessible from all its cores.
+At the department we have access to a machine with two GeForce GTX 690
+GPUs, each of which contains two Kepler K104 GPUs, with 1536 CUDA
+cores arranged into eight multiprocessors. Shared between all SMs is
+an L2 Cache (512 KB) and 2 GiB global memory
+\cite{nvidia2012gtx680}. 
+
+Figure \ref{fig:kepler_sm} shows the structure of a streaming
+multiprocessor in the K104 architecture. All 192 cores share the same
+register file (in the top) and 64 KB of local memory (at the bottom)
+is used both as L1 cache and shared memory between cores of the
+SM. The amount of memory used as cache and as shared memory is
+configurable.
+
+\begin{figure}
+  % floatflt package?
+  \centering
+  \includegraphics[width=0.7\textwidth]{graphics/nvidia_kepler_k104_sm_cropped}
+  \vspace{2mm}
+  \caption{A diagram of a single streaming multiprocessor from a
+    Kepler K104 GPU. The illustration is borrowed from NVIDIAs K104
+    whitepaper \cite{nvidia2012geforcegtx680}, and a few irrelevant
+    parts are cropped away..}
+  \label{fig:kepler_sm}
+\end{figure}
+
+When executing a grid of CUDA blocks on a Kepler architecture GPU,
+each block is assigned to a single SM (each SM can process several
+blocks). Each block is partitioned into \textit{warps} which are
+groups of 32 threads, which are scheduled on the 192 CUDA cores of the
+streaming multiprocessor. \todo{explain warp schedulers and why there
+  are 4 rather than 6 schedulers}
+
+All threads in a \textit{warp} always executes exactly the same
+instruction, this is called \textit{SIMD}, single instruction,
+multiple data. Moreover, when warps are executed by a SM it can
+execute two warps from the same block simultaneously, as each SM have
+access to two schedulers and the register file can be used for both of
+the two warps independently. This is called \textit{SIMT} (single
+instruction, multiple thread) as two threads are executed on the same
+processor simultaneously. Each streaming multiprocessor can be
+assigned a certain number of warps, which it switches between
+executing. This is useful for hiding latency endured by memory access
+or data dependencies between instructions.
+
+\section{GPU programming}
+Since modern GPUs contains hundreds or thousands of
+cores, GPU programs must be written such that their work can be
+executed independently and in parallel on as many of these cores as
+possible. A single thread of execution on a CUDA core is the smallest
+unit of work on a GPU. These threads are arranged into equal sized
+groups called \textit{blocks} and blocks are arranged into an
+$3$-dimensional grid. A \textit{block} is executed on a single
+multiprocessor, which provides shared memory accessible from all its
+cores.
 
 Programming a GPU is done by writing \textit{kernel programs} or
 simply \textit{kernels}. A kernel specifies the work done by a single
@@ -93,54 +143,6 @@ dependencies are met.
 \todo{describe memory allocation in CUDA: specific versions of malloc
   and free for GPU memory and cudaMemcpy to transfer data to and from the host}
 
-\section{Hardware}
-\label{sec:gpu_hardware}
-In this section we will introduce the GPU devices produced by NVIDIA,
-as it is GPUs from this vendor we have available at the department.
-
-The architecture of NVIDIAs latest line of GPGPU devices is named
-Kepler. The current Kepler based GPUs consists of up to 1536 CUDA
-cores grouped into \textit{streaming multiprocessors} (SM) of 192
-cores each. Shared between all SMs is an L2 Cache (512 KB) of global
-memory \cite{nvidia2012gtx680}. Figure \ref{fig:kepler_sm} shows the
-structure of a streaming multiprocessor in the Kepler
-architecture. All 192 cores share the same register file (in the top)
-and 64 KB of local memory (at the bottom) is used both as L1 cache and
-shared memory between cores of the SM. The amount of memory used as
-cache and as shared memory is configurable.
-
-\begin{figure}
-  % floatflt package?
-  \centering
-  \vspace{5mm}
-  \includegraphics[width=\textwidth]{graphics/nvidia_kepler_k104_sm}
-  \vspace{4mm}
-  \caption{A single streaming multiprocessor of a Kepler K104 GPU. The
-    illustration is borrowed from NVIDIAs K104 whitepaper
-    \cite{nvidia2012keplerk104}.}
-  \label{fig:kepler_sm}
-\end{figure}
-
-When executing a grid of CUDA blocks on a Kepler architecture GPU,
-each block is assigned to a single SM (each SM can process several
-blocks). Each block is partitioned into \textit{warps} which are
-groups of 32 threads, which are scheduled on the 192 CUDA cores of the
-streaming multiprocessor. Notice that the 192 CUDA cores does not
-divide evenly into groups of 32 threads (which was common on previous
-architectures, such as NVIDIA Fermi).
-\todo{explain why this is the case}
-
-All threads in a \textit{warp} always executes exactly the same
-instruction, this is called \textit{SIMD}, single instruction,
-multiple data. Moreover, when warps are executed by a SM it can
-execute two warps from the same block simultaneously, as each SM have
-access to two schedulers and the register file can be used for both of
-the two warps independently. This is called \textit{SIMT} (single
-instruction, multiple thread) as two threads are executed on the same
-processor simultaneously. Each streaming multiprocessor can be
-assigned a certain number of warps, which it switches between
-executing. This is useful for hiding latency endured by memory access
-or data dependencies between instructions.
 
 \subsection{Optimization considerations}
 Determining how the grid of threads are partitioned into blocks are of
