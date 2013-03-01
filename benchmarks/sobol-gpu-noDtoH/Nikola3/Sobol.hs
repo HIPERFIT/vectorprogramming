@@ -10,7 +10,8 @@ import Data.Int (Int32)
 import Data.Typeable (Typeable)
 
 import Data.Array.Nikola.Backend.CUDA
-import Data.Array.Nikola.Combinators
+import Data.Array.Nikola.Combinators hiding (fold) -- nikola-hiperfit has various 'fold' experiments. here we use our own local one.
+
 
 type Elem = Word32
 type SpecReal = Double

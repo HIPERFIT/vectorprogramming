@@ -15,31 +15,38 @@ import Data.Array.Nikola.Backend.CUDA (initializeCUDACtx)
 import Data.Int
 
 import qualified Data.Array.Repa as R
-import qualified Data.Array.Repa.Repr.UnboxedForeign as R
+import qualified Data.Array.Repa.Repr.CUDA.UnboxedForeign as R
 
 import Sobol
 import System.IO
 
-sobolIndPrecompiled :: Int32 -> CV.Vector SpecReal
-sobolIndPrecompiled = $(NTH.compileSig sobolSequence_
-  (undefined :: Int32 -> IO (R.Array R.UF R.DIM1 SpecReal))
+sobolIndPrecompiled :: Int32 -> IO (R.Array R.CUF R.DIM1 SpecReal)
+sobolIndPrecompiled = return . $(NTH.compileSig sobolSequence_
+  (undefined :: Int32 -> R.Array R.CUF R.DIM1 SpecReal))
 
+{-
+sobolSeqNoDtoH :: (Int32 -> IO (R.Array r sh a)) -> Int32 -> IO ()
+sobolSeqNoDtoH sobol n =
+-}
+
+{-
 sobolSequence :: (NFData a, CV.Storable a) => (Int32 -> CV.Vector a) -> Int -> V.Vector a
 sobolSequence sobol n = V.take 150 $!! CV.toHostVector $ sobol (Prelude.fromIntegral n)
-
+-}
 main = do
   hSetBuffering stdin LineBuffering
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   initializeCUDACtx
   putStrLn "OK"
-  execute (sobolSequence (sobolIndPrecompiled . Prelude.fromIntegral))
+  execute (sobolIndPrecompiled . Prelude.fromIntegral)
 
-execute :: (Read a) => (a -> IO b) -> IO ()
+execute :: (Read a, Show b) => (a -> IO b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
   vec <- f $ read str
+  -- putStrLn $ "RESULT " ++ show (vec)
   putStrLn $ "RESULT <untransferred>" -- ++ (show . f . read $ str)
 
 {-

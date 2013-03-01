@@ -74,6 +74,8 @@ int main(int argc, char *argv[])
     }
 
     // Transfer direction vectors.
+
+    unsigned int *d_directions;
     checkCudaErrors(cudaGetDevice(&devID));
     try
     {
@@ -130,8 +132,6 @@ int main(int argc, char *argv[])
         std::cerr << "Unable to allocate CPU memory (try running with fewer vectors/dimensions)" << std::endl;
         exit(EXIT_FAILURE);
     }
-
-    unsigned int *d_directions;
     float        *d_output;
 
     try
@@ -168,10 +168,9 @@ int main(int argc, char *argv[])
 
     // Cleanup and terminate
     delete h_directions;
-    checkCudaErrors(cudaFree(d_directions));
     checkCudaErrors(cudaFree(d_output));
 
-    printf("RESULT <untransferred>");
+    printf("RESULT <untransferred>\n");
 
     /*
     for(int i = 0; i < 10; i++)
@@ -182,6 +181,7 @@ int main(int argc, char *argv[])
     //delete h_outputGPU;
 
     }
+    checkCudaErrors(cudaFree(d_directions));
 
     cudaDeviceReset();
     exit(EXIT_SUCCESS);
