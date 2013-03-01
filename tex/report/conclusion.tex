@@ -1,3 +1,46 @@
+
+% Make space in the table of contents so the conclusion and
+% bibliography is separate from the Language Extension-part
+\addtocontents{toc}{\protect\vspace{10pt}}
+
 \chapter{Conclusion}
 \section{Future Work}
+
+\todo{Expand all these points to a section}
+\begin{itemize}
+\item Explain how nested parallelism can be handled in newer versions
+  of CUDA running on the Kepler architecture:
+  \url{http://developer.download.nvidia.com/assets/cuda/docs/TechBrief_Dynamic_Parallelism_in_CUDA_v2.pdf}
+  Suggest using this in a new nested data-parallel language.
+
+\item Our idea of 'sequential' should have been introduced in previous
+  sections, but we should suggest implementing it more fully than we
+  have had time to
+
+\item Implementing 'sequential' as a replacement for computeS and
+  computeP in Repa
+
+\item Extending our survey to cover other languages. Specifically
+  Theano, Bohrium and Copperhead.
+
+\item Change our survey to cover portfolio pricing. Longstaff and
+  Schwartz pricer on a single option is not worthwhile on GPUs, with
+  our current approach. But implementing it as a portfolio pricer
+  might give us benefits.
+
+\item This community really needs a way of comparing their work, to
+  make it more competitive. We should look at doing a Computer
+  Languages Benchmark Game for data parallel languages, with both a
+  GPU and CPU category (W. \url{http://benchmarksgame.alioth.debian.org/}
+
+\item Cite SPL and the PJ/LexiFi paper and suggest using Longstaff and
+  Schwartz for pricing their contracts.
+\end{itemize}
+
 \section{Conclusion}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End:

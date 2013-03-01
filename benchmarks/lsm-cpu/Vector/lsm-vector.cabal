@@ -1,0 +1,12 @@
+name:                lsm-vector
+version:             0.1.0.0
+license:             BSD3
+author:              Philip Carlsen, Martin Dybdal
+maintainer:          plcplc@gmail.com, dybber@dybber.dk
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable lsm-vector
+  main-is:       Main.hs
+  build-depends: base, vector, deepseq, vector-random, mersenne-random-pure64
+  ghc-options:   -threaded -optlo-O3 -fllvm

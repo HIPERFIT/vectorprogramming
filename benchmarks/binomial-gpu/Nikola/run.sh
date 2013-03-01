@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec ./dist_*/build/binomial-nikola/binomial-nikola $@
+exec ./dist_*/build/binomial-nikola2/binomial-nikola2 $@

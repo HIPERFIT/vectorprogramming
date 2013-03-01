@@ -13,17 +13,18 @@
 % \end{itemize}
 
 \chapter{Introduction}
+\section{Background}
 Ever since the first electronic computers were built, there has been a
 wish for tackling larger and more complex problems, which in turn has
 created an increasing demand for performance improvements and
 increased programmer productivity. Performance improvements originate
 from improvements in either hardware or the employed
-algorithms. Programmer productivity, on the other hand, mostly
-correlates with the features of the used programming language
-\todo{cite}. A language providing high programmer efficiency should make
-it easy to implement and reason about algorithms, make mistakes easily
-avoidable and when a mistake happens, make it easy to uncover its
-cause. \todo{cite}
+algorithms. Programmer productivity, on the other hand, correlates
+with the features of the used programming language and programming
+environment (IDEs, debuggers, etc.). A language providing high
+programmer efficiency should make it easy to implement and reason
+about algorithms, make mistakes easily avoidable and when a mistake
+happens, make it easy to uncover its cause.
 
 For a handful of decades, we have been able to increase performance
 through hardware improvements of sequential processors and we have
@@ -31,31 +32,62 @@ thus been able to stick with more or less the same model of
 computation. Recently, hardware developers have faced physical
 barriers, making further performance improvements of sequential
 processors impractical, and they have had to go new ways to obtain the
-desired speed-up \cite{sutter2006freelunchisover}. These new architectures call
-for new algorithms and models of computation, as well as new languages
-and programming tools to keep the complexity of software development
-at a tolerable level.
+desired speed-up \cite{sutter2006freelunchisover}. These new
+architectures call for new algorithms and models of computation, as
+well as new languages and programming tools to keep the complexity of
+software development at a tolerable level.
 
-We will focus on software development for \textit{graphics processing
-  units} (GPUs), which were originally intended solely for computer
-graphics, but have in recent years been found useful in many other
-applications, such as \todo{Which applications?}. They have gained so
-much popularity that they are a main ingredient in quite a few of
-todays largest supercomputers.
+We will focus on software development for \emph{graphics processing
+  units} (GPUs), which in recent years have been found cost-effective
+alternatives to ordinary CPUs, for many other domains than computer
+graphics. Today they are employed in fields as diverse as
+bioinformatics, computational chemistry, medical image analysis,
+relational databases, computational finance and simulation in both
+engineering and the sciences \cite{hwy2011emerald, hwu2011jade,
+  owens2007survey}. Solutions to many problems in these domains can be
+expressed naturally as \emph{data-parallel} algorithms, where each
+data item can be processed independently (often from a linear algebra
+specification of the problem). This is thus where GPUs popularity
+arise; executing such data-parallel tasks is the core capability of
+GPUs.
 
-Even though we think of graphics processors as \textit{modern
+% Should we include this somewhere?
+% GPUs have gained so much popularity that they are a main ingredient in
+% quite a few of todays largest supercomputers \cite{Top500}.
+
+\section{Data-parallel programming languages}
+Even though we think of graphics processors as \emph{modern
   hardware}, the software development tools in widespread use for
-programming them are far from modern. CUDA and OpenCL, the two main
-languages for programming GPUs are low-level languages with manual
-memory management, limited abstractions, no \todo{critise
-even more!}. Alternative approaches have been tried out, but none of them
-have found as widespread use as CUDA and OpenCL. Such higher level
-languages include Theano, Accelerate, Nikola, Obsidian, Intel Array
-Building Blocks, Qilin and Copperhead.
+programming them are far from modern. CUDA
+\cite{nvidia2012programming} and OpenCL \cite{munshi2011opencl}, the
+two main languages for programming GPUs are low-level languages with
+manual memory management, limited abstractions, and tedious hand
+optimization are often required. It is, for instance, important to
+streamline memory accesses to get decent performance. The low-level
+nature of these languages makes automated code analysis difficult. The
+NVIDIA CUDA compiler thus cannot make an optimization such as stream
+fusion (deforestation), that removes intermediate data structures and
+thus removes the need for very costly memory transactions. The
+programmer thus has to fuse programs by hand, sacrificing clarity as
+abstractions between individual parts has to be broken down and fused
+together. Also, the programmer has to be well aware of the exact
+hardware his program is to be executed on, thus making a tight
+coupling between program and hardware.
 
-\todo{describe the shared characteristica of these languages}
-\todo{define parallel functional programming}
-\todo{define ''vector language''}
+High-level languages for GPU programming have been developed and
+employed, but none of them have found as widespread use as programming
+directly in CUDA or OpenCL. These newer languages include
+Theano\cite{bergstra2010theano},
+Accelerate\cite{chakravarty2011accelerating},
+Nikola\cite{mainland2010nikola}, Obsidian\cite{svensson2011obsidian},
+Intel Array Building Blocks \cite{newburn2011intel}, Bohrium
+\cite{homepage:bohrium} and Copperhead \cite{Catanzaro2011}. Their
+common aim is to abstract away the underlying hardware platform and
+let data-parallel problems be easily specified.
+
+These languages share the characteristica of lifting operations to
+work collectively on vectors rather than individually on primitive
+values (such as integers and floating point number).
 
 We want to join in and contribute to these languages, and we believe
 that such an endeavour should start with evaluating current state of
@@ -66,9 +98,49 @@ have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
 current approaches.
 
-% PLC: Should we have these in the introduction? wouldn't they fit better in their respective sections?
+\section{Contributions}
+% PLC: Should we have these in the introduction? wouldn't they fit
+% better in their respective sections?
+
+% MD: Yes we should, but only as overview/teaser. I think it would be
+% easier to read, when it is clear what's to come
 \todo{Which kind of problems we have found}
+
+We have found that the lack of nesting in a language such as
+Accelerate is too limiting to implement the algorithms that we want,
+without sacrificing code clarity. We suggest moving back a step on
+ladder and give the programmer more control.
+
 \todo{Something about what we have done to alleviate those problems}
+
+\todo{List our contributions:}
+
+\begin{itemize}
+
+\item A survey comparing of the vector languages CUDA, R, Repa, Accelerate and
+  Nikola. The comparison is based on how well they performed with our cases,
+  both in terms of expressivity and performance, and the surrounding community
+  of developers and users.
+
+\item We found Nikola to be the most promising candidate for useful extensions.
+
+\item We have implemented prototypes of folding, unfolding and nested maps in
+  Nikola. While there is yet some way to an acceptable implementation, we
+  outline a way to it.
+
+\item We present an alternative way of expressing nested data parallelism, that
+  doesn't involve an elaborate code transformation like \cite{nesl}, and
+  doesn't impair the compositionality of the language. Like above, we have yet
+  to actually test the method in practise.
+
+\end{itemize}
+
+%
+%* Example where the Accelerate breaks down, and code does not seem to
+%  be written clearly
+%
+%* An alternative approach to specifying
+
 
 \section{Report outline}
 The remainder of the report is structured as follows. This

@@ -1,0 +1,245 @@
+% \subsection{Ease of use and expressiveness}
+
+% How easy is the language to use? And how expressive is it? Our
+% aim is to find a language that might be suitable for a financial
+% engineer and we thus want a suitably high-level language. It should
+% be near the complexity level of R. We still want the language to
+% expressive enough to cover the domain of financial algorithms.
+
+% Subquestions include
+% \begin{itemize}
+% \item Which programs can we write, and which can't we write?
+%   \begin{itemize}
+%   \item Can we write nested loops?
+%   \item Does it include all of: scans, folds, zip/map, stencils?
+%   \item Do we have access to general recursion?
+%   \end{itemize}
+% \item How good are the error messages?
+% \item How high-level is it on the scale from ``R'' to ``CUDA''?
+% \end{itemize}
+
+\chapter{Language Discussions}
+
+\section{CUDA/C}
+
+Since CUDA/C is close to a one-to-one mapping of hardware abilities to language
+primitives, it is possible though not necessarily easy to implement anything
+that the hardware is capable of running.
+
+Every single resource must be explicitly managed -- there is not even a
+function call stack. While this enables the coding of very fast algorithms,
+programs are also more tightly coupled with the parameters of the hardware, and
+to assumptions about input size. So even though a CUDA programmer has access to
+highly optimised linear algebra libraries such as CUBLAS \cite{CUBLAS2013},
+optimisations such as loop fusion must be coded by hand, ruling out using such
+libraries. This optimisation often has profound effects on performance
+\cite{mainlandhaskell}.
+
+When implementing the binomial option pricer in CUDA, we relied on example code
+from the CUDA SDK provided by Nvidia \cite{CUDAbinomial}, as we assumed this to
+be a good sample of real-world CUDA code. This example code was in fact
+specialised to price a portfolio of options rather than a single option, and as
+seen in the performance evaluation it scales less well than Nikola.
+\todo{check that this is actually true once the performance section has been written.}
+
+Adapting the CUDA pricer to use just a single option proved to be a substantial
+and error prone effort for us.
+
+\section{R}
+
+The R programming language is designed as a tool for exploring data sets using
+statistics and plotting, and for coding prototypes of data analysis programs.
+It is safe to say that the focus of R lies mainly on expressivity in the domain
+of statistics and data analysis, while performance is secondary.
+
+R is a very dynamic language, complete with anonymous functions, general
+recursion and an immense library of high level operations. R programs execute
+on the CPU in their entirety. We are not aware of any efforts to exploit CUDA
+or OpenCL from inside of R programs.
+
+R has become very popular in scientific fields that are not primarily centered
+on computer programming, such as biology and statistics\cite{}. That in itself
+is good testament to the practical usefulnes of the language.
+
+Implementing our case studies in R required typically very little work, and the
+larger example of LSM was able to offload much work to the built-in linear
+algebra routines.
+
+\section{Repa}
+
+Repa is a library that attempts to bring high performance data parallelism to
+Haskell, using the multithreaded runtime. As a result, Repa features all the
+expressive power of Haskell.
+
+The main contribution of Repa towards this end is that arrays in Repa are
+parametrised by their internal representation and shape in the type:
+\texttt{Array r sh a}.  This enables using different algorithms for processing
+different array representations, and restricting certain operations for certain
+representations. For example we have delayed arrays, which are simply
+represented by an index domain and a function that maps indices to values.
+These arrays support indexing, but each index operation will pay the cost of
+computing the function.
+
+Repa provides two main operations for manifesting arrays to memory:
+\texttt{computeS} and \texttt{computeP} for sequential and parallel array
+manifestation respectively. Repa uses a pool of worker threads, called a gang,
+to carry out computation. Thus, it doesn't support nested parallelism and issues
+a warning if \texttt{computeP} is issued more than once.
+
+\section{Accelerate}
+
+Accelerate provides a variety of array operations: Both scans, segmented scans,
+folds, permutations, maps and zips. Arrays may be multidimensional, denoted by
+a type variable in the same style as Repa.
+
+Reductions (folds) are defined on arrays of arbitrary rank by performing the
+reduction on the innermost dimension, yielding an array with rank one less.
+Maps are all elementwise regardless of the shape of the input array, and scans
+are only defined on one-dimensional arrays.
+
+Accelerate is characterised by a clean division between the frontend and the
+various backends that exist. The Accelerate language thus is completely backend
+agnostic, and backends simply export a function such as \hbox{\texttt{run :: Acc a ->
+a}.}
+
+Accelerate employs a meticulus partitioning of functions on arrays and functions
+on scalar values. Array functions are all embedded in the \texttt{Acc a} type,
+while scalars are embedded in the \texttt{Exp a} type. So, everything that is
+capable of reducing an array or producing an array is carefully placed inside
+\texttt{Acc}, and the functions usable for elementwise computation must
+reside in \texttt{Exp}. Thus, the lack of nested parallelism is directly
+encoded in the type system.
+
+While this restriction probably makes it easy to ensure efficient execution of
+the individual contructs, it impairs the composability of the language
+constructs significantly, as the programmer needs to manually transform
+algorithms with a naturally nested defintion into something that will fit into
+the view of Accelerate.
+
+Consider this small example, derived from a problem we actually encountered
+while exploring the sobol sequence generation case:
+
+Suppose we have a function \texttt{f} performing a simple vector operation,
+such as multiplying a scalar.
+
+\begin{verbatim}
+f :: Vector a -> b -> Vector c
+f as b = map (b *) as
+\end{verbatim}
+
+Now, if we want to do scalar multiplication with a vector of scalars, in
+\texttt{Data.Vector} haskell, this is what we could reasonably write:
+
+\begin{verbatim}
+g :: Vector a -> Vector b -> Vector (Vector c)
+g as bs = map (f as) bs
+\end{verbatim}
+
+If we set out to code this program in Accelerate we would have a similar
+\texttt{f}:
+
+\begin{verbatim}
+f :: Acc (Vector a) -> Exp b -> Acc (Vector c)
+f as b = map (b *) as
+\end{verbatim}
+
+But since we don't have nested arrays in Accelerate, we need to model the
+\texttt{Vector (Vector c)} type  as \texttt{Acc (Array DIM2 c)}. Thus we end up
+wanting the function \texttt{g} below, defined using \texttt{f}.
+
+\begin{verbatim}
+g :: Acc (Vector a) -> Acc (Vector b) -> Acc (Array DIM2 c)
+\end{verbatim}
+
+But there seems to be no way to construct a high-dimensional array from array
+functions of lower dimension. So we need to rewrite \texttt{f} itself:
+
+\begin{verbatim}
+g as bs = generate
+  (index2 $ (size as) (size bs))
+  (\ix ->
+  let (Z :. ia :. ib) = unlift ix
+  in bs ! (Z :. ib) * as ! (Z :. ia))
+\end{verbatim}
+
+Furthermore, this is only possible because \texttt{f} is itself defined by an
+elementwise operation. Had \texttt{f} been defined by a reduction such as
+\texttt{fold}, the transformation would have been even more elaborate and
+require replication of both vector \texttt{as} and \texttt{bs} and zipping to
+properly distribute \texttt{b} into the folding operation.
+
+\todo{It would be really nice to have a proper explanation of this, preferably
+with an illustration of the replication. But that is definitely beyond our
+current schedule}
+\todo{Add Accelerate Sobol-example as appendix, reference it here - hand drawing?!}
+
+This sharp division between scalar and array operations is easily the biggest
+hindrance to the expressiveness of Accelerate, and therefore very relevant to
+our interest in language research. However, as this is a pervasive part of the
+architecture of Accelerate, removing the distinction of \texttt{Acc} and
+\texttt{Exp} would result in an entirely different language, and every single
+backend would have to be rewritten.
+
+\todo{The above paragraph sounds a bit corny..}
+
+The embedding of Accelerate leaves some things to be desired. It is for
+instance not easily possible to pattern match on tuples and shapes, as these
+need to be properly lifted and unlifted to be used (see above in function \texttt{g}).
+
+Also, lifting using \texttt{lift :: Lift c e => e -> c (Plain e)} uses the
+\texttt{Plain} associated type, the definition of which is not shown in the
+auto-generated documentation of instances. Although the documentation
+generation system is arguably to blame for this, it does nonetheless make it
+more difficult to easily use value lifting confidently.
+
+There is no way to define recursive functions in Accelerate. Trying to do so
+will result in compilation not terminating.
+
+\section{Nikola}
+
+Nikola does not provide the variety of array operations that Accelerate does: Only
+a few mapping operations are provided, and an iteration construct.  Nikola has
+a lot of overall structure in common with Repa. As with Repa, an array's
+implementations and shape are represented in the array type, and the programmer
+has access to mutable arrays in addition to the common pure array operations.
+
+To exploit the ability do differentiate according to array representations,
+operations such as \texttt{map} and \texttt{zipWith} are implemented using
+typeclasses.  While this architecture allows for specialisation of operations
+to different array representations, actually using the operations results in quite
+elaborate types. These are often too compilcated for type inference to resolve
+and require a human programmer to supply a type signature.
+
+
+Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
+leveraging the \texttt{RebindableSyntax} GHC-extension. Also, in our programming
+experience we were less required to interact with the value lifting machinery
+than we were in Accelerate. Value lifting in Nikola is subject to the same
+documentation inadequacies as we encountered with Accelerate.
+
+While Nikola does not present any means for expressing nested parallelism, it
+does not explicitly ban it either in the style of Accelerate's
+\texttt{Acc}/\texttt{Exp} division. Thus, extending the expressive power of
+Nikola in this aspect appears at first to be a less elaborate endeavour than in
+Accelerate.
+
+There is no way to define recursive functions in Nikola. Trying to do so
+will result in compilation not terminating.
+
+Nikola functions are compiled to CUDA code, linked dynamically into the running
+haskell program and then wrapped as a haskell function of corresponding type.
+Exactly which types are possible is derived from a menu of instances of the
+typeclass \texttt{Compilable a b}, denoting (informally) that a value of type
+\texttt{a} may be compiled into one of type \texttt{b}, with \texttt{b}
+determined by a type signature in the client program. This typeclass is not yet
+implemented for a lot of the possible choices of array representations and
+combinations. During the implementation of our case studies, we observed that
+trying to compile a function with an instance missing often resulted in very
+lengthy and elaborate type errors, that were hard for us to decode. Luckily our
+ability to decode compilation-related type errors improved over time, but they
+are nevertheless still unpleasant.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:

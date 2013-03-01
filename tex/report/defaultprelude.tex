@@ -17,11 +17,21 @@
 \usepackage{graphicx}
 \usepackage{todonotes}
 \presetkeys{todonotes}{inline}{}
-
+\usepackage{adjustbox}
 \usepackage{tikz}
 \usetikzlibrary{trees}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+
+% ADD "parfor" to algorithmic environment
+  % declaration of the new block
+  \algblock{ParFor}{EndParFor}
+  % customising the new block
+  \algnewcommand\algorithmicparfor{\textbf{parfor}}
+  \algnewcommand\algorithmicpardo{\textbf{do}}
+  \algnewcommand\algorithmicendparfor{\textbf{end\ parfor}}
+  \algrenewtext{ParFor}[1]{\algorithmicparfor\ #1\ \algorithmicpardo}
+  \algrenewtext{EndParFor}{\algorithmicendparfor}
 
 % Bibliography
 %\usepackage[style=alphabetic,natbib=true]{biblatex}
@@ -55,7 +65,14 @@
 \setsecheadstyle{\large\bfseries\raggedright}
 \setsubsecheadstyle{\bfseries}
 
+% Print the DOI url out
+%\newcommand*{\doi}[1]{DOI: \url{http://dx.doi.org/#1}}
 
+\DeclareFieldFormat{doi}{\textsc{doi}: \url{http://dx.doi.org/#1}}
+%\DeclareFieldFormat{title}{\emph{#1}}
+\renewcommand\mkbibnamefirst[1]{\textsc{#1}}
+\renewcommand\mkbibnamelast[1]{\textsc{#1}}
+\renewcommand*{\bibfont}{\footnotesize}
 
 % Figures
 \newsubfloat{figure}

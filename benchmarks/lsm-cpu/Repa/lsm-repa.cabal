@@ -1,0 +1,11 @@
+name:                lsm-repa
+version:             0.1.0.0
+author:              Martin Dybdal
+maintainer:          dybber@dybber.dk
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable lsm-repa
+  build-depends:       base, repa ==3.2.*, mtl, vector, mersenne-random-pure64, vector-random
+  main-is: Main.hs
+  ghc-options: -rtsopts -threaded -optlo-O3 -fllvm

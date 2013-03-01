@@ -1,25 +1,121 @@
-\section{Nikola Frontend Architecture}
+\section{Frontend Architecture}
 
-\todo{Describe how the programming interface with nikola is intended to be
-used, i.e. Exp, Array, storable vectors, monad P, compilation from user
-perspective, TH same-module restriction...}
+In this section we describe the part of Nikola that serves as the language
+programming interface, as well as the middle layer which is still backend
+agnostic.
 
-Nikola presents for its clients three data types: \texttt{Exp t a},
-\texttt{Array r sh a} and the monad \texttt{P a}. It also provides type class
-machinery for compiling Nikola functions into Haskell functions that wrap an
-unsafe foreign function call to a CUDA representation of a given Nikola
-program.
+The Nikola language is made up of three data types: \texttt{Exp t a},
+\texttt{Array r sh a} and the program monad \texttt{P a}. These parts are all
+backend agnostic. It also provides a type class directed \texttt{compile}
+function for compiling Nikola functions to CUDA code which is subsequently
+wrapped as regular haskell functions. \texttt{Exp t a} expressions are first
+translated to another first-order untyped abstract syntax before CUDA code
+generation.
 
-Following in the tradition of Repa, arrays in Nikola are parametrised by their
-representation and shape by the type variables \texttt{r} and \texttt{sh}.
+\paragraph{Nikola scalar expressions} are represented by the \texttt{Exp t a} type, with
+the phantom type variable \texttt{t} representing the target architecture for
+the expression, eg.  \texttt{CUDA}. Thus, it is possible to have Nikola terms
+specialised for different backends. This is unusual, as programming languages
+are typically assumed universal in the sense that every well-typed expression
+is executable on every supported machine architecture. Nikola is the first
+programming language we have witnessed to explicitly encode term portability in
+the type system. However, the ability to specialise expressions to targets
+doesn't extend into the lower layers of Nikola, so as such the \texttt{t} type
+variable only clutters up type signatures currently.
+
+\paragraph{Arrays in Nikola} are modeled by the type \texttt{Array r sh a}, an associated
+type of the typeclass \texttt{IsArray r a}. Arrays are parametrised on their
+representation and shape by the type variables \texttt{r} and \texttt{sh},
+following in the tradition of Repa. The only common operation for all arrays is
+that of extracting their shape through the function \texttt{extent}. Array
+shapes are similar to those of Repa and Accelerate, denoted as instances of
+typeclass \texttt{Shape sh}.
+
 Three principal array representations are provided by Nikola: The global array,
 the delayed array, and the push array, denoted respectably by the types
-\texttt{G}, \texttt{P} and \texttt{D}.
+\texttt{G}, \texttt{PSH} and \texttt{D}. This is a source of both control and
+complexity, as each representation gives rise to different features and
+restrictions. The global array represents a certain manifest range of memory
+cells, from which it is only referentially safe to read. Push arrays and
+delayed arrays however, represent array computations rather than actual areas
+of memory - only at the Nikola-Haskell border are they manifest into memory. An
+important consequence of this is that terms composed of delayed and push arrays
+undergo fusion by construction.
 
-This is a source of both control and complexity, as each representation gives
-rise to different features and restrictions.
+What distinguishs push arrays and delayed arrays is their perspective on the
+arrays they represent. A delayed array is simply a function from indices to
+values, while a push array may be viewed as a stream of index/value pairs, that
+may appear in potentially any ordering.
+
+\paragraph{The type of the low-level abstract syntax} is \texttt{S.Exp},
+qualified to avoid confusion with \texttt{Exp t a}. This is elaborated in the
+nikola reference in section \ref{section:nikola-reference}.  \texttt{S.Exp}
+defines primitive constructs for annonymous functions, delayed arrays,
+accessing and manipulation of mutable arrays, and a \texttt{for}-loop
+construct. Many of these constructs map directly to corresponding C constructs.
+
+\paragraph{The monad \texttt{P a}} serves some of the same roles as the
+\texttt{IO} monad does in plain Haskell. One must for example only manipulate
+mutable arrays from within the \texttt{P} monad.  It is a type alias for the
+slightly more elaborate monad type \texttt{type P a = R S.Exp a}. The monad
+\texttt{R r a} is the reification monad, used to convert the various
+frontend datatypes such as \texttt{Exp t a} and \texttt{Array r sh a} into the
+low-level abstract syntax \texttt{S.Exp}.
+
+To enable this, monad \texttt{R r a} is a continuation monad.  \todo{for
+now just assume knowledge of continuation passing monads :-(} But instead of
+direct access to the underlying continuation, Nikola uses delimited
+continuations, described in \cite{wadler1994monads} and introduced first in
+\cite{filinski1996controlling}.
+The interface to using delimited continuations consists of two special operations:
+
+\begin{verbatim}
+shift :: ((a -> R r r) -> R r r) -> R r a
+reset :: R r a -> R r r
+\end{verbatim}
+
+Which when specialised to the \texttt{P} monad becomes:
+
+\begin{verbatim}
+shift :: ((a -> P S.Exp) -> P S.Exp) -> P a
+reset :: P a -> P S.Exp
+\end{verbatim}
+
+\texttt{shift} and \texttt{reset} work in tandem. A full account of the use and
+details of delimited continuations is out of scope for this thesis, but
+consider this short typical usage pattern:
+
+\begin{verbatim}
+reset $ do
+  ...
+  y <- shift $ \k -> do
+    ...
+    x <- k ""
+    ...
+  ...
+
+\end{verbatim}
+
+In this \texttt{shift} expression, \texttt{k} is a continuation representing
+all that is going to happen up until the enclosing \texttt{reset}.  Upon
+invoking \texttt{k ""}, control shifts outside of \texttt{shift}, and \texttt{y}
+is bound to the empty string \texttt{""}. Upon reaching the end of the monadic
+action inside \texttt{reset}, control is shifted back into \texttt{shift}, and
+\texttt{x} is bound to the result of the enclosing action. The eventual result
+of the action inside \texttt{shift} then becomes the result of the enclosing
+\texttt{reset}. Informally, \texttt{shift} and \texttt{reset} turn the code
+inside-out.
 
 \section{Nikola Backend Architecture}
 
-\todo{Describe the various parts of the Nikola architecture, i.e. the role of
-S.Exp, the various monads, how compilation works, what substantial parts are missing...}
+In this section we describe some parts of Nikola that are used for code
+generation.
+
+Compiling a Nikola function relies on both reification to \texttt{S.Exp}, a
+mechanism to determine the type of the resulting haskell function, and the
+translation from \texttt{S.Exp} abstract syntax to C abstract syntax.
+
+Reification is handled by the function \texttt{reify :: Reifiable a b => a -> R
+b b} of typeclass \texttt{Reifiable}.
+
+The programmer is \ldots \todo{explain how Compilable a b instance selection allows for different resulting haskell wrapper types}

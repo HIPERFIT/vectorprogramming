@@ -28,7 +28,6 @@
  location = {Baltimore, Maryland, USA},
  pages = {261--272},
  numpages = {12},
- url = {http://doi.acm.org/10.1145/1863543.1863582},
  doi = {10.1145/1863543.1863582},
  acmid = {1863582},
  publisher = {ACM},
@@ -54,6 +53,17 @@
   organization={IEEE}
 }
 
+@article{wadler1994monads,
+  title={Monads and composable continuations},
+  author={Wadler, Philip},
+  journal={Lisp and Symbolic Computation},
+  volume={7},
+  number={1},
+  pages={39--55},
+  year={1994},
+  publisher={Springer}
+}
+
 @book{blelloch1990vector,
   title={Vector models for data-parallel computing},
   author={Blelloch, Guy E.},
@@ -77,6 +87,13 @@
    year = {2011}
 }
 
+@techreport{filinski1996controlling,
+  title={Controlling Effects.},
+  author={Filinski, Andrezej},
+  year={1996},
+  institution={DTIC Document}
+}
+
 @techreport{nesl,
    author = "Guy E. Blelloch",
    title = "{NESL}: A Nested Data-Parallel Language",
@@ -98,6 +115,7 @@
   url = {http://repa.ouroborus.net},
   year = {2012}
 }
+
 @misc{homepage:haskell:vectortutorial,
   title = {Numeric Haskell: A Vector Tutorial},
   url = {http://www.haskell.org/haskellwiki/Numeric_Haskell:_A_Vector_Tutorial},
@@ -151,11 +169,25 @@
   publisher={JSTOR}
 }
 
-@misc{CUDAbinomial, 
+@misc{CUDAbinomial,
    author = {{NVIDIA Corporation} and Podlozhnyuk, Victor},
-   title = {NVIDIA CUDA SDK -- Binomial Option Pricing Model}, 
-   publisher = {NVIDIA Corporation}, 
+   title = {NVIDIA CUDA SDK -- Binomial Option Pricing Model},
+   publisher = {NVIDIA Corporation},
    year = {2007}
+}
+
+@misc{CUBLAS2013,
+  author = {Nvidia Corporation},
+  title = {{The CUBLAS website}},
+  url = {https://developer.nvidia.com/cublas},
+  year = {2013}
+}
+
+@unpublished{mainlandhaskell,
+  title = {Haskell Beats {C} Using Generalized Stream Fusion},
+  author = {Mainland, Geoffrey and Leshchinskiy, Roman and Peyton Jones, Simon and Marlow, Simon},
+  year = {2012},
+  note = {In submission}
 }
 
 @article{sutter2006freelunchisover,
@@ -172,7 +204,7 @@
 
 @article{blelloch1996programming,
   title={Programming parallel algorithms},
-  author={Blelloch, G.E.},
+  author={Blelloch, Guy E.},
   journal={Communications of the ACM},
   volume={39},
   number={3},
@@ -196,4 +228,139 @@
   author={Ganesan, Narayan and Chamberlain, Roger D and Buhler, Jeremy},
   journal={Performance Computing},
   year={2009}
+}
+
+@article{sobol1967,
+  title={On the distribution of points in a cube and the approximate evaluation of integrals},
+  author={Sobol, I.M},
+  journal={USSR Computational Mathematics and Mathematical Physics},
+  volume={7},
+  issue={4},
+  year={1967},
+  doi={10.1016/0041-5553(67)90144-9}
+}
+
+@book{glasserman2003monte,
+  title={Monte Carlo methods in financial engineering},
+  author={Glasserman, Paul},
+  volume={53},
+  year={2003},
+  publisher={Springer},
+  isbn={978-0387004518}
+}
+
+@article{chaudhary2005american,
+  title={American options and the LSM algorithm: Quasi-random sequences and Brownian bridges},
+  author={Chaudhary, Suneal K},
+  journal={Journal of Computational Finance},
+  volume={8},
+  number={4},
+  year={2005}
+}
+
+@article{acworth1998comparison,
+  title={A comparison of some Monte Carlo and quasi-Monte Carlo techniques for option pricing},
+  author={Acworth, Peter and Broadie, Mark and Glasserman, Paul},
+  journal={Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing},
+  volume={127},
+  pages={1--18},
+  year={1998}
+}
+
+@mastersthesis{couffignals2010quasi,
+  title={Quasi-Monte Carlo simulations for Longstaff Schwartz pricing of american options},
+  author={Couffignals, Eric},
+  year={2010},
+  school={Mathematical Institute}
+} 
+
+@mastersthesis{dfine2009americanbasket,
+  title={Valuation of American Basket Options using Quasi-Monte Carlo Methods},
+  author={Anonymous Author},
+  year={2009},
+  school={Christ Church College, University of Oxford},
+  url={http://www.maths.ox.ac.uk/system/files/private/active/0/MScThesis.pdf}
+}
+
+@misc{bradley2010parallelisation,
+  title={Parallelisation Techniques for Random Number Generators},
+  author={Bradley, Thomas and du Toit, Jacques and Giles, Mike and Tong, Robert and Woodhams, Paul},
+  year={2010}
+}
+
+@book{hwu2011jade,
+  title={GPU Computing Gems Jade Edition},
+  author={Hwu, Wen-mei W},
+  year={2011},
+  publisher={Morgan Kaufmann Publishers Inc.}
+}
+
+@book{hwy2011emerald,
+  title={GPU Computing Gems Emerald Edition},
+  author={Hwu, Wen-mei W},
+  year={2011},
+  publisher={Morgan Kaufmann}
+}
+
+@inproceedings{owens2007survey,
+  title={A Survey of General-Purpose Computation on Graphics Hardware},
+  author={Owens, John D and Luebke, David and Govindaraju, Naga and Harris, Mark and Kr{\"u}ger, Jens and Lefohn, Aaron E and Purcell, Timothy J},
+  booktitle={Computer graphics forum},
+  volume={26},
+  number={1},
+  pages={80--113},
+  year={2007},
+  organization={Wiley Online Library}
+}
+
+@misc{Top500,
+  howpublished = {http://www.top500.org/lists/2012/11/},
+  title = {Top 500 Supercomputer Sites, November 2012 List},
+  author = {Top500},
+  year = {2012},
+}
+
+@article{munshi2011opencl,
+  title={The OpenCL 1.2 Specification},
+  author={Munshi, Aaftab},
+  journal={Khronos OpenCL Working Group},
+  year=2011
+}
+
+@misc{nvidia2012programming,
+  title={NVIDIA CUDA C Programming Guide, Version 4.2},
+  author={NVIDIA},
+  year={2012}
+}
+
+@inproceedings{newburn2011intel,
+  title={Intel's Array Building Blocks: A retargetable, dynamic compiler and embedded language},
+  author={Newburn, Chris J and So, Byoungro and Liu, Zhenying and McCool, Michael and Ghuloum, Anwar and Toit, Stefanus Du and Wang, Zhi Gang and Du, Zhao Hui and Chen, Yongjian and Wu, Gansha and others},
+  booktitle={Code Generation and Optimization (CGO), 2011 9th Annual IEEE/ACM International Symposium on},
+  pages={224--235},
+  year={2011},
+  organization={IEEE}
+}
+
+@misc{homepage:bohrium,
+  title = {The Bohrium homepage},
+  url = {http://bh107.org},
+  year = {2013}
+}
+
+@INPROCEEDINGS{bergstra2010theano,
+     author = {Bergstra, James and Breuleux, Olivier and Bastien, Fr{\'{e}}d{\'{e}}ric and Lamblin, Pascal and Pascanu, Razvan and Desjardins, Guillaume and Turian, Joseph and Warde-Farley, David and Bengio, Yoshua},
+      month = jun,
+      title = {Theano: a {CPU} and {GPU} Math Expression Compiler},
+  booktitle = {Proceedings of the Python for Scientific Computing Conference ({SciPy})},
+       year = {2010},
+   location = {Austin, TX},
+       note = {Oral Presentation},
+        url = {http://www.iro.umontreal.ca/~lisa/pointeurs/theano_scipy2010.pdf}
+}
+
+@article{dybdal2011opencl,
+  title={An OpenCL back-end for Accelerate},
+  author={Dybdal, Martin},
+  year={2011}
 }

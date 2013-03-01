@@ -49,3 +49,4 @@ build/
 .shelly/
 temp.cu
 temp.fatbin
+/tex/report/master.nls
