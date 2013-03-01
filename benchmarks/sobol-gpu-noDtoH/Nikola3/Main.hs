@@ -41,13 +41,14 @@ main = do
   putStrLn "OK"
   execute (sobolIndPrecompiled . Prelude.fromIntegral)
 
-execute :: (Read a, Show b) => (a -> IO b) -> IO ()
+--execute :: (Read a, Show b) => (a -> IO b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
   vec <- f $ read str
+  
   -- putStrLn $ "RESULT " ++ show (vec)
-  putStrLn $ "RESULT <untransferred>" -- ++ (show . f . read $ str)
+  putStrLn $ vec `R.deepSeqArray` "RESULT <untransferred>" -- ++ (show . f . read $ str)
 
 {-
 instance (V.Storable a, NFData a) => NFData (V.Vector a) where
