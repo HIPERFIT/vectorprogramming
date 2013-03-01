@@ -22,7 +22,7 @@
 
 \section{CUDA/C}
 
-Since CUDA/C is close to a one-to-one mapping of hardware abilities to language
+Since CUDA/C is close to a one-to-one mapping of hardware capabilities to language
 primitives, it is possible though not necessarily easy to implement anything
 that the hardware is capable of running.
 
@@ -31,8 +31,8 @@ function call stack. While this enables the coding of very fast algorithms,
 programs are also more tightly coupled with the parameters of the hardware, and
 to assumptions about input size. So even though a CUDA programmer has access to
 highly optimised linear algebra libraries such as CUBLAS \cite{CUBLAS2013},
-optimisations such as loop fusion must be coded by hand, ruling out using such
-libraries. This optimisation often has profound effects on performance
+optimisations such as loop fusion must be coded by hand, outruling the use of
+such libraries. This optimisation often has profound effects on performance
 \cite{mainlandhaskell}.
 
 When implementing the binomial option pricer in CUDA, we relied on example code
@@ -229,13 +229,13 @@ will result in compilation not terminating.
 Nikola functions are compiled to CUDA code, linked dynamically into the running
 haskell program and then wrapped as a haskell function of corresponding type.
 Exactly which types are possible is derived from a menu of instances of the
-typeclass \texttt{Compilable a b}, denoting (informally) that a value of type
+typeclass \texttt{Compilable a b}, denoting that a value of type
 \texttt{a} may be compiled into one of type \texttt{b}, with \texttt{b}
 determined by a type signature in the client program. This typeclass is not yet
 implemented for a lot of the possible choices of array representations and
 combinations. During the implementation of our case studies, we observed that
 trying to compile a function with an instance missing often resulted in very
-lengthy and elaborate type errors, that were hard for us to decode. Luckily our
+lengthy and elaborate type errors that were hard for us to decode. Luckily our
 ability to decode compilation-related type errors improved over time, but they
 are nevertheless still unpleasant.
 

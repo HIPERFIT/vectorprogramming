@@ -108,14 +108,19 @@ inside-out.
 
 \section{Nikola Backend Architecture}
 
-In this section we describe some parts of Nikola that are used for code
-generation.
-
 Compiling a Nikola function relies on both reification to \texttt{S.Exp}, a
-mechanism to determine the type of the resulting haskell function, and the
+mechanism to determine the type of the resulting Haskell function, and the
 translation from \texttt{S.Exp} abstract syntax to C abstract syntax.
+Reification is handled by the typeclass \texttt{Reifiable a b}, and the
+Haskell-interfacing parts of compilation by \texttt{Compilable a b}.  The
+details of how Nikola manages to interface Haskell with the compiled Nikola
+code is documented in \cite{mainland2010nikola}.
 
-Reification is handled by the function \texttt{reify :: Reifiable a b => a -> R
-b b} of typeclass \texttt{Reifiable}.
+All it takes for a construct to be part of the Nikola language frontend is
+proper instances of these two type classes. So as such, Nikola is very
+extensible, provided that the programmer is capable of lifting the burden of
+expressing his additions in terms of the low-level abstract syntax.
 
-The programmer is \ldots \todo{explain how Compilable a b instance selection allows for different resulting haskell wrapper types}
+Once a term has undergone reification, it is translated into C abstract syntax.
+This is a somewhat straightforward translation, as many of the components
+correspond directly to C.
