@@ -54,7 +54,7 @@ is not a necessity.
   \node at (-4.5, -2) [] (t0) {$S(t_2) =$};
   \node at (-4.5, -3) [] (t0) {$S(t_3) =$};
 
-  \path[-latex] 
+  \path[-latex]
      (S1) edge (uS)
      (S1) edge (dS)
 
@@ -165,7 +165,7 @@ at expiration date.
   \State \Return $B[0]$
 \EndFunction
 \end{algorithmic}
-  
+
   \caption{Binomial algorithm}
   \label{alg:binomial-algorithm}
 \end{algorithm}
@@ -177,15 +177,54 @@ $Depth(T)$, and memory complexity $O(2T)$.
 While the above code is both short and simple in structure, the main motive for
 pursuing parallelism is in gaining performance rather than expressivity.  To
 explore further algorithm samples, we examine the binomial pricing algorithm
-included in the CUDA SDK \cite{CUDAbinomial}.
+included in the CUDA SDK \cite{CUDAbinomial}, depicted in Algorithm
+\ref{alg:cuda-binom}. Here the \textsc{Partition}$(i,n,k,o)$ procedure
+partitions the index range $[i,n]$ into $k$ sized chunks with $o$ indices
+overlapping. Here it is written as a separate procedure for clarity, but in the
+actual code the partitioning logic is fused into the index computations of the
+\texttt{for}-loop.
 
-\begin{verbatim}
-lots of pseudocode.
-\end{verbatim}
+\begin{algorithm}
+\begin{algorithmic}
+  \Function{GPUBinom}{$mem$, $\Delta_{mem}$, $\Delta t$, $T$, $u$, $d$, $q$, $S(0)$, $K$, $r$}
+  \State $S(T) \gets \mathbf{parmap}$ $(\lambda i.\ d^{T-i}u^{i}S(0))$ $\{0..T\}$ \Comment Value at expiration
+  \State $B \gets \mathbf{parmap}$ $(\lambda S_i(T).\ \mathsf{max}\ 0\ (K-S_i(T)))$ $S(T)$ \Comment in global memory
+  \State $t \gets T$
+  \While{$t > 0$}
+    \For{each $(i,j)$ of \Call{Partition}{$0$,$t$, $mem$, $\Delta_{mem}$}}
+      \State $C \gets B[i:j] $ \Comment Copy to shared memory
+      \State $C \gets$ $\Delta_{mem}$ iterations of the body of \Call{Binom}{}
+      \State $B[i:j-\Delta_{mem}] \gets C[0:j-i-\Delta_{mem}] $ \Comment Update global memory
+    \EndFor
+    \State $t \gets t -\Delta_{mem}$ \Comment All of $B$ now corresponds to $t -\Delta_{mem}$
+  \EndWhile
+\EndFunction
 
-Notes: Duplication of computation, fixed amount of parallelism pr option being
-priced, better scaling to pricing a larger number of options. Remark on the
-poor scaling of the first algorithm.
+\Function{Partition}{$i$, $n$, $k$, $o$}
+\If{$i+k > n$}
+\State\Return $[(i,n)]$
+\Else
+\State
+\Return $(i,i+k)$ : \Call{Partition}{$i+k-o+1$, $n$, $k$, $o$}
+\EndIf
+\EndFunction
+\end{algorithmic}
+\caption{Binomial portfolio pricer}
+\label{alg:cuda-binom}
+\end{algorithm}
+
+This algorithm explicitly divides the pricing problem into packages that fit
+exactly into the amount of shared memory availabe for a Streaming
+Multiprocessor. This includes a configurable amount of duplicated computation
+for each iteration, because it is faster to recompute some part of the solution
+if doing so brings down the number of accesses to global devce memory. Thus,
+the optimal value of $\Delta_{mem}$ is hardware specific.  Algorithm
+\ref{alg:cuda-binom} is only capable of employing $mem$ threads at a time.
+Therefore, to scale it must be applied to an entire portforlio of options.  In
+the CUDA SDK source code, this is done by doing a kernel call with a CUDA block
+for each option to be priced. That way, each option pricing instance gets its
+own streaming multiprocessor, and no penalty has to be paid for divergence when
+the options in the portfolio vary in size.
 
 %%% Local Variables:
 %%% mode: latex
