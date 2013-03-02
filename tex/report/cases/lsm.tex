@@ -22,14 +22,14 @@ expiration to initiation time.
     \State $E_t \gets max(K-S_t, 0)$ \Comment Exercise value
     \State $f_t \gets$ \Call{LeastSquares}{$\overline{S_t}$, $e^{-r\Delta t}\cdot\overline{V_t}$} % \Comment Find regression function $f_t$
     \State $\hat{C_t}$ $\gets$ $f_i(S_t)$ \Comment Expected value for continuation
-    \State $V_t \gets $\textbf{if} $E_t > C_t > 0$ \textbf{then} $E_t$ \textbf{else} $e^{-r\Delta t}\cdot V_t}$
+    \State $V_t \gets $\textbf{if} $E_t > C_t > 0$ \textbf{then} $E_t$ \textbf{else} $e^{-r\Delta t}\cdot V_t$
  % max(F_t, E_t)$
     \EndFor
     \EndFunction
   \end{algorithmic}
   \vspace{2mm}
   \caption{Least Squares Monte Carlo algorithm for American put
-    options. $\overbar{S_t}$ and $\overbar{V_t}$ selects those paths
+    options. $\overline{S_t}$ and $\overline{V_t}$ selects those paths
     which are in the money, that is where $E_t > 0$.}
   \label{alg:lsm-algorithm}
 \end{algorithm}
@@ -311,18 +311,69 @@ $$cdf^{-1}(u) = \left\{
 \end{array}\right.$$
 
 \subsection{Least Squares solvers}
-The remaining element of the Longstaff \& Schwartz algorithm is the
-least squares regression algorithm. 
+The only remaining element of the Longstaff \& Schwartz algorithm that
+we need to discuss is the least squares regression. What we need is a
+way of smoothing out the variation in the paths, by representing their
+change from one point in time to the next by a function. We have a set
+of stock prices $S_t$ and a set of option values $V_t$ and wants to
+find the polynomial $f$ of a degree $d$ that is as close to these
+coordinates as possible. That is, we want the coefficients
+$\mathbf{x}$ for the polynomial that minimizes the error:
 
-\todo{Specify the problem}
+$$min_\mathbf{x} \sum^{N}_{i=0}(V_{t,i}-f(S_{t,i},\mathbf{x}))^2$$
 
-\todo{Show that it can be solved as a linear system}
+to generalize this, we will use $a$ and $b$ in the rest of this
+section, such that:
+$$min_\mathbf{x} \sum^{N}_{i=0}(b_i-f(a_i,\mathbf{x}))^2$$
 
-\todo{Describe possible linear system solvers, and say that it was kind of
-arbitrary that we settled on Cholesky.}
+In our case, $f$ will take the shape of a polynomial:
+$$f(\mathbf{a},\mathbf{x}) = x_1 + x_2a_i + x_3a_i^2 \ldots x_da_i^{d-1}$$
+and this gives rise to a linear system of equations. Each equation
+originating from a coordinate $(a_i, b_i)$. We write the system as:
 
-\todo{Describe Cholesky factorization}
+\begin{equation}
+  \label{eq:vandermonde}
+  \mathbf{Ax} =
+  \left(
+  \begin{array}{ccccc}
+    1 & a_1 & a_1^2 & \ldots & a_1^{d-1} \\
+    1 & a_2 & a_2^2 & \ldots & a_2^{d-1} \\
+     & & \vdots & & \\
+    1 & a_n & a_n^2 & \ldots & a_n^{d-1} \\
+  \end{array}\right)
+  \left(
+  \begin{array}{c}
+     x_1 \\
+     x_2 \\
+    \vdots \\
+     x_n \\
+  \end{array}\right)
+=
+  \left(
+  \begin{array}{c}
+     b_1 \\
+     b_2 \\
+    \vdots \\
+     b_n \\
+  \end{array}\right)
+= \mathbf{b}
+\end{equation}
 
+The $\mathbf{A}$ matrix is called a Vandermonde matrix.  To find the
+minimizing $x$ vector, we want to minimize the residual vector
+$\mathbf{r} = \mathbf{b} - \mathbf{Ax}$. By \todo{magic} we know that
+we can find the minimizing $\mathbf{x}$ by solving the system
+$\mathbf{A}^T\mathbf{A}\mathbf{x} = \mathbf{A}^T\mathbf{b}$.
+
+There are several ways to solve such systems, for instance
+LU-decomposition, QR-decomposition or Cholesky-decomposition. We have
+chosen to implement Cholesky-decomposition, though that choice was a
+bit arbitrary.
+
+With Cholesky decomposition we find a lower triangular matrix
+$\mathbf{L}$ such that $\mathbf{A} = \mathbf{LL}^T$. And now forward
+and then backward substitution can be used to find the minimizing
+$\mathbf{x}$.
 
 %%% Local Variables:
 %%% mode: latex
