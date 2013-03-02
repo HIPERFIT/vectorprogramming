@@ -2,7 +2,7 @@
 A relatively simple discrete time model for computing the price of an
 American style option is the \emph{standard binomial model}
 \cite{cox1979option}. The model is widely used in the financial
-industry\cite{ganesan2009acceleration}, and is thus a relevant case
+industry \cite{ganesan2009acceleration}, and is thus a relevant case
 for our investigation.
 
 The basic assumption is that the price of the underlying follows a
@@ -80,28 +80,29 @@ is not a necessity.
 \label{fig:binomial-tree}
 \end{figure}
 
-Each layer in the three corresponds to a time step $t$, and the nodes
-of the layer are the different possible prices $S(t)$. To distinguish
-between the nodes on a single layer we attach a unique index $i$ to
-each node of the tree and define $\mathsf{left\textsf{-}child}(i)$ and
+Each layer in the tree corresponds to a time step $t$, and the nodes
+of the layer are the different possible prices $S(t)$ of the
+underlying. To distinguish between the nodes on a single layer we
+attach a unique index $i$ to each node of the tree and define
+$\mathsf{left\textsf{-}child}(i)$ and
 $\mathsf{right\textsf{-}child}(i)$ to navigate the indices of the
 tree. We use the notation $S_i(t)$ to refer to the particular node $i$
 at layer $t$.
 
 The final row represents the possible values of the underlying at
-expiration time, $T$, we can use the same procedure as for European
-options (discussed above) to find the value of our option in each of
-these cases. Thus, for each possible $S_i(T)$, that is, for each leaf
-node, we compute the option value as either $V_i(T) = max(S_i(T)-K, 0)$
-for call options or $V_i(T) = max(K-S_i(T),0)$ for put options, where
-$S_i(T)$ is the price of the underlying asset, and $K$ being the strike
-price.
+expiration time, $T$. We can use the same procedure as for European
+options (discussed in Example \ref{example:europeancall} above) to
+find the value of our option at each of these possible cases. Thus,
+for each possible $S_i(T)$, that is, for each leaf node, we compute
+the option value as either $V_i(T) = max(S_i(T)-K, 0)$ for call
+options or $V_i(T) = max(K-S_i(T),0)$ for put options, where $K$ is
+the strike price.
 
 The algorithm now proceeds by estimating the price $V_i$ of the option
 in the remaining lattice points, by iterating backwards (towards the
 root). The price estimate at each lattice point for time $t$ depends
-only on its two children at time $t+1$. This is done by recursively
-discounting:
+only on its two children at time $t+1$, which prices was calculated in
+the previous iteration. This is done by recursively discounting:
 $$V_{i} = e^{-r\Delta t} \cdot (q\cdot V_{\mathsf{left\textsf{-}child}(i)} + (1-q)\cdot V_{\mathsf{right\textsf{-}child}(i)})$$
 where the probability $q$ is used to attain the expected value from
 either of the two alternative futures, and $e^{r\Delta t}$ is the
