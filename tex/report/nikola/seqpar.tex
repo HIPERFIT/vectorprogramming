@@ -1,3 +1,9 @@
+\label{chap:directing-parallism}
+
+We are interested in exploiting as much parallelism as possible, but the
+ability to express nested maps leaves us in a dilemma: Which of the nested maps
+should be run in parallel?
+
 Various ways exist to treat the problem of nested parallelism, with the
 extremes being disallowing nested parallelism at all and the vectorisation
 transformation of NESL \cite{nesl}.
@@ -5,95 +11,78 @@ transformation of NESL \cite{nesl}.
 Nikola itself is able to handle some degree of nested parallelism by exploiting
 the up to three-dimensional grid layout of CUDA threads.
 
-\todo{Cite CUDA documentation, and make sure to construct a test case that
-actually breaks nikola because of this.}
+We propose a different compromise. Based on viewing nikola programs a sequence
+of parallel actions, that are themselves composed only of sequential parts, we
+propose adding a primitive construct to Nikola that serves as a separator
+between what should be executed sequentially and what should be executed in
+parallel. The innermost potential parallel operation enclosing the expression
+with the marker gets to be executed in parallel. We have chosen to name this
+construct \texttt{sequential}.
 
-We propose a different compromise, based on viewing nikola programs a sequence
-of parallel actions, that are themselves composed only of sequential parts.  If we instead of
-\texttt{for}-loops consider having \texttt{fold}'s, \texttt{reduce}'s, \texttt{map}'s
-and \texttt{scan}'s and \texttt{unfold}'s as looping primitives, we realize that
-we are able to assign either a 'sequence of parallel' or a 'parallel sequential'
-execution to each of them.
+Consider how the expression \texttt{map (\bs -> map f bs) as} (ignoring the
+technical details of shape specification for clarity) may be given a parallel
+execution semantics:
 
-\todo{maybe not such a big list of primitives, but particularly 'reduce' and
-'scan' seem good for making a point of having separate parallel and sequential
-versions, so let's keep them along for now.}
+\begin{verbatim}
 
-The expression \texttt{map f xs} may for instance be executed in two ways,
-assuming that \texttt{xs} is already evaluated:
+ex1 = map (\bs -> map (sequential . f) bs) as
 
-\begin{itemize}
+ex2 = map (\bs -> sequential $ map f bs) as
 
-\item The \texttt{map} happens all elements at once, while \texttt{f} is
-evaluated sequentially
+ex3 = map (\bs -> map f bs) as
 
-\item The \texttt{map} happens one element at a time, while \texttt{f} may itself
-be evaluated as a sequence of parallel operations.
+\end{verbatim}
 
-\end{itemize}
+In \texttt{ex1}, the outer map happens sequentially, while the inner map, being
+the innermost potentially parallel operation outside \texttt{sequential} is
+executed in parallel, while each application of function \texttt{f} happens
+sequentially.
+
+In \texttt{ex2}, the outer map is the innermost potentially parallel operation
+enclosing \texttt{sequential}, and thus it is executed in parallel, while the
+inner map of \texttt{f} is executed sequentially.
+
+In \texttt{ex3}, either the inner map is executed in parallel if \texttt{f}
+contains no potential parallelism. Otherwise some part of \texttt{f} gets to be
+executed in parallel.
 
 Which of the above is the more beneficial depends entirely on the precise
 operations denoted by \texttt{f} in conjunction with the capabilities of the
-hardware that is to execute them.
+hardware that is to execute them, and of course the shape of \texttt{as}.
 
-We propose to adress this by introducing a new primitive construct to Nikola
-that we have so far named \texttt{sequential}, and by assigning the (informal)
-operational semantics that parallelism in nested cases 'flows inward' until the
-first occurence of \texttt{sequential}.
+\section{Implications for fusion}
 
-As an example, consider the case of a nested occurence of \texttt{reduce}
-inside a version of \texttt{map} that operates on arrays with shapes.
+Directing the parallel execution strategy using \texttt{sequential} interacts
+loop fusion.
 
-\todo{Should probably end up referencing the earlier section of nikola
-operators. Also, this presupposes the existence of \texttt{:+:}. Also, not at
-all done yet! Any take on a more instructive example is greatly appreciated.
-preferably one using a more likely-to-be-imlemented construct than
-\texttt{reduce}}
+In each of the examples \texttt{ex1}-\texttt{ex3} above, some parts of
+\texttt{as} may be computed in parallel, namely the hyperplane slices
+corresponding with a parallel map.
 
+But consider the example:
 \begin{verbatim}
-map :: sh' -> (Array r'' sh a -> Array r' sh' b)
-          -> Array r'' (sh :. Ix) a -> Array D (sh :+: sh') b
-
-rowsum1 :: Array r (Z :. Ix :. Ix) Double -> Array D (Z :. Ix) Double
-rowsum1 mat =
-  let Z :. rows :. cols = extent mat
-  in map Z (\row -> scalar $ reduce (+) 0.0 row) mat
-
-rowsum2 mat =
-  let Z :. rows :. cols = extent mat
-  in map Z (\row -> sequential $ scalar $ reduce (+) 0.0 row) mat
-
-rowsum3 mat = sequential $
-  let Z :. rows :. cols = extent mat
-  in map Z (\row -> scalar $ reduce (+) 0.0 row) mat
+ex4 = map (\bs -> map f bs) (sequential as)
 \end{verbatim}
 
-In \texttt{rowsum1} the intention is that the \texttt{map} is executed
-sequentially, while the innermost parallelizable construct, \texttt{reduce},
-gets executed in parallel \todo{cite parallel reduce/scan source. Look through
-TIPL-2012 papers for inspiration}, exploiting the assumed associativity of the
-given operation to reduce with.  In \texttt{rowsum2} the \texttt{map} happens
-in parallel, running a sequential reduction for each row in the matrix. In
-\texttt{rowsum3} the entire computation is dictated to happen sequentially.
-The relative work/depth complexities of these three variations are given in
-this table:
+Here we would require that both maps and \texttt{f} be executed sequentially,
+at least down until an eventual point where \texttt{f} acts only on single
+elements of \texttt{as}.
 
-\begin{verbatim}
-rowsum1  w(cols*rows)  d(rows*lg(cols)) <-- be sure to look up the actual depth complexity of reduce in Nesl!
-rowsum2  w(cols*rows)  d(cols)
-rowsum3  w(cols*rows)  d(cols*rows)
-\end{verbatim}
-\todo{turn the above into a proper table}
+Obviously, we realise that these examples only give a small hint as to the
+consequences of introducing a construct such as \texttt{sequential}.
+Investigating this would be an obligatory part of further research on the
+viability of \texttt{sequential}.
 
-On a parallel architecture, it is quite probable that different running times
-will be observed for each of the three variants, with the difference between
-\texttt{rowsum1} and \texttt{rowsum2} depending on the dimensions of the matrix
-\texttt{mat}.
+\section{Implementation considerations}
 
-\section{Implementation proposals}
+So far we have only seriously considered making \texttt{sequential} an
+additional primitive, usable as a function of type \texttt{Exp t a -> Exp t a}.
 
-\todo{analyse the differences between a type-based and an untyped
-implementation. Specifically, address Ken's concerns of 'sequential'
-spillover in library functions.}
+However, inspired by the use of array representation type tags, we have also
+entertained the idea that the execution mode dictated by use of
+\texttt{sequential} could be mirrored in the type of terms. But as the types
+used in Nikola terms are already a complicated, complete with interaction with
+various typeclasses and the value lifting machinery, we have postponed further
+exploration of this.
 
-\section{Implications for Loop Fusion}
+
