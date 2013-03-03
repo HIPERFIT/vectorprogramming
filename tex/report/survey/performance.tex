@@ -11,98 +11,110 @@
 % \end{itemize}
 
 \chapter{Performance}
+\label{chap:performance}
 We will now look at how the different languages compare in
-performance. We will start by taking a brief look at which
-optimisations are implemented in each language, and what we can expect.
+performance, by implementations of the cases described in Chapter
+\ref{chap:cases}. 
 
-\section{Optimisations}
 
-\subsection{Deforestation}
-Stream fusion, program composition or deforestation is a technique
-that aims composing several functions into one to optimize away
-intermediate datastructures\footnote{which it what gives it the name
-  deforestation: intermediate tree structures are removed} and thus
-avoid expensive memory access.
+% We will start by taking a brief look at which
+% optimisations are implemented in each language, and what we can
+% expect.
 
-A simple example is that of computing sum of squares:
-\begin{verbatim}
-foldl (+) 0 (map (^2) xs)
-\end{verbatim}
-where the unoptimized program would have to write all the squared
-numbers into memory during the computation of map and then read back
-from memory during the summation. Fusing the \verb|map| into the
-\verb|foldl| avoids this intermediate array:
-\begin{verbatim}
-foldl (\a b -> a + b^2) 0 xs
-\end{verbatim}
+% \section{Optimisations}
 
-This optimization is at the heart of both the Nikola and Repa
-architectures, where it happens through the use of delayed
-arrays. Data.Vector also performs some stream fusion by employing GHC
-rewrite rules. Fusion is currently being implemented in
-Accelerate. The newest version on Hackage (0.12.1.0) does not perform
-any fusion, but the development repository contains a not completely
-functional implementation, so it will possibly be part of the next
-release.
+% \subsection{Deforestation}
+% Stream fusion, program composition or deforestation is a technique
+% that aims composing several functions into one to optimize away
+% intermediate datastructures\footnote{which it what gives it the name
+%   deforestation: intermediate tree structures are removed} and thus
+% avoid expensive memory access.
 
-On GPU hardware this also means that several kernels can be merged
-into one, and the overhead involved in kernel launches can thus also
-be avoided.
+% A simple example is that of computing sum of squares:
+% \begin{verbatim}
+% foldl (+) 0 (map (^2) xs)
+% \end{verbatim}
+% where the unoptimized program would have to write all the squared
+% numbers into memory during the computation of map and then read back
+% from memory during the summation. Fusing the \verb|map| into the
+% \verb|foldl| avoids this intermediate array:
+% \begin{verbatim}
+% foldl (\a b -> a + b^2) 0 xs
+% \end{verbatim}
 
-In CUDA this optimization must be done by hand \todo{Cite someone that
-  says nvcc doesn't provide deforestation/fusion}
+% This optimization is at the heart of both the Nikola and Repa
+% architectures, where it happens through the use of delayed
+% arrays. Data.Vector also performs some stream fusion by employing GHC
+% rewrite rules. Fusion is currently being implemented in
+% Accelerate. The newest version on Hackage (0.12.1.0) does not perform
+% any fusion, but the development repository contains a not completely
+% functional implementation, so it will possibly be part of the next
+% release.
 
-\subsection{Prefix sum, tree reduction}
-Accelerate comes with a number of built in parallel algorithms, that
-runs efficiently on GPUs. Such as
+% On GPU hardware this also means that several kernels can be merged
+% into one, and the overhead involved in kernel launches can thus also
+% be avoided.
 
-\subsection{Strided memory access}
-Because of limited caches in GPUs, out of order memory access incurs a
-huge performance penalty. We must thus make sure that memory accesses
-inside GPU warps are coalesced.
+% In CUDA this optimization must be done by hand \todo{Cite someone that
+%   says nvcc doesn't provide deforestation/fusion}
 
-Accelerate guarantees this approach, as long as you use the built in
-high order functions, and avoid using the array lookup function
-\begin{verbatim}
-(!) :: (Shape ix, Elt e) => Acc (Array ix e) -> Exp ix -> Exp e
-\end{verbatim}
+% \subsection{Prefix sum, tree reduction}
+% Accelerate comes with a number of built in parallel algorithms, that
+% runs efficiently on GPUs. Such as
 
-\todo{Nikola??} 
+% \subsection{Strided memory access}
+% Because of limited caches in GPUs, out of order memory access incurs a
+% huge performance penalty. We must thus make sure that memory accesses
+% inside GPU warps are coalesced.
 
-\subsection{Limit branch divergence}
-Accelerate goes a long way to restrict the possible programs you can
-write, such that they can make certain performance guarantees. For
-instance, they do not allow you to write sequential loops running on
-the GPU as this may allow one thread to diverge letting the remaining
-threads in a block waiting. This is problematic, as certain problems
-are more efficiently expressed using nested loops, and you thus need
-to manually flatten, giving a performance penalty.
+% Accelerate guarantees this approach, as long as you use the built in
+% high order functions, and avoid using the array lookup function
+% \begin{verbatim}
+% (!) :: (Shape ix, Elt e) => Acc (Array ix e) -> Exp ix -> Exp e
+% \end{verbatim}
 
-Nikola on the other hand, does not make such limitations and lets the
-programmer himself evaluate \todo{complete this}
+% \todo{Nikola??} 
+
+% \subsection{Limit branch divergence}
+% Accelerate goes a long way to restrict the possible programs you can
+% write, such that they can make certain performance guarantees. For
+% instance, they do not allow you to write sequential loops running on
+% the GPU as this may allow one thread to diverge letting the remaining
+% threads in a block waiting. This is problematic, as certain problems
+% are more efficiently expressed using nested loops, and you thus need
+% to manually flatten, giving a performance penalty.
+
+% Nikola on the other hand, does not make such limitations and lets the
+% programmer himself evaluate \todo{complete this}
 
 \section{Benchmark setup}
+We only measure the time used by each of the different
+implementations. Other parameters such as host and device memory
+consumption have been left out. For GPU implementations of the
+algorithms we can usually infer the device memory consumption directly
+from the program, but an analysis of host memory usage would have been
+\todo[noinline]{adjective here: ''interesting''?}, but \todo{why we
+  didn't include it, perhaps just time constraints and scope}.
 
 \subsection{Hardware}
 All benchmarks have been performed on a computer provided by the
 HIPERFIT research center running Ubuntu 12.04 LTS and CUDA 5.0.
 
 The hardware specifications is as follows:
-
 \begin{itemize}
 \item 2 $\times$ AMD Opteron\texttrademark\ 6274 processors (16 cores each, clocked at 2,2 Ghz)
-\item 125-132 GB of main memory \todo{What is the real value here? /proc/meminfo says 125 GB - but an odd number?}
-\item Quad SLI consisting of two GeForce GTX 690 (each a dual-head GPU). See full specifications in Table \ref{tab:hardware}.
+\item 132 GB (approx. 126 GiB) main memory
+\item Quad SLI consisting of two GeForce GTX 690 (each a dual-head
+  GPU). See full specifications in Table \ref{tab:hardware}.
 \end{itemize}
-
 \begin{table}
   \centering
   \begin{tabular}{ll}
-    Memory & $2 \times 2048$ MiB \\
     Multiprocessors & $2 \times 8$ SMs\\
     Cores per SM & 192 cores \\
     CUDA cores & $2 \times 1536$ cores\\
     Clock rate & 915 Mhz \\
+    Memory & $2 \times 2$ GB \\
     RAM technology & GDDR5 \\
     Memory bandwidth & $2 \times 192.3$ GB/s \\
     \hline
@@ -111,86 +123,186 @@ The hardware specifications is as follows:
   \label{tab:hardware}
 \end{table}
 
-% Ideally we would have evaluated all benchmarks on two different GPUs,
-% to make sure we were not optimizing for the behavior of a single
-% unit. We did however only have access to this machine with CUDA
-% version >= 4.0 (which was a requirement for \todo{Was it Nikola,
-%   Accelerate or both?}. The other machine we have access to only
-% provides CUDA 3.2.
+Ideally, we would have evaluated all benchmarks on two different
+systems, to make sure that our results are not specific to one
+setup. We did however only have access to this one machine with CUDA
+version 5.0 or newer, which was a required by the newest versions of
+both Nikola and Accelerate.
 
+\newpage
 \subsection{Software and compilation}
-\todo{Introduce our suite of survey tools, how execution time are
-measured, criterion, Individual GHC installations for each library}
+For each case, we have a set of different implementations and we want
+to measure the time for used by each implementation on varying problem
+sizes. This was accomplished by developing a small benchmarking tool
+that executed each experiment in succession, providing the input
+through a small protocol over Unix standard I/O, and letting the
+program respond between with a result between each experiment. This
+response was used to stop the timer of the program. 
 
+Several of the libraries and languages we have used requires
+individual compilation steps before the actual computation can take
+place. We have decided not to include all initialization in the
+running times, and only record the time used on the actual computation
+and eventual memory allocation and transfers. This is done to make the
+comparison fair, and because we think it is more important to optimize
+the actual computation. Optimizing the compilation or interpretation
+performance is also important, but we find that to be less of priority
+now and it thus out of our current scope.
 
-% \subsection{Benchmark setup}
-% Several of the libraries we have tested requires individual
-% compilation steps before the actual computation can take place. We
-% have decided not to include all initialization in the running times,
-% and only record the time used on the actual computation and eventual
-% memory allocation and transfers. This is done to make the comparison
-% fair, and because we think it is more important to optimize the actual
-% computation. Optimizing the compilation or interpretation performance
-% is also important, but we find that to be less of priority now and it
-% thus out of our current scope.
+The benchmarking tool was developed using the Haskell
+\texttt{criterion}\footnote{\url{http://hackage.haskell.org/package/criterion}}
+package. Each experiment was been executed 100 times and mean and
+standard deviations was logged.
 
+Accelerate and Nikola initially had contradicting dependencies, as
+Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
+additional dependencies was also incompatible. Luckily, it is possible
+to install several versions of GHC side-by-side\footnote{We have used
+  the \texttt{hsenv} package with good results. Our fork of
+  \texttt{hsenv} is available here
+  \url{https://github.com/dybber/hsenv}}. We are not sure if the
+status is still the same, but our experience installing boths packages
+-- and our failure to get the Feldspar library in a runnable state in
+decent time -- examplified a large problem with the core Haskell
+infrastructure. Many packages are not updated when newer versions of
+their dependencies are released or new GHC releases are made. We will
+thus suggest a change of policy on the Haskell Package Archive,
+Hackage, to make sure that policies are updated or made unavailable
+for installation through Cabal (see Section
+\ref{sec:haskell_infrastructure}).
+
+\todo{appendix of benchmark script ''how to'', use README from github}
 
 \section{Benchmarks}
 We will now present the results of our benchmarks. We have two plots
 for each benchmark: One showing the actual time used on each
 computation, and one showing relative performances.
 
+\subsection{Benchmark 1: Binomial option pricing on the CPU}
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/speedup-graph.pdf}\label{fig:binomial-cpu-speedup}}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/time-graph.pdf}\label{fig:binomial-cpu-time}}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/speedup-graph.pdf}\label{fig:binomial-cpu-speedup}
+    \vspace{-12mm}}
+  \subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/time-graph.pdf}\label{fig:binomial-cpu-time}}
 \end{adjustbox}
-  \caption{\textbf{(a)}  \textbf{(b)} }
+\caption{Binomial option pricing (CPU).}
 \label{fig:binomial-cpu}
 \end{figure}
 
+In our first benchmark we compare the performance of R and C languages
+and the Repa and the \texttt{Data.Vector} Haskell libraries, on the
+binomial option pricing case. All algorithms have been implemented
+following Algorithm \ref{alg:binomial-algorithm}, in Section
+\ref{sec:binomial-model}. The R and C implementations are equivalently
+and are written by Rolf Poulsen, Professor of Financial Mathematics at
+the Department of Mathematical Sciences, University of
+Copenhagen\footnote{Obtained from
+  \url{http://www.math.ku.dk/~rolf/FAMOES/}}. The \texttt{Data.Vector}
+version and Repa implementations differ from these by not reusing
+memory, and are thus not completely fair to Algorithm
+\ref{alg:binomial-algorithm}, but using mutable arrays would not be
+idiomatic in these library. In addition, the Repa version is
+parallelized, using 32 cores.
+
+\todo{The following should perhaps be moved somewhere else, so it
+  isn't part of this particular benchmark, but written in a more
+  general style}
+
+We are not interested in comparing fully optimized programs, we want
+to measure how the languages compare in performance when the programs
+are written idiomatically and in a fashion that is also appropriate
+for human reading.
+
+The results are shown in Figure \ref{fig:binomial-cpu}.
+\todo{What do we see on the graph (results pending)}
+
+\subsection{Benchmark 2: Binomial option pricing on the GPU}
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/speedup-graph.pdf}\label{fig:binomial-gpu-speedup}}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/time-graph.pdf}\label{fig:binomial-gpu-time}}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/speedup-graph.pdf}\label{fig:binomial-gpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/time-graph.pdf}\label{fig:binomial-gpu-time}}
 \end{adjustbox}
-  \caption{\textbf{(a)}  \textbf{(b)} }
+  \caption{Binomial option pricing (GPU).}
 \label{fig:binomial-gpu}
 \end{figure}
 
+In our second benchmark we compare the performance of Nikola to two
+different CUDA implementations of binomial option pricing. We also
+wished to compare with an Accelerate version, it does not work
+consistently and often breaks down with an error\todo[noinline]{quote
+  the error}. The results are presented in Figure
+\ref{fig:binomial-gpu}.
+
+The first CUDA version is adapted from the portfolio pricer found in
+NVIDIA's CUDA SDK, Algorithm \ref{alg:cuda-binom} in Section
+\ref{sec:binomial-model}. This only runs on a single block and we see
+that it is not competitive for long option durations. At options
+running over 64 years (which is $16384$ iterations), the Nikola
+version outperforms it, and the second CUDA implementation is faster
+overall.
+
+The second CUDA implementation is written from scratch, and uses all
+available cores to do price the option. Synchronization happens by
+returning to the CPU in each iteration, as we have to synchronize all
+SMs. The reason why it outperforms Nikola is perhaps that we do not
+reuse memory in our Nikola implementation, and thus have to reallocate
+and deallocate space for each iteration \todo{this could quickly be
+  changed}.
+
+\subsection{Benchmark 3: Sobol sequence generation on the CPU}
 \begin{figure}
 	\centering
   \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph.pdf}\label{fig:sobol-cpu-speedup}}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph.pdf}\label{fig:sobol-cpu-time}}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph.pdf}\label{fig:sobol-cpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph.pdf}\label{fig:sobol-cpu-time}}
 \end{adjustbox}  
-  \caption{\textbf{(a)}  \textbf{(b)} }
+  \caption{Sobol sequence generation (CPU).}
 \label{fig:sobol-cpu}
 \end{figure}
 
+We now look at the performance of the Sobol sequence generators we
+have implemented, and in this section we will concentrate on the CPU
+versions implemented in R, Repa and \texttt{Data.Vector}. 
+
+The R implementation is from the R-package \texttt{randtoolbox} which
+interfaces with a Fortran implementation that uses the recursive
+Algorithm \ref{alg:sobol-recursive}, Section \label{sec:sobol}. This
+is also the algorithm we have implemented in \texttt{Data.Vector}, but
+in Repa we have used \todo{Arg! Latest results are from the wrong
+  Repa-version!}
+
+The results are presented in Figure \ref{fig:sobol-cpu}.
+
+\subsection{Benchmark 4: Sobol sequence generation on the GPU}
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph.pdf}\label{fig:sobol-gpu-speedup}}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph.pdf}\label{fig:sobol-gpu-time}}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph.pdf}\label{fig:sobol-gpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph.pdf}\label{fig:sobol-gpu-time}}
 \end{adjustbox}
-  \caption{\textbf{(a)}  \textbf{(b)} }
+  \caption{Sobol sequence generation (GPU).}
 \label{fig:sobol-gpu}
 \end{figure}
 
+For GPUs, we have Sobol sequence generation implementations in
+Accelerate, CUDA in addition to two Nikola variants. The results are
+presented in Figure \ref{fig:sobol-gpu}.
+
+\subsection{Benchmark 5: Longstaff and Schwartz option pricing on the CPU}
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/speedup-graph.pdf}\label{fig:lsm-cpu-speedup}}
-	\subbottom[]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/time-graph.pdf}\label{fig:lsm-cpu-time}}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/speedup-graph.pdf}\label{fig:lsm-cpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/time-graph.pdf}\label{fig:lsm-cpu-time}}
 \end{adjustbox}
-  \caption{\textbf{(a)}  \textbf{(b)} }
+  \caption{Longstaff \& Schwartz option pricing (CPU).}
 \label{fig:lsm-cpu}
 \end{figure}
 
-
+We did only have time to implement Longstaff and Schwartz on the
+CPU. \todo{why not Accelerate and Nikola}
 
 
 % Speed up graph. In the graph we use the sequential version written

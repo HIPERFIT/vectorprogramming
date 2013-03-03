@@ -65,14 +65,19 @@
 \setsecheadstyle{\large\bfseries\raggedright}
 \setsubsecheadstyle{\bfseries}
 
+% BIBLIOGRAPHY styling
 % Print the DOI url out
 %\newcommand*{\doi}[1]{DOI: \url{http://dx.doi.org/#1}}
 
 \DeclareFieldFormat{doi}{\textsc{doi}: \url{http://dx.doi.org/#1}}
+\DeclareNameAlias{default}{last-first/first-last}
 %\DeclareFieldFormat{title}{\emph{#1}}
 \renewcommand\mkbibnamefirst[1]{\textsc{#1}}
 \renewcommand\mkbibnamelast[1]{\textsc{#1}}
 \renewcommand*{\bibfont}{\footnotesize}
+
+% Footnote symbols
+%\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 
 % Figures
 \newsubfloat{figure}

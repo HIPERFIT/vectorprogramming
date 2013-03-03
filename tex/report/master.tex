@@ -14,7 +14,9 @@ University of Copenhagen, DIKU}
 \bibliography{../bibliography/bibliography}
 
 \begin{document}
+\frontmatter
 \maketitle
+\thispagestyle{empty}
 \begin{abstract}
 Here goes the abstract
 \end{abstract}
@@ -26,6 +28,9 @@ Here goes the abstract
 \tableofcontents*
 
 \input{preface.tex}
+\mainmatter
+\counterwithout{table}{chapter}
+\counterwithout{figure}{chapter}
 \input{intro.tex}
 \input{gpgpu.tex}
 \input{cases.tex}

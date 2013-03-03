@@ -18,21 +18,24 @@
 % \item How high-level is it on the scale from ``R'' to ``CUDA''?
 % \end{itemize}
 
-\chapter{Language Discussions}
+\chapter{Language discussions}
+\todo{Introduce the contents of this chapter}
+\todo{Can we find a more precise heading?}
 
 \section{CUDA/C}
-
 Since CUDA/C is close to a one-to-one mapping of hardware capabilities to language
 primitives, it is possible though not necessarily easy to implement anything
 that the hardware is capable of running.
 
-Every single resource must be explicitly managed -- there is not even a
-function call stack. While this enables the coding of very fast algorithms,
-programs are also more tightly coupled with the parameters of the hardware, and
-to assumptions about input size. So even though a CUDA programmer has access to
-highly optimised linear algebra libraries such as CUBLAS \cite{CUBLAS2013},
-optimisations such as loop fusion must be coded by hand, outruling the use of
-such libraries. This optimisation often has profound effects on performance
+Every single resource must be explicitly managed -- there is not even
+a function call stack\todo[noinline]{There is in CUDA 5.0 (max 20
+  levels of nesting)}. While this enables the coding of very fast
+algorithms, programs are also more tightly coupled with the parameters
+of the hardware, and to assumptions about input size. So even though a
+CUDA programmer has access to highly optimised linear algebra
+libraries such as CUBLAS \cite{CUBLAS2013}, optimisations such as loop
+fusion must be coded by hand, outruling the use of such
+libraries. This optimisation often has profound effects on performance
 \cite{mainlandhaskell}.
 
 When implementing the binomial option pricer in CUDA, we relied on example code
@@ -43,7 +46,7 @@ seen in the performance evaluation it scales less well than Nikola.
 \todo{check that this is actually true once the performance section has been written.}
 
 Adapting the CUDA pricer to use just a single option proved to be a substantial
-and error prone effort for us.
+and error prone effort for us. \todo{because of ?}
 
 \section{R}
 
@@ -57,11 +60,12 @@ recursion and an immense library of high level operations. R programs execute
 on the CPU in their entirety. We are not aware of any efforts to exploit CUDA
 or OpenCL from inside of R programs.
 
-R has become very popular in scientific fields that are not primarily centered
-on computer programming, such as biology and statistics\cite{}. That in itself
-is good testament to the practical usefulnes of the language.
+R has become popular in scientific fields that are not primarily
+centered on computer programming, such as biology and
+statistics\todo{cite}. That in itself is good testament to the practical
+usefulnes of the language.
 
-Implementing our case studies in R required typically very little work, and the
+Implementing our case studies in R typically required very little work, and the
 larger example of LSM was able to offload much work to the built-in linear
 algebra routines.
 
@@ -81,24 +85,26 @@ These arrays support indexing, but each index operation will pay the cost of
 computing the function.
 
 Repa provides two main operations for manifesting arrays to memory:
-\texttt{computeS} and \texttt{computeP} for sequential and parallel array
-manifestation respectively. Repa uses a pool of worker threads, called a gang,
-to carry out computation. Thus, it doesn't support nested parallelism and issues
-a warning if \texttt{computeP} is issued more than once.
+\texttt{computeS} and \texttt{computeP} for sequential and parallel
+array manifestation respectively. Repa uses a pool of worker threads,
+called a gang, to carry out computation. Thus, it doesn't support
+nested parallelism and issues a warning if \texttt{computeP} is issued
+below another call to \texttt{computeP}.
 
 \section{Accelerate}
+Accelerate provides a variety of array operations: Both scans,
+segmented scans, folds, permutations, maps and zips, implemented as
+parallel algorithmic skeletons. Arrays may be multidimensional,
+denoted by a type variable in the same style as Repa.
 
-Accelerate provides a variety of array operations: Both scans, segmented scans,
-folds, permutations, maps and zips. Arrays may be multidimensional, denoted by
-a type variable in the same style as Repa.
-
-Reductions (folds) are defined on arrays of arbitrary rank by performing the
-reduction on the innermost dimension, yielding an array with rank one less.
-Maps are all elementwise regardless of the shape of the input array, and scans
-are only defined on one-dimensional arrays.
+Reductions (folds) are defined on arrays of arbitrary rank by
+performing the reduction on the innermost dimension, yielding an array
+with rank one less, or by folding all dimensions into a single scalar
+value.  Maps are all elementwise regardless of the shape of the input
+array, and scans are only defined on one-dimensional arrays.
 
 Accelerate is characterised by a clean division between the frontend and the
-various backends that exist. The Accelerate language thus is completely backend
+various backends that exist. The Accelerate language is thus completely backend
 agnostic, and backends simply export a function such as \hbox{\texttt{run :: Acc a ->
 a}.}
 
@@ -113,11 +119,11 @@ encoded in the type system.
 While this restriction probably makes it easy to ensure efficient execution of
 the individual contructs, it impairs the composability of the language
 constructs significantly, as the programmer needs to manually transform
-algorithms with a naturally nested defintion into something that will fit into
+algorithms with a naturally nested definition into something that will fit into
 the view of Accelerate.
 
 Consider this small example, derived from a problem we actually encountered
-while exploring the sobol sequence generation case:
+while exploring the Sobol sequence generation case:
 
 Suppose we have a function \texttt{f} performing a simple vector operation,
 such as multiplying a scalar.
@@ -128,7 +134,7 @@ f as b = map (b *) as
 \end{verbatim}
 
 Now, if we want to do scalar multiplication with a vector of scalars, in
-\texttt{Data.Vector} haskell, this is what we could reasonably write:
+\texttt{Data.Vector} Haskell, this could reasonably be writen:
 
 \begin{verbatim}
 g :: Vector a -> Vector b -> Vector (Vector c)
@@ -143,7 +149,7 @@ f :: Acc (Vector a) -> Exp b -> Acc (Vector c)
 f as b = map (b *) as
 \end{verbatim}
 
-But since we don't have nested arrays in Accelerate, we need to model the
+But since Accelerate does not allow nested arrays, we need to model the
 \texttt{Vector (Vector c)} type  as \texttt{Acc (Array DIM2 c)}. Thus we end up
 wanting the function \texttt{g} below, defined using \texttt{f}.
 
@@ -180,8 +186,6 @@ architecture of Accelerate, removing the distinction of \texttt{Acc} and
 \texttt{Exp} would result in an entirely different language, and every single
 backend would have to be rewritten.
 
-\todo{The above paragraph sounds a bit corny..}
-
 The embedding of Accelerate leaves some things to be desired. It is for
 instance not easily possible to pattern match on tuples and shapes, as these
 need to be properly lifted and unlifted to be used (see above in function \texttt{g}).
@@ -203,7 +207,7 @@ a lot of overall structure in common with Repa. As with Repa, an array's
 implementations and shape are represented in the array type, and the programmer
 has access to mutable arrays in addition to the common pure array operations.
 
-To exploit the ability do differentiate according to array representations,
+To exploit the ability to differentiate according to array representations,
 operations such as \texttt{map} and \texttt{zipWith} are implemented using
 typeclasses.  While this architecture allows for specialisation of operations
 to different array representations, actually using the operations results in quite
@@ -226,18 +230,22 @@ Accelerate.
 There is no way to define recursive functions in Nikola. Trying to do so
 will result in compilation not terminating.
 
-Nikola functions are compiled to CUDA code, linked dynamically into the running
-haskell program and then wrapped as a haskell function of corresponding type.
-Exactly which types are possible is derived from a menu of instances of the
-typeclass \texttt{Compilable a b}, denoting that a value of type
-\texttt{a} may be compiled into one of type \texttt{b}, with \texttt{b}
-determined by a type signature in the client program. This typeclass is not yet
-implemented for a lot of the possible choices of array representations and
-combinations. During the implementation of our case studies, we observed that
-trying to compile a function with an instance missing often resulted in very
-lengthy and elaborate type errors that were hard for us to decode. Luckily our
-ability to decode compilation-related type errors improved over time, but they
-are nevertheless still unpleasant.
+Nikola functions are compiled to CUDA code, linked dynamically into
+the running Haskell program and then wrapped as a Haskell function of
+the corresponding type.  Exactly which types are possible is derived
+from a menu of instances of the typeclass \texttt{Compilable a b},
+denoting that a value of type \texttt{a} may be compiled into one of
+type \texttt{b}, with \texttt{b} determined by a type signature in the
+client program. This typeclass is not yet implemented for a lot of the
+possible choices of array representations and combinations. During the
+implementation of our case studies, we observed that trying to compile
+a function with an instance missing often resulted in very lengthy and
+elaborate type errors that were hard for us to decode. Luckily our
+ability to decode compilation-related type errors improved over time,
+but they are nevertheless still unpleasant.
+
+\todo{Integration with other CUDA libraries by exporting CUDA device
+  points as \texttt{UnboxedForeign} Arrays}
 
 %%% Local Variables:
 %%% mode: latex
