@@ -1,0 +1,43 @@
+\chapter{Survey Conclusion}
+In this chapter we summarise the conclusions made in the above
+summary, and make suggestions for further studies. In Part
+\ref{part:extensions} of this dissertation we will look closer on a
+couple of the mentioned suggestions, and remaining can be seen as
+future work. Additional future work is presented in Chapter
+\ref{chap:Conclusion}.
+
+\section{Language comparison and recommendations}
+\todo{Which language to suggest for further studies: Nikola}
+\todo{Which language to suggest for application development}
+
+\section{Unfold}
+\todo{Required by several of our cases, as neither Nikola nor
+  Accelerate has primitives for iterative construction of arrays}
+\todo{Nikola and Accelerate can only construct arrays where there are
+  no dependencies between elements, through \texttt{fromFunction} and
+  \texttt{generate}}
+
+\section{Nesting}
+\todo{We have shown how Accelerate and Nikola breaks down in
+  cumbersome notation certain cases, where algorithms could be written
+  clearly if nested layers of array operations was allowed} 
+
+\todo{We argue that it is worth incorporating nesting in one way or
+  another, and we will go into a possible way in the following
+  sections}
+
+\subsection{Directing parallelism}
+\todo{Introducing nesting also requires some way to direct how
+  parallelism will come about. Parallelism can be present at several
+  layers, or vectorisation could be employed.}
+
+\section{Where to synchronize}
+
+\section{Memory reusage}
+
+\section{Haskell infrastructure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End:

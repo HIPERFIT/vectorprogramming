@@ -31,14 +31,25 @@ Here goes the abstract
 \input{cases.tex}
 
 \part{Survey}
-\input{survey.tex}
+\label{part:survey}
+\input{survey/setup.tex}
+\input{survey/discussions.tex}
+\input{survey/projecthealth.tex}
+\input{survey/performance.tex}
+\input{survey/surveyconclusion.tex}
 
 \part{Language Extension}
+\label{part:extensions}
 \input{nikola.tex}
 \input{conclusion.tex}
 
 \clearpage
-\defbibheading{bibliography}{\chapter{Bibliography}}
+
+% We want the bibliography in the ToC, but it shouldn't have a chapter
+% number.
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\defbibheading{bibliography}{\chapter*{Bibliography}}
 \printbibliography
 
 
