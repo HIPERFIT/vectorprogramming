@@ -29,7 +29,7 @@ create_speedup_plot <- function (frame, greyscale, uselineplot, xlabel) {
 
     # Configure scales
     p <- p + scale_x_log10(breaks=basis_data[,1], name=xlabel) #, label=comma_format())
-    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,10,25,50,100,200,400,600,1000,2000,4000), name="Speed-up", label=comma_format())
+    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,4,8,16,32,50,100,200,400,600,1000,2000,4000), name="Speed-up", label=comma_format())
 
     #p <- p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
 
@@ -50,13 +50,13 @@ create_speedup_plot <- function (frame, greyscale, uselineplot, xlabel) {
 }
 
 create_time_plot <- function (data, greyscale, uselineplot, xlabel) {
-    p <- ggplot(data = frame, aes(x=Size, y=AbsoluteTime, fill=Language, colour=Language, shape=Language))
+    p <- ggplot(data = frame, aes(x=Size, y=AbsoluteTime*1000, fill=Language, colour=Language, shape=Language))
     if(greyscale) {
       p <- p + scale_colour_grey(start = 0, end = .6)
       p <- p + scale_fill_grey(start = 0, end = .6)
       p <- p + theme_bw()
     }
-    limits <- aes(ymax = AbsoluteStddevLB, ymin=AbsoluteStddevUB)
+    limits <- aes(ymax = AbsoluteStddevLB*1000, ymin=AbsoluteStddevUB*1000)
 
 
     if(uselineplot) {
@@ -74,9 +74,9 @@ create_time_plot <- function (data, greyscale, uselineplot, xlabel) {
 
     # Configure scales
     p <- p + scale_x_log10(breaks=basis_data[,1], name=xlabel) #, label=comma_format())
-    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,10,25,50,100,200,400,600,1000,2000,4000),
-                           labels=c("0", "0.001","0.01","0.05","0.1","0.5","1","2","10","25","50","100","200","400","600","1000","2000","4000"),
-                           name="Time in seconds") #, label=comma_format())
+    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,5,10,25,50,100,200,400,1000,2000,4000,8000,16000),
+                           labels=c("0", "0.001","0.01","0.05","0.1","0.5","1","2","5","10","25","50","100","200","400","1000","2000","4000", "8000", "16000"),
+                           name="Time (ms)") #, label=comma_format())
 
     #p <- p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
 

@@ -88,13 +88,23 @@ performance, by implementations of the cases described in Chapter
 % programmer himself evaluate \todo{complete this}
 
 \section{Benchmark setup}
-We only measure the time used by each of the different
-implementations. Other parameters such as host and device memory
-consumption have been left out. For GPU implementations of the
-algorithms we can usually infer the device memory consumption directly
-from the program, but an analysis of host memory usage would have been
-\todo[noinline]{adjective here: ''interesting''?}, but \todo{why we
-  didn't include it, perhaps just time constraints and scope}.
+In our benchmarks we only measure the time used by each of the
+different implementations. Other parameters, such as memory
+consumption on host and device, have been left out. For GPU
+implementations of the algorithms we can usually infer the device
+memory consumption directly from the program, but an analysis of host
+memory usage would have been interesting, but we had to limit
+ourselves and thus deemed it outside our scope.
+
+The benchmarks are made on programs written in an as idiomatic style
+as we possible could, and if we have one available, we use a version
+written by a language expert. We are not interested in comparing fully
+optimized programs, as we want to measure how the languages compare in
+performance when the languages are used as the language author inteded
+it, and in a fashion appropriate for human reading. One exception is
+though CUDA, where we want to compare our ``idiomatic'' versions to a
+fully optimized CUDA implementation, employing all the tricks of the
+trade.
 
 \subsection{Hardware}
 All benchmarks have been performed on a computer provided by the
@@ -108,6 +118,7 @@ The hardware specifications is as follows:
   GPU). See full specifications in Table \ref{tab:hardware}.
 \end{itemize}
 \begin{table}
+\begin{minipage}[b]{0.50\linewidth}
   \centering
   \begin{tabular}{ll}
     Multiprocessors & $2 \times 8$ SMs\\
@@ -121,6 +132,19 @@ The hardware specifications is as follows:
   \end{tabular}
   \caption{Geforce GTX 690 specification}
   \label{tab:hardware}
+\end{minipage}
+\begin{minipage}[b]{0.50\linewidth}
+  \centering
+  \begin{tabular}{cr}
+    \textbf{Language} & \textbf{Time}  \\ \hline
+    C & $67.03 \mu s$ \\
+    R & $89.13 \mu s$ \\
+    CUDA C & $66.23 \mu s$ \\
+    Haskell & $107.45 \mu s$ \\ \hline
+  \end{tabular}
+  \caption{Benchmarking overhead}
+  \label{tab:benchmarking-overhead}
+\end{minipage}
 \end{table}
 
 Ideally, we would have evaluated all benchmarks on two different
@@ -129,21 +153,22 @@ setup. We did however only have access to this one machine with CUDA
 version 5.0 or newer, which was a required by the newest versions of
 both Nikola and Accelerate.
 
-\newpage
 \subsection{Software and compilation}
 For each case, we have a set of different implementations and we want
-to measure the time for used by each implementation on varying problem
+to measure the time used by each implementation on varying problem
 sizes. This was accomplished by developing a small benchmarking tool
-that executed each experiment in succession, providing the input
-through a small protocol over Unix standard I/O, and letting the
-program respond between with a result between each experiment. This
-response was used to stop the timer of the program. 
+\todo[noinline]{new appendix of benchmark script ''how to'', use
+  README from github, and add footnote here} that executed each
+experiment in succession, providing the input through a small protocol
+over Unix standard I/O, and letting the program respond with a result
+between each experiment. This response was used to stop the time
+measurement.
 
 Several of the libraries and languages we have used requires
 individual compilation steps before the actual computation can take
 place. We have decided not to include all initialization in the
 running times, and only record the time used on the actual computation
-and eventual memory allocation and transfers. This is done to make the
+and eventual memory allocation and memory transfers. This is done to make the
 comparison fair, and because we think it is more important to optimize
 the actual computation. Optimizing the compilation or interpretation
 performance is also important, but we find that to be less of priority
@@ -151,15 +176,21 @@ now and it thus out of our current scope.
 
 The benchmarking tool was developed using the Haskell
 \texttt{criterion}\footnote{\url{http://hackage.haskell.org/package/criterion}}
-package. Each experiment was been executed 100 times and mean and
-standard deviations was logged.
+package. Each experiment was been executed 100 times and the mean and
+standard deviations was logged. To eliminate the possibility of errors
+in our approach, we have measured the overhead involved in issuing a
+request through standard I/O, by implementing an ``empty'' benchmark
+in each language, and measured the time used on a just responding. The
+results are shown in Table \ref{tab:benchmarking-overhead} (standard
+deviations are not listed, but are in all cases negligible). The
+overhead is insignificant for our purposes.
 
 Accelerate and Nikola initially had contradicting dependencies, as
 Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
 additional dependencies was also incompatible. Luckily, it is possible
 to install several versions of GHC side-by-side\footnote{We have used
   the \texttt{hsenv} package with good results. Our fork of
-  \texttt{hsenv} is available here
+  \texttt{hsenv} is available at
   \url{https://github.com/dybber/hsenv}}. We are not sure if the
 status is still the same, but our experience installing boths packages
 -- and our failure to get the Feldspar library in a runnable state in
@@ -171,12 +202,12 @@ Hackage, to make sure that policies are updated or made unavailable
 for installation through Cabal (see Section
 \ref{sec:haskell_infrastructure}).
 
-\todo{appendix of benchmark script ''how to'', use README from github}
 
 \section{Benchmarks}
 We will now present the results of our benchmarks. We have two plots
 for each benchmark: One showing the actual time used on each
-computation, and one showing relative performances.
+computation, and one showing relative performances. All scales are
+logarithmic.
 
 \subsection{Benchmark 1: Binomial option pricing on the CPU}
 \begin{figure}
@@ -191,7 +222,7 @@ computation, and one showing relative performances.
 \end{figure}
 
 In our first benchmark we compare the performance of R and C languages
-and the Repa and the \texttt{Data.Vector} Haskell libraries, on the
+to the Repa and the \texttt{Data.Vector} Haskell libraries, on the
 binomial option pricing case. All algorithms have been implemented
 following Algorithm \ref{alg:binomial-algorithm}, in Section
 \ref{sec:binomial-model}. The R and C implementations are equivalently
@@ -203,53 +234,49 @@ version and Repa implementations differ from these by not reusing
 memory, and are thus not completely fair to Algorithm
 \ref{alg:binomial-algorithm}, but using mutable arrays would not be
 idiomatic in these library. In addition, the Repa version is
-parallelized, using 32 cores.
-
-\todo{The following should perhaps be moved somewhere else, so it
-  isn't part of this particular benchmark, but written in a more
-  general style}
-
-We are not interested in comparing fully optimized programs, we want
-to measure how the languages compare in performance when the programs
-are written idiomatically and in a fashion that is also appropriate
-for human reading.
+parallelized, using 32 cores\todo{or what?}.
 
 The results are shown in Figure \ref{fig:binomial-cpu}.
 \todo{What do we see on the graph (results pending)}
+
+\todo{The overhead of not reusing memory is not that big for these
+  problems. Perhaps we are saved by the GC liveness analysis?}
 
 \subsection{Benchmark 2: Binomial option pricing on the GPU}
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/speedup-graph.pdf}\label{fig:binomial-gpu-speedup}}
-	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/time-graph.pdf}\label{fig:binomial-gpu-time}}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/speedup-graph-final.pdf}\label{fig:binomial-gpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-gpu/time-graph-final.pdf}\label{fig:binomial-gpu-time}}
 \end{adjustbox}
   \caption{Binomial option pricing (GPU).}
 \label{fig:binomial-gpu}
 \end{figure}
 
-In our second benchmark we compare the performance of Nikola to two
-different CUDA implementations of binomial option pricing. We also
-wished to compare with an Accelerate version, it does not work
-consistently and often breaks down with an error\todo[noinline]{quote
-  the error}. The results are presented in Figure
-\ref{fig:binomial-gpu}.
+In our second benchmark we compare the performance of Nikola, written
+by the Nikola author Geoffrey Mainland, to two different CUDA
+implementations of binomial option pricing. We also wished to
+benchmark an Accelerate version, but we could not get a version to run
+consistently and often it would break down with a CUDA error
+(``unspecified launch failure``, which signals a memory access error
+equivalent to a segmentation fault). The results are presented in
+Figure \ref{fig:binomial-gpu}.
 
 The first CUDA version is adapted from the portfolio pricer found in
 NVIDIA's CUDA SDK, Algorithm \ref{alg:cuda-binom} in Section
 \ref{sec:binomial-model}. This only runs on a single block and we see
 that it is not competitive for long option durations. At options
-running over 64 years (which is $16384$ iterations), the Nikola
-version outperforms it, and the second CUDA implementation is faster
-overall.
+running over 64 years ($16384$ time-steps), the Nikola
+version outperforms it. 
 
-The second CUDA implementation is written from scratch, and uses all
-available cores to do price the option. Synchronization happens by
-returning to the CPU in each iteration, as we have to synchronize all
-SMs. The reason why it outperforms Nikola is perhaps that we do not
-reuse memory in our Nikola implementation, and thus have to reallocate
-and deallocate space for each iteration \todo{this could quickly be
-  changed}.
+The second CUDA implementation is faster in all cases. We have written
+this version from scratch, and uses all available cores to price the
+option. Synchronization happens by returning to the CPU in each
+iteration, as we have to synchronize across all blocks. The reason why
+it outperforms Nikola is perhaps that the Nikola version does not
+reuse memory, and thus have to reallocate and deallocate in each
+iteration \todo[noinline]{this could quickly be changed}, in all other aspects
+this implementation is identical to the Nikola implementation.
 
 \subsection{Benchmark 3: Sobol sequence generation on the CPU}
 \begin{figure}

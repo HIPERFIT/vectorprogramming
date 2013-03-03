@@ -73,7 +73,7 @@ plot() {
     echo plotting in $experimentdir
     BASELINE=$(cat $experimentdir/plot_baseline)
 
-    Rscript ggplot_speedup.r --args $experimentdir $(basename $experimentdir)-$BASELINE.csv
+    Rscript ggplot_speedup.r --args $experimentdir "$(basename $experimentdir)-$BASELINE.csv"
   done
 }
 
