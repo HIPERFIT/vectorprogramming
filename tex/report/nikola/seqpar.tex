@@ -6,7 +6,10 @@ should be run in parallel?
 
 Various ways exist to treat the problem of nested parallelism, with the
 extremes being disallowing nested parallelism at all and the vectorisation
-transformation of NESL \cite{nesl}.
+transformation of NESL \cite{nesl}. While the vectorisation transformation
+removes issues of both nesting and irregularity, it may also incur a certain
+amount of overhead that can be prohibitive to its practical application, see
+\cite{Catanzaro2011}.
 
 Nikola itself is able to handle some degree of nested parallelism by exploiting
 the up to three-dimensional grid layout of CUDA threads.
@@ -53,10 +56,8 @@ hardware that is to execute them, and of course the shape of \texttt{as}.
 \section{Implications for fusion}
 
 Directing the parallel execution strategy using \texttt{sequential} interacts
-loop fusion.
-
-In each of the examples \texttt{ex1}-\texttt{ex3} above, some parts of
-\texttt{as} may be computed in parallel, namely the hyperplane slices
+loop fusion.  In each of the examples \texttt{ex1}-\texttt{ex3} above, some
+parts of \texttt{as} may be computed in parallel, namely the hyperplane slices
 corresponding with a parallel map.
 
 But consider the example:
@@ -85,4 +86,10 @@ used in Nikola terms are already a complicated, complete with interaction with
 various typeclasses and the value lifting machinery, we have postponed further
 exploration of this.
 
+\section{Implementation status}
 
+Currently our effort concerning the addition of \texttt{sequential} to Nikola
+has been mostly hypothetical. The idea arose as a simple and versatile
+alternative to full program vectorisation, and we think it holds some promising
+in that respect. At least it appears worthy of further study.  While we have
+made some effort at implementing it in Nikola, this is far from complete.
