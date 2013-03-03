@@ -2,13 +2,42 @@
 In this chapter we summarise the conclusions made in the above
 summary, and make suggestions for further studies. In Part
 \ref{part:extensions} of this dissertation we will look closer on a
-couple of the mentioned suggestions, and remaining can be seen as
-future work. Additional future work is presented in Chapter
-\ref{chap:Conclusion}.
+couple of the mentioned suggestions, the remaining can be seen as
+future work. Additional future work, not related to the outcomes of
+the survey, is presented in Chapter \ref{chap:Conclusion}.
 
-\section{Language comparison and recommendations}
-\todo{Which language to suggest for further studies: Nikola}
-\todo{Which language to suggest for application development}
+\section{Language selection}
+We have compared the libraries Accelerate, Nikola, Repa and
+\texttt{Data.Vector} and our conclusion is that Nikola is the most
+suitable for further extensions when the scope is GPU programming. The
+Repa and \texttt{Data.Vector} architectures are not really compatible
+with code-generation, as would be necessary if they had to be modified
+to run on GPUs. Studying them was not entirely without results, as for
+instance the \texttt{computeS} of Repa can be viewed as the originator
+for the idea we will present in Chapter
+\ref{chap:directing-parallelism}.
+
+When comparing Accelerate and Nikola, we had the most pleasant
+installation experience with Nikola. The restrictive type system of
+Accelerate was also a factor that made us opt for Nikola. Especially
+the division between the expression and vector layer of Accelerate
+made us worried, as we would have to make major modifications to break
+this barrier down.
+
+Another choice is which languages would be suitable for application
+development. Currently \texttt{Data.Vector} with more than 150 reverse
+dependencies seems the most stable and practically useful. Repa seems
+stable, though hard to get to scale, though our problems might not
+have been the best fit for Repa.
+
+The four languages that would be most likely to change in the future
+is Nikola, as only skeleton of the language exist; it still lacks many
+common parallel array operations such as prefix-sum, parallel
+reductions. It can be seen more as a testbed, than a practical
+language. Accelerate on the other hand has alot of such operations
+built in as skeletons, and if we did not have had the troubles with
+getting it to run on our machine, we would probably have had been more
+keen at recommending it.
 
 \section{Unfold}
 \todo{Required by several of our cases, as neither Nikola nor
