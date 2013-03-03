@@ -56,12 +56,12 @@ for the type signature:
 \begin{verbatim}
 unfold ::
   Shape sh =>
-  IsElem (Exp t a) =>
+  IsElem a =>
   Typeable a =>
     sh ->
-    (sh -> Exp t a -> Exp t a) ->
-    Exp t a ->
-    Array PSH sh (Exp t a)
+    (sh -> a -> a) ->
+    a ->
+    Array PSH sh a
 \end{verbatim}
 
 In order to be useful however, \texttt{unfoldr} by itself is not enough.
@@ -85,7 +85,7 @@ mapNest ::
   Source r a =>
       sh' -> (Exp t Ix -> Array D sh a -> Array PSH sh' b)
           -> Array r  (sh :. Exp t Ix) a
-          -> Array PSH (sh' :. Exp t Ix)   b
+          -> Array PSH (sh' :. Exp t Ix) b
 \end{verbatim}
 
 While we require the shape \texttt{sh'} to be specified, there is no guarantee
@@ -113,20 +113,27 @@ by defining \texttt{mapNest} as a function in a typeclass parametrised over the
 involved array representations, as is already the case for typeclass
 \texttt{Map} in module \texttt{Data.Array.Nikola.Operators.Mapping}.
 
-\subsection{intrinsically mapped unfold}
+\subsection{Intrinsically mapped unfold}
 
 Our first attempt at defining an unfolding operation was inspired by the
 collective operators of Accelerate.
 
 \begin{verbatim}
 unfold ::
+  IsElem a =>
+  IsElem (Exp t Ix) =>
   Shape sh =>
   Source r a =>
-    Exp t Ix -> (Exp t Ix -> Exp t a -> Exp t a)
+    Exp t Ix -> (Exp t Ix -> a -> a)
     -> Array r sh a -> Array PSH (sh :. Exp t Ix) a
 \end{verbatim}
 
 By avoiding the need for a nested map, it is guaranteed that the resulting
 unfolded arrays all have the same size. However, upon realizing that we would
 be able to define a nested mapping operation, we felt that that was a more
-compositional approach.
+compositional approach, being able to map any function on arrays.
+
+An inviting property of this version however is that the its type is a bit
+simpler, as one does not need to concern oneself with shape specifications
+beyond the desired length of the unfolded arrays.
+
