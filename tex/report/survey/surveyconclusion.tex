@@ -22,7 +22,10 @@ installation experience with Nikola. The restrictive type system of
 Accelerate was also a factor that made us opt for Nikola. Especially
 the division between the expression and vector layer of Accelerate
 made us worried, as we would have to make major modifications to break
-this barrier down.
+this barrier down. Another plus in the favour of Nikola, is that it
+allows interaction with other CUDA libraries, e.g. CUBLAS, without
+having to get the data roundtrip to the CPU and back again (see
+Section \todo{ref}).
 
 Another choice is which languages would be suitable for application
 development. Currently \texttt{Data.Vector} with more than 150 reverse
@@ -40,31 +43,52 @@ getting it to run on our machine, we would probably have had been more
 keen at recommending it.
 
 \section{Unfold}
-\todo{Required by several of our cases, as neither Nikola nor
-  Accelerate has primitives for iterative construction of arrays}
-\todo{Nikola and Accelerate can only construct arrays where there are
-  no dependencies between elements, through \texttt{fromFunction} and
-  \texttt{generate}}
+As demonstrated in Section \todo{ref}, several of our cases requires a
+way of building up an array from repeated application of a
+non-associative operator. Neither Accelerate nor Nikola provides
+built-in functionality that can be combined to do perform such
+operation. They can only construct new GPU arrays where there are no
+dependencies between elements (through \texttt{generate} and
+\texttt{fromFunction} respectively) or from existing CPU-arrays.
+
+Chapter \todo{ref} will present our work on an implementation of such
+an idea in Nikola.
 
 \section{Nesting}
-\todo{We have shown how Accelerate and Nikola breaks down in
-  cumbersome notation certain cases, where algorithms could be written
-  clearly if nested layers of array operations was allowed} 
+We have in Section \todo{ref} shown how in certain cases, both
+Accelerate and Nikola breaks down in cumbersome notation, where
+algorithms could be written clearly if nested layers of array
+operations were allowed. We can in certain cases get out of this by
+relying on fusion of a surrounding \texttt{generate} function that
+indexes into the nested call. This will not work in the general case
+though, as it breaks down if we for instance raise the dimensionality
+of the involved arrays by one.
 
-\todo{We argue that it is worth incorporating nesting in one way or
-  another, and we will go into a possible way in the following
-  sections}
+We argue that it is worth incorporating nesting in one way or another,
+as many algorithms are more naturally expressed in a nested style. 
 
-\subsection{Directing parallelism}
-\todo{Introducing nesting also requires some way to direct how
-  parallelism will come about. Parallelism can be present at several
-  layers, or vectorisation could be employed.}
+We will go into a possible way of mapping this to GPU devices in
+Chapter \todo{ref}. The method is an alternative to full vectorisation
+and allows you to direct how parallelism is added to the
+program. Parallelism can be incorporated at several different layers
+of programs, and we thus provide a way of selecting between them.
 
-\section{Where to synchronize}
+\section{Level of synchronization}
+In the implementation of the binomial option pricer we found it
+necessary to synchronize on the CPU to guarentee syncronization across
+all blocks. If we were to map this option pricer over a portfolio of
+different options, we would instead want something different. We would
+want each option to reside in their own block, and use CUDAs
+\texttt{__syncthreads} function to syncronize all threads in the
+block.
+
+Thus, in algorithms that requires such synchronization, an analysis
+could be employed to determine when synchronization could happen in
+scope of single blocks and when it is necessary to synchronize all
+blocks.
 
 \section{Memory reusage}
-
-\section{Interfacing with existing libraries}
+In the binomial pricer we have seen that 
 
 \section{Haskell infrastructure}
 \label{sec:haskell_infrastructure}
