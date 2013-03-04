@@ -99,21 +99,24 @@ applications from the financial domain, to study the limitations of
 current approaches.
 
 \section{Contributions}
-% PLC: Should we have these in the introduction? wouldn't they fit
-% better in their respective sections?
 
-% MD: Yes we should, but only as overview/teaser. I think it would be
-% easier to read, when it is clear what's to come
-\todo{Which kind of problems we have found}
+We have conducted a small survey comparing a few Haskell libraries and
+languages with respect to their performance, expressivity and the apparent
+health of their supporting projects infrastructure.
 
-We have found that the lack of nesting in a language such as
-Accelerate is too limiting to implement the algorithms that we want,
-without sacrificing code clarity. We suggest moving back a step on
-ladder and give the programmer more control.
+Taking an outset in two common financial algorithms for option pricing and a
+quasi-random number generator, we have found that the lack of nesting in a
+language such as Accelerate is too limiting to implement concise and performing
+solutions.
 
-\todo{Something about what we have done to alleviate those problems}
+As this lack of nesting is due to excessive and concious limitation, we suggest
+taking a step back and give the programmer more control. Of our surveyed
+languages, Nikola fits this view the best, and is selected as the subject for
+further study.
 
-\todo{List our contributions:}
+This we go about by exploring the implementation of a few but motivated extra
+array operators, and last we present a proposal to deal with the problem posed
+by mapping nested data parallelism to flat parallel hardware.
 
 \begin{itemize}
 
@@ -141,8 +144,9 @@ ladder and give the programmer more control.
 %
 %* An alternative approach to specifying
 
-
-\todo{Add links to github where our code and benchmarks can be found}
+All the source code associated with the practical execution of the survey, as well as this report is hosted at
+\href{https://github.com/HIPERFIT/vectorprogramming/}.
+The extensions developed for Nikola are to be found at \href{https://github.com/HIPERFIT/nikola/}
 
 \section{Report outline}
 The remainder of the report is structured as follows. This

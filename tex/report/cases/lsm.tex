@@ -80,7 +80,7 @@ equation can be found in the book \emph{Monte-Carlo Methods in
   \label{alg:lsm-pathgeneration}
 \end{algorithm}
 
-\todo{perhaps introduce Brownian Bridge alternative}
+% \todo{perhaps introduce Brownian Bridge alternative}
 
 As long as we can generate independent random numbers in parallel this
 generation can also be parallelized, as each path can be generated
@@ -128,12 +128,12 @@ does indeed follow rather visible patterns (see Figure
 statistically random numbers, instead QRNG provides numbers suitable
 for numerical integration, optimization and simulation. QRNGs have
 several times been shown useful in financial Monte Carlo simulations
-\cite{chaudhary2005american, couffignals2010quasi,
-  dfine2009americanbasket} \todo{perhaps mention the differences
-  between their methods} and a survey paper shows QRNGs beating PRNGs
+\cite{chaudhary2005american, couffignals2010quasi, dfine2009americanbasket}
+%  \todo{perhaps mention the differences between their methods}
+and a survey paper shows QRNGs beating PRNGs
 when it comes to option pricing \cite{acworth1998comparison}. The
-survey is 15 years old, so newer PRNGs \todo[noinline]{which other
-  noteworthy?} might perform differently.
+survey is 15 years old, so newer PRNGs might perform differently.
+% \todo[noinline]{which other noteworthy?}
 
 We will look closer at one particular low-discrepancy generator,
 namely the Sobol sequence generator, by the Russian mathematician
