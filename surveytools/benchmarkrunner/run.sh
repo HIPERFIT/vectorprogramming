@@ -13,7 +13,8 @@ INSTANCE=$2
 LOGTAG=$3
 
 # Name of benchmark (for naming logs, reports etc.)
-NAME=$BENCHMARK-$INSTANCE
+NAME=$INSTANCE
+#NAME=$BENCHMARK-$INSTANCE
 
 SCRIPTFILE=`readlink -f $0`
 SCRIPTROOT=`dirname $SCRIPTFILE`

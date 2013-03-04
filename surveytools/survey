@@ -72,8 +72,10 @@ plot() {
   do
     echo plotting in $experimentdir
     BASELINE=$(cat $experimentdir/plot_baseline)
+    XLABEL=$(cat $experimentdir/xlabel)
+    TIMEUNIT=$(cat $experimentdir/timeunit)
 
-    Rscript ggplot_speedup.r --args $experimentdir "$(basename $experimentdir)-$BASELINE.csv"
+    Rscript ggplot_speedup.r --args $experimentdir "$BASELINE.csv" "$XLABEL" "$TIMEUNIT"
   done
 }
 
