@@ -41,6 +41,7 @@ setup() {
 benchmark() {
 
   cd $SURVEYTOOLS_DIR/benchmarkrunner
+  cp -r $SURVEYTOOLS_DIR/plotting $BENCHRESULTS_DIR/$LOGTAG/
   for experiment in $BENCHROOT/*
   do
     if [ ! -d $experiment ]; then
@@ -56,7 +57,7 @@ benchmark() {
     #copy the plot settings to summarydir to make the plot generation self contained
     cp $experiment/plot_baseline $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
     cp $experiment/xlabel $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
-
+    cp $experiment/timeunit $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
   done
 
 }

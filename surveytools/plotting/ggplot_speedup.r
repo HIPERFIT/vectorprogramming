@@ -13,7 +13,8 @@ greyscale <- FALSE
 
 # read arguments following --args (--args included)
 args <- commandArgs(trailingOnly = TRUE)
-dir <- args[2]   # where the results are located
+dir <- args[2]   # where the benchmark run are located
+datadir <- paste(dir, "data", sep="/")   # where the csv files are located
 basisfile <- args[3] # which of graphs should be treated as basis (zero) which the others compares to
 xlabel <- args[4] # Label for the x-axis
 timeunit <- as.numeric(args[5]) # Time unit used in absolute time plot (the we receive always uses seconds)
@@ -22,16 +23,16 @@ timeunit <- as.numeric(args[5]) # Time unit used in absolute time plot (the we r
 size <- 4
 
 # The graph to measure the other against
-basis_data <- read.csv(paste(dir, "/", basisfile, sep=""))
+basis_data <- read.csv(paste(datadir, "/", basisfile, sep=""))
 basis <- cbind(basis_data, Language=basisfile)
 
 # Collect remaining results in a data frame
-csvfiles <- list.files(dir)
+csvfiles <- list.files(datadir)
 frame <- data.frame()
 for(i in 1:length(csvfiles)) {
   csv <- csvfiles[i]
   if(file_ext(csv) == "csv") {
-    data <- read.csv(paste(dir, "/", csv, sep=""))
+    data <- read.csv(paste(datadir, "/", csv, sep=""))
 
     # Only include results with some data
     if(any(is.na(data[,2]))) {
