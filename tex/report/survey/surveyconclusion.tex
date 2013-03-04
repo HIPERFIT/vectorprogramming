@@ -84,14 +84,24 @@ block.
 
 Thus, in algorithms that requires such synchronization, an analysis
 could be employed to determine when synchronization could happen in
-scope of single blocks and when it is necessary to synchronize all
+scope of single blocks and only when necessary, synchronize all
 blocks.
 
 \section{Memory reusage}
-In the binomial pricer we have seen that
+In the binomial pricer we have seen that the performance of Nikola
+degraded as it didn't reuse the same CUDA memory areas that was
+already allocated, but had to reallocate space. In our case, where we
+are folding over an operation that uses an array as accumulator, we
+would be able to determine whether we could reuse the array from
+earlier iterations. We already know the size of arrays after each
+iteration, since we need to allocate space before starting the
+operation, so we would be able to infer whether the accumulator would
+increase in size or not.
 
 \section{Haskell infrastructure}
 \label{sec:haskell_infrastructure}
+In setting up our test environment we found that \todo{}
+
 
 %%% Local Variables:
 %%% mode: latex

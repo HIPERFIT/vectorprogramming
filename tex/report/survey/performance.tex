@@ -106,6 +106,10 @@ though CUDA, where we want to compare our ``idiomatic'' versions to a
 fully optimized CUDA implementation, employing all the tricks of the
 trade.
 
+The output of all our benchmarks has been verified manually, through
+comparison of results with our reference $R$ implementations of the
+algorithms.
+
 \subsection{Hardware}
 All benchmarks have been performed on a computer provided by the
 HIPERFIT research center running Ubuntu 12.04 LTS and CUDA 5.0.
@@ -183,7 +187,9 @@ request through standard I/O, by implementing an ``empty'' benchmark
 in each language, and measured the time used on a just responding. The
 results are shown in Table \ref{tab:benchmarking-overhead} (standard
 deviations are not listed, but are in all cases negligible). The
-overhead is insignificant for our purposes.
+significance of of course depends on the application, for most of our
+purposes it is too small to make a difference, we will note when it
+should be considered a source of error.
 
 Accelerate and Nikola initially had contradicting dependencies, as
 Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
@@ -213,9 +219,9 @@ logarithmic.
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/speedup-graph.pdf}\label{fig:binomial-cpu-speedup}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/speedup-graph-final.pdf}\label{fig:binomial-cpu-speedup}
     \vspace{-12mm}}
-  \subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/time-graph.pdf}\label{fig:binomial-cpu-time}}
+  \subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/binomial-cpu/time-graph-final.pdf}\label{fig:binomial-cpu-time}}
 \end{adjustbox}
 \caption{Binomial option pricing (CPU).}
 \label{fig:binomial-cpu}
@@ -233,14 +239,23 @@ Copenhagen\footnote{Obtained from
 version and Repa implementations differ from these by not reusing
 memory, and are thus not completely fair to Algorithm
 \ref{alg:binomial-algorithm}, but using mutable arrays would not be
-idiomatic in these library. In addition, the Repa version is
-parallelized, using 32 cores\todo{or what?}.
+idiomatic in these library. The Repa version has been executed with
+both one and two operating system threads (by setting the \texttt{+RTS
+  -N} option).
 
-The results are shown in Figure \ref{fig:binomial-cpu}.
-\todo{What do we see on the graph (results pending)}
+The results are shown in Figure \ref{fig:binomial-cpu}. We see that
+using an additional processor in Repa gives us a speed down. We have
+also tested with additional processors, which performs even worse. The
+amount of synchronization necessary between each iteration probably
+the problem. It would be interesting to see how Repa would perform if
+we were to execute it as a binomial pricer, but we have not had the
+time to do that experiment.
+
+We also see that the overhead incurred by \texttt{Data.Vector} when
 
 \todo{The overhead of not reusing memory is not that big for these
   problems. Perhaps we are saved by the GC liveness analysis?}
+
 
 \subsection{Benchmark 2: Binomial option pricing on the GPU}
 \begin{figure}
@@ -306,8 +321,8 @@ The results are presented in Figure \ref{fig:sobol-cpu}.
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph.pdf}\label{fig:sobol-gpu-speedup}}
-	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph.pdf}\label{fig:sobol-gpu-time}}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph-final.pdf}\label{fig:sobol-gpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph-final.pdf}\label{fig:sobol-gpu-time}}
 \end{adjustbox}
   \caption{Sobol sequence generation (GPU).}
 \label{fig:sobol-gpu}
@@ -321,8 +336,8 @@ presented in Figure \ref{fig:sobol-gpu}.
 \begin{figure}
 	\centering
 \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/speedup-graph.pdf}\label{fig:lsm-cpu-speedup}}
-	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/time-graph.pdf}\label{fig:lsm-cpu-time}}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/speedup-graph-final.pdf}\label{fig:lsm-cpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/lsm-cpu/time-graph-final.pdf}\label{fig:lsm-cpu-time}}
 \end{adjustbox}
   \caption{Longstaff \& Schwartz option pricing (CPU).}
 \label{fig:lsm-cpu}
