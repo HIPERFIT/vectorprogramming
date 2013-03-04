@@ -1,0 +1,46 @@
+\chapter{Sobol sequences in Accelerate}
+
+\begin{lstlisting}sobol_divisor :: Exp Double
+sobol_divisor = Prelude.fromIntegral (2^30)
+
+grayCode :: Exp Int -> Exp Word32
+grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
+
+-- ^ Generate a length @n@ Sobol sequence using the given
+-- direction vector by parallelising the inductive algorithm
+sobolN :: Array DIM2 Word32 -> Int -> Acc (Array DIM2 Double)
+sobolN dirVs n =
+  let
+    Z :. i :. j = arrayShape dirVs
+    cubeSize = constant $ Z :. n :. i :. j
+    sobolIndices = generate cubeSize (fst3 . unindex3)
+    directionNumberIndices = generate cubeSize (thd3 . unindex3)
+
+    ps = map fromBool $ zipWith (testBit . grayCode)
+                                sobolIndices
+                                directionNumberIndices
+
+    directionNumbersRep = replicate (constant $ Z :. n :. All :. All) 
+                                    (use dirVs)
+
+    xs :: Acc (Array DIM2 Word32)
+    xs = fold1 xor $ zipWith (*) directionNumbersRep ps
+  in map ((/sobol_divisor) . fromIntegral) xs
+
+
+-- Various helper functions
+fromBool :: (Elt a, IsNum a) => Exp Bool -> Exp a
+fromBool b = b ? (1, 0)
+
+unindex3 :: (Elt i, IsIntegral i) => Exp DIM3 -> Exp (i, i, i)
+unindex3 ix =
+  let
+   Z :. i :. j :. k = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
+  in lift (fromIntegral i, fromIntegral j, fromIntegral k)
+
+fst3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp a
+fst3 e = let (x, _:: Exp b, _:: Exp c) = unlift e in x
+
+thd3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp c
+thd3 e = let (_ :: Exp a, _:: Exp b, x) = unlift e in x
+\end{lstlisting}

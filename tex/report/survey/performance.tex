@@ -251,10 +251,10 @@ the problem. It would be interesting to see how Repa would perform if
 we were to execute it as a binomial pricer, but we have not had the
 time to do that experiment.
 
-We also see that the overhead incurred by \texttt{Data.Vector} when
-
-\todo{The overhead of not reusing memory is not that big for these
-  problems. Perhaps we are saved by the GC liveness analysis?}
+We also see that the overhead incurred by reallocating arrays in each
+iteration by the \texttt{Data.Vector} implementation is not that huge,
+we could suspect that the garbage collectors liveness analysis detects
+that we can reuse the just deallocated memory region.
 
 
 \subsection{Benchmark 2: Binomial option pricing on the GPU}
@@ -284,14 +284,14 @@ that it is not competitive for long option durations. At options
 running over 64 years ($16384$ time-steps), the Nikola
 version outperforms it.
 
-The second CUDA implementation is faster in all cases. We have written
-this version from scratch, and uses all available cores to price the
-option. Synchronization happens by returning to the CPU in each
-iteration, as we have to synchronize across all blocks. The reason why
-it outperforms Nikola is perhaps that the Nikola version does not
-reuse memory, and thus have to reallocate and deallocate in each
-iteration \todo[noinline]{this could quickly be changed}, in all other aspects
-this implementation is identical to the Nikola implementation.
+The second CUDA implementation is faster in all cases, except the
+one-year option. We have written this version from scratch, and uses
+all available cores to price the option. Synchronization happens by
+returning to the CPU in each iteration, as we have to synchronize
+across all blocks. The reason why it outperforms Nikola is perhaps
+that the Nikola version does not reuse memory, and thus have to
+reallocate and deallocate in each iteration, in all other aspects this
+implementation is identical to the Nikola implementation.
 
 \subsection{Benchmark 3: Sobol sequence generation on the CPU}
 \begin{figure}
@@ -306,14 +306,15 @@ this implementation is identical to the Nikola implementation.
 
 We now look at the performance of the Sobol sequence generators we
 have implemented, and in this section we will concentrate on the CPU
-versions implemented in R, Repa and \texttt{Data.Vector}.
+versions implemented in R, Repa and \texttt{Data.Vector}. 
 
 The R implementation is from the R-package \texttt{randtoolbox} which
 interfaces with a Fortran implementation that uses the recursive
-Algorithm \ref{alg:sobol-recursive}, Section \ref{sec:sobol}. This
-is also the algorithm we have implemented in \texttt{Data.Vector}, but
-in Repa we have used \todo{Arg! Latest results are from the wrong
-  Repa-version!}
+Algorithm \ref{alg:sobol-recursive}, Section \ref{sec:sobol}. This is
+also the algorithm we have implemented in \texttt{Data.Vector}, but in
+Repa we have used \todo{Arg! Latest results are from the wrong
+  Repa-version! And we don't know the number of cores used in previous
+  executions.}
 
 The results are presented in Figure \ref{fig:sobol-cpu}.
 
@@ -330,7 +331,7 @@ The results are presented in Figure \ref{fig:sobol-cpu}.
 
 For GPUs, we have Sobol sequence generation implementations in
 Accelerate, CUDA in addition to two Nikola variants. The results are
-presented in Figure \ref{fig:sobol-gpu}.
+presented in Figure \ref{fig:sobol-gpu}. 
 
 \subsection{Benchmark 5: Longstaff and Schwartz option pricing on the CPU}
 \begin{figure}
