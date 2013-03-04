@@ -65,7 +65,7 @@ though, as it breaks down if we for instance raise the dimensionality
 of the involved arrays by one.
 
 We argue that it is worth incorporating nesting in one way or another,
-as many algorithms are more naturally expressed in a nested style. 
+as many algorithms are more naturally expressed in a nested style.
 
 We will go into a possible way of mapping this to GPU devices in
 Chapter \todo{ref}. The method is an alternative to full vectorisation
@@ -79,7 +79,7 @@ necessary to synchronize on the CPU to guarentee syncronization across
 all blocks. If we were to map this option pricer over a portfolio of
 different options, we would instead want something different. We would
 want each option to reside in their own block, and use CUDAs
-\texttt{__syncthreads} function to syncronize all threads in the
+\texttt{\_\_syncthreads} function to syncronize all threads in the
 block.
 
 Thus, in algorithms that requires such synchronization, an analysis
@@ -88,7 +88,7 @@ scope of single blocks and when it is necessary to synchronize all
 blocks.
 
 \section{Memory reusage}
-In the binomial pricer we have seen that 
+In the binomial pricer we have seen that
 
 \section{Haskell infrastructure}
 \label{sec:haskell_infrastructure}

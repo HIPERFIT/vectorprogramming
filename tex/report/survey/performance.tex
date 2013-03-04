@@ -14,7 +14,7 @@
 \label{chap:performance}
 We will now look at how the different languages compare in
 performance, by implementations of the cases described in Chapter
-\ref{chap:cases}. 
+\ref{chap:cases}.
 
 
 % We will start by taking a brief look at which
@@ -73,7 +73,7 @@ performance, by implementations of the cases described in Chapter
 % (!) :: (Shape ix, Elt e) => Acc (Array ix e) -> Exp ix -> Exp e
 % \end{verbatim}
 
-% \todo{Nikola??} 
+% \todo{Nikola??}
 
 % \subsection{Limit branch divergence}
 % Accelerate goes a long way to restrict the possible programs you can
@@ -267,7 +267,7 @@ NVIDIA's CUDA SDK, Algorithm \ref{alg:cuda-binom} in Section
 \ref{sec:binomial-model}. This only runs on a single block and we see
 that it is not competitive for long option durations. At options
 running over 64 years ($16384$ time-steps), the Nikola
-version outperforms it. 
+version outperforms it.
 
 The second CUDA implementation is faster in all cases. We have written
 this version from scratch, and uses all available cores to price the
@@ -284,18 +284,18 @@ this implementation is identical to the Nikola implementation.
   \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
 	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph.pdf}\label{fig:sobol-cpu-speedup}}
 	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph.pdf}\label{fig:sobol-cpu-time}}
-\end{adjustbox}  
+\end{adjustbox}
   \caption{Sobol sequence generation (CPU).}
 \label{fig:sobol-cpu}
 \end{figure}
 
 We now look at the performance of the Sobol sequence generators we
 have implemented, and in this section we will concentrate on the CPU
-versions implemented in R, Repa and \texttt{Data.Vector}. 
+versions implemented in R, Repa and \texttt{Data.Vector}.
 
 The R implementation is from the R-package \texttt{randtoolbox} which
 interfaces with a Fortran implementation that uses the recursive
-Algorithm \ref{alg:sobol-recursive}, Section \label{sec:sobol}. This
+Algorithm \ref{alg:sobol-recursive}, Section \ref{sec:sobol}. This
 is also the algorithm we have implemented in \texttt{Data.Vector}, but
 in Repa we have used \todo{Arg! Latest results are from the wrong
   Repa-version!}
