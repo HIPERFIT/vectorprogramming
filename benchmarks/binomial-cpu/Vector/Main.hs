@@ -16,7 +16,6 @@ c *^ v = V.map (c *) v
 pmax v c = V.map (max c) v
 ppmax = V.zipWith max
 
-
 binom :: Int -> Double
 binom expiry = V.head first
   where
@@ -26,13 +25,9 @@ binom expiry = V.head first
     st = s0 *^ (uPow ^*^ dPow)
     finalPut = pmax (strike -^ st) 0
 
--- for (i in n:1) {
---   St<-S0*u.pow[1:i]*d.pow[i:1]
---   put[1:i]<-pmax(strike-St,(qUR*put[2:(i+1)]+qDR*put[1:i]))
--- }
     first = foldl' prevPut finalPut [n, n-1 .. 1]
     prevPut put i = ppmax (strike -^ st) ((qUR *^ V.tail put) ^+^ (qDR *^ V.init put))
-      where st = s0 *^ ((V.take i uPow) ^*^ (V.drop (n+1-i) dPow))
+      where st = s0 *^ (V.take i uPow ^*^ V.drop (n+1-i) dPow)
 
     -- standard econ parameters
     strike = 100 :: Double
