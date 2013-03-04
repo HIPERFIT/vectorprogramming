@@ -1,6 +1,6 @@
 AmrPut: 
 	mkdir -p bin
-	gcc -o bin/AmrPut AmrPut.c -lm
+	gcc -O3 -o bin/AmrPut AmrPut.c -lm
 
 clean:
 	rm AmrPut
