@@ -46,7 +46,7 @@ lsb0_help ell c | (c .&. 1 == 0) = ell
 lsb0 n = lsb0_help 0 n
 
 sobolRec :: Vector Elem -> Index -> Elem -> Elem
-sobolRec dirVs i e = e `xor` (dirVs ! lsb0 i)
+sobolRec dirVs i e = e `xor` (dirVs ! lsb0 (i-1))
 
 -- sobolSequence :: Index -> VB.Vector SpecReal
 -- sobolSequence num_iters = VB.generate num_iters (sobolInd (sobol_dirVs VB.! 0))
