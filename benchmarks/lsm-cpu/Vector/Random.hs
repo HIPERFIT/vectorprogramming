@@ -1,17 +1,19 @@
-module Random (boxMuller, boxMullerVector, normalsBoxMuller) where
+module Random (boxMuller, boxMullerVector, normalsBoxMuller, normals) where
 
-import Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as UB
 import qualified Data.Vector.Unboxed.Mutable as UBM
 
 import Data.Vector.Random.Mersenne
 import System.Random.Mersenne.Pure64
 
+normals :: (UB.Unbox a, Floating a, PureMTRandom a, Ord a, Fractional a, Num a) => PureMT -> Int -> UB.Vector a
+normals = normalsBoxMuller
 
-normals :: (UB.Unbox a, Floating a, PureMTRandom a) => PureMT -> Int -> Vector a
-normals gen count = UB.map morosInversion $ randoms gen count
+normalsMorosInversion :: (UB.Unbox a, Floating a, PureMTRandom a, Ord a, Fractional a, Num a) => PureMT -> Int -> UB.Vector a
+normalsMorosInversion gen count = UB.map morosInversion $ randoms gen count
 
-normalsBoxMuller :: (UB.Unbox a, Floating a, PureMTRandom a) => PureMT -> Int -> Vector a
+
+normalsBoxMuller :: (UB.Unbox a, Floating a, PureMTRandom a) => PureMT -> Int -> UB.Vector a
 normalsBoxMuller gen count = boxMullerVector $ randoms gen count
 
 
@@ -21,7 +23,7 @@ boxMuller u1 u2 = (r * cos t, r * sin t) where r = sqrt (-2 * log u1)
                                                t = 2 * pi * u2
 
 -- Only call with vectors of even length
-boxMullerVector :: UB.Unbox a => Floating a => Vector a -> Vector a
+boxMullerVector :: UB.Unbox a => Floating a => UB.Vector a -> UB.Vector a
 boxMullerVector vec = UB.create $ do
   v <- UBM.new n
   boxMullerVec v 0
@@ -43,16 +45,16 @@ boxMullers :: Floating a => [a] -> [a]
 boxMullers (u1:u2:us) = n1:n2:boxMullers us where (n1,n2) = boxMuller u1 u2
 boxMullers _          = []
 
-boxMullerVector2 :: UB.Unbox a => Floating a => Vector a -> Vector a
+boxMullerVector2 :: UB.Unbox a => Floating a => UB.Vector a -> UB.Vector a
 boxMullerVector2 = UB.fromList . boxMullers . UB.toList
 
--- ^ Convert a (0,1] uniformly distributed number to a normal
--- distributed value using Moro's inversion.
+-- ^ Convert a (0,1] uniformly distributed number to a value from the
+-- standard normal distribution using Moro's inversion.
 --
 -- See "Monte Carlo Methods in Financial Engineering" by Paul
 -- Glasserman, page 67.
 {-# INLINE morosInversion #-}
-morosInversion :: Floating a => a -> a
+morosInversion :: (Floating a, Ord a, UB.Unbox a, Fractional a, Num a) => a -> a
 morosInversion u | 0.50 <= u && u <= 0.92 = beasleySpringerApprox
                  | 0.92  < u && u  < 1.00 = morosApprox
                  | otherwise              = - morosInversion (1-u)
@@ -60,15 +62,16 @@ morosInversion u | 0.50 <= u && u <= 0.92 = beasleySpringerApprox
     beasleySpringerApprox = numerator / (1 + divisor)
       where
         ux = u - 0.5
-        numerator = UB.foldl f (0,ux) as
-        divisor   = UB.foldl f (0,1) bs
+        numerator = fst $ UB.foldl f (0,ux) as
+        divisor   = fst $ UB.foldl f (0,1) bs
         f (s, m) a = (s + a * m, m * ux * ux)
     
-    morosApprox = UB.foldl (\(s,m) c -> (s + c*m, m*logloginvu)) (0,1) cs
+    morosApprox = fst $ UB.foldl (\(s,m) c -> (s + c*m, m*logloginvu)) (0,1) cs
      where
        logloginvu = log(-log(1-u))
 
 -- Contants used for morosInversion
+as, bs, cs :: (Fractional a, UB.Unbox a) => UB.Vector a
 as = UB.fromList [ 2.50662823884, -18.61500062529, 
                   41.39119773534, -25.44106049637]
 
