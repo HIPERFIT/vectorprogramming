@@ -1,52 +1,39 @@
-% \subsection{Ease of use and expressiveness}
-
-% How easy is the language to use? And how expressive is it? Our
-% aim is to find a language that might be suitable for a financial
-% engineer and we thus want a suitably high-level language. It should
-% be near the complexity level of R. We still want the language to
-% expressive enough to cover the domain of financial algorithms.
-
-% Subquestions include
-% \begin{itemize}
-% \item Which programs can we write, and which can't we write?
-%   \begin{itemize}
-%   \item Can we write nested loops?
-%   \item Does it include all of: scans, folds, zip/map, stencils?
-%   \item Do we have access to general recursion?
-%   \end{itemize}
-% \item How good are the error messages?
-% \item How high-level is it on the scale from ``R'' to ``CUDA''?
-% \end{itemize}
-
 \chapter{Language discussions}
-\todo{Introduce the contents of this chapter}
-\todo{Can we find a more precise heading?}
+%\todo{Introduce the contents of this chapter}
+%\todo{Can we find a more precise heading?} - Nope. Not now at least.
+
+In this chapter we discuss and compare the expressiveness of each of the
+languages we are considering.  We here concern ourselves only with this aspect
+of the programming language, and disregard other aspects such as performance.
+In the case that we encounter hindrances to a language's expressivity we give
+as short as possible motivated example that should convey the problem to the reader.
 
 \section{CUDA/C}
 Since CUDA/C is close to a one-to-one mapping of hardware capabilities to language
 primitives, it is possible though not necessarily easy to implement anything
 that the hardware is capable of running.
 
-Every single resource must be explicitly managed -- there is not even
-a function call stack\todo[noinline]{There is in CUDA 5.0 (max 20
-  levels of nesting)}. While this enables the coding of very fast
-algorithms, programs are also more tightly coupled with the parameters
-of the hardware, and to assumptions about input size. So even though a
-CUDA programmer has access to highly optimised linear algebra
-libraries such as CUBLAS \cite{CUBLAS2013}, optimisations such as loop
-fusion must be coded by hand, outruling the use of such
-libraries. This optimisation often has profound effects on performance
-\cite{mainlandhaskell}.
+Every single resource must be explicitly managed -- there is not even a
+function call stack\footnote{There is in CUDA 5.0 (max 20 levels of nesting)}.
+While this enables the coding of very fast algorithms, programs are also more
+tightly coupled with the parameters of the hardware, and to assumptions about
+input size. So even though a CUDA programmer has access to highly optimised
+linear algebra libraries such as CUBLAS \cite{CUBLAS2013}, optimisations such
+as loop fusion must be coded by hand, outruling the use of such libraries. This
+optimisation often has profound effects on performance \cite{mainlandhaskell}.
 
 When implementing the binomial option pricer in CUDA, we relied on example code
 from the CUDA SDK provided by Nvidia \cite{CUDAbinomial}, as we assumed this to
 be a good sample of real-world CUDA code. This example code was in fact
 specialised to price a portfolio of options rather than a single option, and as
 seen in the performance evaluation it scales less well than Nikola.
-\todo{check that this is actually true once the performance section has been written.}
+% \todo{check that this is actually true once the performance section has been
+% written.}
 
 Adapting the CUDA pricer to use just a single option proved to be a substantial
-and error prone effort for us. \todo{because of ?}
+and error prone effort for us, because of the relatively foreign to us
+development environment and the lack of conventional debugging tools, such as a
+single-step debugger or a machine simulator.
 
 \section{R}
 
