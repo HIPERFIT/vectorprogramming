@@ -25,16 +25,16 @@ BENCHROOT=$ROOT/benchmarks
 RESULTROOT=$ROOT/results
 HSENVROOT=$BUILDROOT/hsenvs
 LOGDIR=$BUILDROOT/logs/$LOGTAG
-mkdir -p $LOGDIR/data
+mkdir -p $LOGDIR/
 LOGFILE=$LOGDIR/$BENCHMARK-$INSTANCE
 
 # The main directory of the test program
 PROGRAMDIR=$BENCHROOT/$BENCHMARK/$INSTANCE
 # (note the underscore to avoid variable capture when sourcing!)
 
-SUMMARYDIR=$RESULTROOT/benchmark-summaries/$LOGTAG/$BENCHMARK
-SUMMARYFILE=$SUMMARYDIR/data/$NAME.csv
-REPORTFILE=$SUMMARYDIR/data/$NAME-report.html
+SUMMARYDIR=$RESULTROOT/benchmark-summaries/$LOGTAG/$BENCHMARK/data
+SUMMARYFILE=$SUMMARYDIR/$NAME.csv
+REPORTFILE=$SUMMARYDIR/$NAME-report.html
 
 RUNNER=$SCRIPTROOT/dist_*/build/benchmarkunner/benchmarkunner
 
