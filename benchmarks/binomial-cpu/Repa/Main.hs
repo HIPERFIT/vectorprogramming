@@ -11,7 +11,8 @@ import Data.Array.Repa.Eval
 
 import Prelude hiding (map, zipWith)
 
-import Control.Monad.Identity (runIdentity)
+import Control.Monad (foldM)
+import Data.Vector.Unboxed (Unbox)
 import System.IO
 
 type F = Double
@@ -29,31 +30,27 @@ c *^ v = map (c *) v
 pmax v c = map (max c) v
 ppmax = zipWith max
 
-force :: (Target r2 e,
-          Load r1 sh e) => Int -> Array r1 sh e -> Array r2 sh e
+force :: (Unbox e, Load r1 sh e, Monad m) => Int -> Array r1 sh e -> m (Array U sh e)
 --force arr = arr `deepSeqArray` (suspendedComputeP arr)
 --force = runIdentity . computeP
-force i | i < 1000 = computeS
-        | otherwise = computeP'
+force i | i < 10000 = return . computeS
+        | otherwise = computeP
 
-computeP' arr = arr `deepSeqArray` (suspendedComputeP arr)
+-- computeP' arr = arr `deepSeqArray` (suspendedComputeP arr)
 
-binom :: Int -> F
-binom expiry = repa_head first
+binom :: Monad m => Int -> m F
+binom expiry = do
+    uPow <- force n $ fromFunction (Z :. n+1) (\(Z:.i) -> u^i)
+    dPow <- force n $ fromFunction (Z :. n+1) (\(Z:.i) -> d^(n-i))
+    let st = s0 *^ (uPow ^*^ dPow)
+    finalPut <- force n $ pmax (strike -^ st) 0
+    lastIter <- foldM (prevPut uPow dPow) finalPut [n, n-1 .. 1]
+    return $ repa_head lastIter
   where
-    uPow, dPow :: Array U DIM1 F
-    uPow = force n $ fromFunction (Z :. n+1) (\(Z:.i) -> u^i)
-    dPow = force n $ fromFunction (Z :. n+1) (\(Z:.i) -> d^(n-i))
-
-    st :: Array D DIM1 F
-    st = s0 *^ (uPow ^*^ dPow)
-    finalPut = force n $ pmax (strike -^ st) 0
-
-    first = foldl' prevPut finalPut [n, n-1 .. 1]
-
+    
     {-# INLINE prevPut #-}
-    prevPut :: Array U DIM1 F -> Int -> Array U DIM1 F
-    prevPut put i = force i $ ppmax(strike -^ st) ((qUR *^ repa_tail put) ^+^ (qDR *^ repa_init put))
+    prevPut :: Monad m => Array U DIM1 F -> Array U DIM1 F -> Array U DIM1 F -> Int -> m (Array U DIM1 F)
+    prevPut uPow dPow put i = force i $ ppmax(strike -^ st) ((qUR *^ repa_tail put) ^+^ (qDR *^ repa_init put))
       where st = s0 *^ ((repa_take i uPow) ^*^ (repa_drop (n+1-i) dPow))
 
     -- standard econ parameters
@@ -92,9 +89,10 @@ main = do
   putStrLn "OK" -- no preparation steps
   execute binom
 
-execute :: (Read a, Show b) => (a -> b) -> IO ()
+execute :: (Read a, Show b) => (a -> IO b) -> IO ()
 execute f = forever $ do
   str <- getLine
   when (str == "EXIT") (putStrLn "OK" >> exitSuccess)
-  putStrLn $ "RESULT " Prelude.++ (take 150 . show . f . read $ str)
+  result <- f . read $ str
+  putStrLn $ "RESULT " Prelude.++ (take 150 $ show result)
 
