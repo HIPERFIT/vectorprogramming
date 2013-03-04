@@ -2,14 +2,14 @@ module Sobol where
 
 import System.Environment
 
-import qualified Data.Word as DW
+import Data.Word
 import Data.Bits
 import Data.Vector.Unboxed
 import qualified Data.Vector as VB
 import Prelude hiding (map, zipWith, foldl1, replicate)
 import qualified Prelude as P
 
-type Elem = DW.Word32
+type Elem = Word32
 type SpecReal = Double
 type Index = Int
 
@@ -38,15 +38,15 @@ sobolInd dirVs ix = foldl1 xor $ zipWith (*) dirVs (bitVec $ grayCode ix)
 normalise :: Elem -> SpecReal
 normalise = ((/sobol_divisor ) . fromIntegral)
 
-lsb0_help ell c | (c .&. 1 == 0) = ell
-                | otherwise = lsb0_help (ell+1) (c `shiftR` 1)
-
--- PROBLEM: min{ k | (rep n)[k] == 0}
--- lsb0 :: Index -> Index
-lsb0 n = lsb0_help 0 n
+-- As ffs in C. Finds the least set bit. (ffs(0) = 0, ffs(1) = 1)
+ffs 0 = 0
+ffs x = ffs' 1 x
+  where
+    ffs' count x | x .&. 1 == 1 = count
+                 | otherwise = ffs' (count+1) (x `shiftR` 1)
 
 sobolRec :: Vector Elem -> Index -> Elem -> Elem
-sobolRec dirVs i e = e `xor` (dirVs ! lsb0 (i-1))
+sobolRec dirVs i e = e `xor` (dirVs ! (ffs i - 1))
 
 -- sobolSequence :: Index -> VB.Vector SpecReal
 -- sobolSequence num_iters = VB.generate num_iters (sobolInd (sobol_dirVs VB.! 0))
