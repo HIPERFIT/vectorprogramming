@@ -27,21 +27,17 @@ c *^ v = map (c *) v
 pmax v c = map (max c) v
 ppmax = zipWith max
 
--- force :: (Unbox e, Load r1 sh e, Monad m) => Int -> Array r1 sh e -> m (Array U sh e)
--- force i | i < 10000 = return . computeS
---         | otherwise = computeP
-
 binom :: Int -> F
 binom expiry = repaHead lastIter
   where
     uPow = computeS $ fromFunction (Z :. n+1) (\(Z:.i) -> u^i)
     dPow = computeS $ fromFunction (Z :. n+1) (\(Z:.i) -> d^(n-i))
-    st = computeS $ s0 *^ (uPow ^*^ dPow)
+    st = s0 *^ (uPow ^*^ dPow)
     finalPut = computeS $ pmax (strike -^ st) 0
     lastIter = foldl' (prevPut uPow dPow) finalPut [n, n-1 .. 1]
     
     {-# INLINE prevPut #-}
-    prevPut :: Monad m => Array U DIM1 F -> Array U DIM1 F -> Array U DIM1 F -> Int -> m (Array U DIM1 F)
+    prevPut :: Array U DIM1 F -> Array U DIM1 F -> Array U DIM1 F -> Int -> Array U DIM1 F
     prevPut uPow dPow put i = computeS $ ppmax(strike -^ st) ((qUR *^ repaTail put) ^+^ (qDR *^ repaInit put))
       where st = s0 *^ (repaTake i uPow ^*^ repaDrop (n+1-i) dPow)
 
@@ -81,7 +77,7 @@ main = do
   hSetBuffering stdout LineBuffering
   hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
-  execute portfolioBinom
+  execute (portfolioBinom 2)
 
 execute :: (Read a, Show b) => (a -> IO b) -> IO ()
 execute f = forever $ do
