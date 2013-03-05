@@ -152,15 +152,13 @@ computing the numbers.
 Given a sequence of so called \emph{direction numbers}, $v_1, v_2,
 \ldots$, the computation of Sobol-sequences is pretty straight forward:
 $$x_i = b_1v_1 \oplus b_2v_2 \oplus \ldots \oplus b_lv_l$$
-where $\ldots b_l\ldots b_3b_2b_1$ is the binary representation of $i$
-in $l$-bit representation. This simple algorithm is presented in
-Figure \ref{alg:sobol-inductive}, where \textsc{ToBitVector} converts
-an integer $i$ to its binary representation as an array of
-integers. We do not mentioned the used representation used, which is
-also a factor of the implementation. In our own implementations we
-have used $32$-bit integers. As computing each number is independent
-of the other numbers, we can parallelise by mapping
-\textsc{SobolInductive} over the indices.
+where $b_l\ldots b_3b_2b_1$ is the binary representation of $i$ in
+$l$-bit representation. This simple algorithm is presented in Figure
+\ref{alg:sobol-inductive}, where \textsc{ToBitVector} converts an
+integer $i$ to its binary representation as an array of integers. In
+our own implementations we have used $32$-bit integers. As computing
+each number is independent of the other numbers, we can parallelise by
+mapping \textsc{SobolInductive} over the indices.
 
 The \textsc{SobolInductive} algorithm as well as the remaining
 algorithms produces integer values in the range $[0, 2^l]$ and we thus
@@ -198,27 +196,28 @@ representation of the index instead of the ordinary, whereby a
 recursive definition of Sobol sequences can be made
 \cite{bratley1988algorithm}. It has been shown that
 \begin{equation}
-x_{n+1} = x_n \oplus v_c\label{eq:sobol-recurse}
+x_{i+1} = x_i \oplus v_c\label{eq:sobol-recurse}
 \end{equation}
 
-where $c = \mathit{lsb}(n)$ is the index of the least set bit in
-$n$. A sequential algorithm using this strategy is presented in Figure
+where $c = \mathit{lsb}(i)$ is the index of the least set bit in
+$i$. A sequential algorithm using this strategy is presented in Figure
 \ref{alg:sobol-recursive}.
 
 \begin{algorithm}
   \begin{algorithmic}
     \Function{SobolRecursive}{$v$,$A$,$i$,$n$}
-    \State $A[i] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $i$)
-    \State $j \gets i + 1$
-    \While{$j < i + n$ \textbf{and} $j < length[A]$}
-    \State $c \gets \mathrm{lsb}(j)$
-    \State $A[j] \gets A[j-1] \oplus v_c$
-    \State $j \gets j + 1$
+    \State $x_i \gets$ \textsc{SobolInductive}($v$, \textsc{GrayCode} $i$)
+    \State $end \gets i + n$
+    \While{$i < end$}
+    \State $c \gets \mathrm{lsb}(i)$
+    \State $x_ {i+1} \gets x_i \oplus v_c$
+    \State $i \gets i + 1$
     \EndWhile
     \EndFunction
   \end{algorithmic}
-  \caption{Generate elements $i$ through $i+n-1$ of the Sobol
-    sequence and store results at the appropriate indices of $A$}
+  \caption{Sequentially generate elements $i$ through $i+n-1$ of the
+    Sobol sequence and store results at the appropriate indices of
+    the $x$ vector.}
   \label{alg:sobol-recursive}
 \end{algorithm}
 
@@ -240,11 +239,12 @@ used to fill out the space. The algorithm is shown in Figure
 \begin{algorithm}
   \begin{algorithmic}
     \Function{SobolParRecurse}{$v$,$n$}
+    \State $x \gets$ allocate vector of length $n$
     \State $m \gets$ number of processor cores (e.g. CUDA cores)
-    \State $r \gets \lfloor n/m \rfloor$
+    \State $r \gets \lceil n/m \rceil$
     \ParFor{$p \gets 0$ to $m-1$}
     \State $start \gets p\cdot r$
-    \State \textsc{SobolRecursive}($v$,$A$,$start$,$\min(r,n-start)$)
+    \State \textsc{SobolRecursive}($v$,$x$,$start$,$\min(r,n-start)$)
     \EndParFor
     \EndFunction
   \end{algorithmic}
@@ -272,10 +272,10 @@ chapter):
 
 \begin{equation}
   \label{eq:sobol-skipahead}
-  x_{n+2^p} = x_n \oplus v_p \oplus v_{q(n)}
+  x_{i+2^p} = x_i \oplus v_p \oplus v_{q(i)}
 \end{equation}
 
-where $q(n) = lsb(n \blor (2^p - 1))$. We use $\blor$ for bitwise or.
+where $q(i) = lsb(i \blor (2^p - 1))$. We use $\blor$ for bitwise or.
 
 This fact can be used to develop a parallel algorithm which is memory
 efficient on GPU architectures. Instead of each letting each thread
@@ -309,21 +309,21 @@ and the algorithm needs information about these parameters.
 
 \begin{algorithm}
   \begin{algorithmic}
-    \Function{SobolSkipping}{$v$, $N$, $p$, $b$}
+    \Function{SobolSkipping}{$v$, $n$, $p$, $b$}
 %    \State $p \gets$ number of processor cores (e.g. CUDA cores)
 %    \State $r \gets \lfloor n/m \rfloor$
-    \ParFor{$n \gets 0$ \textbf{to} $2^{p+b}-1$}
-    \State $A[n] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $n$)
-    \While{$n < N$}
-    \State $q \gets lsb(n \blor (2^{p+b} - 1))$
-    \State $A[n+2^{p+b}] \gets A[n] \oplus v_{p+b}~\oplus v_q$
-    \State $n <- n+2^{p+b}$
+    \ParFor{$i \gets 0$ \textbf{to} $2^{p+b}-1$}
+    \State $x_i \gets$ \textsc{SobolInductive}($v$, \textsc{GrayCode} $i$)
+    \While{$i < n$}
+    \State $q \gets lsb(i \blor (2^{p+b} - 1))$
+    \State $x_{i+2^{p+b}} \gets x_i \oplus v_{p+b}~\oplus v_q$
+    \State $i <- i+2^{p+b}$
     \EndWhile
     \EndParFor
     \EndFunction
   \end{algorithmic}
   \caption{Parallel Sobol sequence generator. $v$ is the direction
-    vector, $N$ is the length of the sequence, $2^p$ is the block size
+    vector, $n$ is the length of the sequence, $2^p$ is the block size
     and $2^b$ is the number of blocks.}
   \label{alg:sobol-parallel-2}
 \end{algorithm}
