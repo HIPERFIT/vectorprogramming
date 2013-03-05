@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper,final,oneside,openany]{memoir}
+\documentclass[10pt,a4paper,final,openright]{memoir}
 
 \input{defaultprelude.tex}
 
@@ -21,13 +21,16 @@ University of Copenhagen, DIKU}
 This abstract is intentionally left blank
 \end{abstract}
 
-\newpage
 \renewcommand*{\cftpartname}{Part\space}
 %\renewcommand*{\cftchaptername}{Chapter\space}
 %\renewcommand{\cftchapterindent}{1em}
+\clearpage
+~\thispagestyle{empty}
+\clearpage
 \tableofcontents*
-
+%\openany
 \input{preface.tex}
+%\openright
 \mainmatter
 \counterwithout{table}{chapter}
 \counterwithout{figure}{chapter}
