@@ -51,24 +51,39 @@ It is safe to say that the focus of R lies mainly on expressivity in the domain
 of statistics and data analysis.
 
 R is a very dynamic language, complete with anonymous functions, general
-recursion and an immense library of high level operations. R programs execute
-on the CPU in their entirety. We are not aware of any efforts to exploit CUDA
-or OpenCL from inside of R programs.
+recursion and an immense library of high level operations. Standard R programs
+execute on the CPU in their entirety. There is however an effort to utilise
+GPUs in R to some extent through the \texttt{gputools}
+package\cite{crangputools}.
 
-R has become popular in scientific fields that are not primarily
-centered on computer programming, such as biology and
-statistics\todo{cite}. That in itself is good testament to the practical
-usefulnes of the language.
+R has become popular in scientific fields that are not primarily centered on
+computer programming, such as biology and statistics
+%\todo{cite}.
+That in itself is good testament to the practical usefulnes of the language.
 
-Implementing our case studies in R typically required very little work, and the
-larger example of LSM was able to offload much work to the built-in linear
-algebra routines.
+As a result of the extensive library support for this domain in R, the case
+benchmarks we use in this language were able to offload much work to external
+linear algebra routines.
+
+\section{Data.Vector}
+
+The \texttt{Data.Vector} library augment Haskell with a high performance
+implementation of one-dimensional vectors. Vectors come in various flavours
+that reside in different module namespaces. There are mutable vectors, which
+are only usable from inside the IO or ST monads and must be allocated
+explicitly, and there are immutable vectors, which are usable in pure
+functional code. There is also a version of vectors working on unboxed values.
+
+This vector library interfaces with the GHC compiler to provide the array
+fusion optimisation. Taken together with the use of unboxed vectors one is able
+to remove a lot of overhead associated with array and thunk construction, even
+from ideomatic, functional Haskell code. 
 
 \section{Repa}
 
 Repa is a library that attempts to bring high performance data parallelism to
-Haskell, using the multithreaded runtime. As a result, Repa features all the
-expressive power of Haskell.
+Haskell by means of threaded multicore CPU parallelism. As a result, Repa
+features does not impose more limits on the expressivity of Haskell in general.
 
 The main contribution of Repa towards this end is that arrays in Repa are
 parametrised by their internal representation and shape in the type:
@@ -80,11 +95,16 @@ These arrays support indexing, but each index operation will pay the cost of
 computing the function.
 
 Repa provides two main operations for manifesting arrays to memory:
-\texttt{computeS} and \texttt{computeP} for sequential and parallel
-array manifestation respectively. Repa uses a pool of worker threads,
-called a gang, to carry out computation. Thus, it doesn't support
-nested parallelism and issues a warning if \texttt{computeP} is issued
-below another call to \texttt{computeP}.
+\texttt{computeS} for sequential and \texttt{computeP} for parallel array
+manifestation. While this division of execution modes is simple, it opens the
+potential for expressing nested parallelism. In Repa, nested calls to
+\texttt{computeP} is considered an error. A warning is issued on the terminal,
+and the documentation says to expect reduced performance.
+
+A consequence of this is that a hypothetical library using Repa that require
+the use of array manifestation internally must provide separate parallel and
+sequential versions, as a client program cannot use only the parallel version
+if it intends to parallise on a another level of the program.
 
 \section{Accelerate}
 \label{sec:language-discussion-accelerate}
@@ -121,28 +141,27 @@ the view of Accelerate.
 Consider this small example, derived from a problem we actually encountered
 while exploring the Sobol sequence generation case:
 
-Suppose we have a function \texttt{f} performing a simple vector operation,
-such as multiplying a scalar.
+Suppose we have a function \texttt{f} performing some simple vector operation \texttt{h}:
 
 \begin{verbatim}
-f :: Vector a -> b -> Vector c
-f as b = map (b *) as
+f :: Vector Double -> Double -> Double
+f as b = foldl (\ak a -> h b ak a) 0.0 as
 \end{verbatim}
 
 Now, if we want to do scalar multiplication with a vector of scalars, in
 \texttt{Data.Vector} Haskell, this could reasonably be writen:
 
 \begin{verbatim}
-g :: Vector a -> Vector b -> Vector (Vector c)
+g :: Vector Double -> Vector Double -> Vector Double
 g as bs = map (f as) bs
 \end{verbatim}
 
-If we set out to code this program in Accelerate we would have a similar
-\texttt{f}:
+If we set out to code this program in Accelerate we would have a slightly different
+\texttt{f}, as \texttt{fold} is intrinsically mapped:
 
 \begin{verbatim}
-f :: Acc (Vector a) -> Exp b -> Acc (Vector c)
-f as b = map (b *) as
+f :: Acc (Array (sh :. Ix) Double) -> Exp Double -> Acc (Array sh Double)
+f as b = foldl (\ak a -> h b ak a) 0.0 as
 \end{verbatim}
 
 But since Accelerate does not allow nested arrays, we need to model the
