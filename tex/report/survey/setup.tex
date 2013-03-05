@@ -1,83 +1,156 @@
-\chapter{Survey setup}
-In this and the following chapters we present a small-scale survey of
-a few current vector languages. The survey was originally conducted to
-orient ourselves in the current landscape of parallel functional
-languages and their implementation, but the results might be of
-interest for others. We do not know of other comparisons with a
-similar scope.
+\chapter{Surveying methodology}
 
-\section{Languages}
-We have decided to evaluate and compare the languages Accelerate
-\cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
-Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
-package\footnote{\url{http://hackage.haskell.org/package/vector}}. We
-compare these four libraries to the R programming language and
-NVIDIA's CUDA platform, which are some of the languages currently used
-by financial engineers
-%\todo{cite - that both are used in finance}.
-The R language is used for expressing financial algorithms
-succinctly, while CUDA is used for performance reasons, which is why
-we have chosen to include both of these. Because of time constraints,
-we have had to limit ourselves more than we had originally
-intended. This means we have had to leave out languages such as
-Feldspar\cite{axelsson2010feldspar},
-Obsidian\cite{svensson2011obsidian}, Data Parallel Haskell \cite{keller2010regular},
-Copperhead\cite{Catanzaro2011} and NESL\cite{nesl} from the survey,
-although they might have provided further insights. Also, as noted
-previously, we have not been able to implement the complete Longstaff
-and Schwartz algorithm in neither Nikola or Accelerate
-\todo{make sure this is indeed written down somewhere in the previous chapter}.
+\section{Motivation}
+% Why do we want to do a language comparison?
 
-%\todo{Why only Haskell? Are there any languages we have left out
-%  entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
-%  aren't they here?}
+* Orient ourselves
 
-\section{Programming language surveys}
-To make a fair comparison, we have to be objective in our evaluation
-of the languages. Obtaining objectivity in such a comparison is not
-an easy task, as it is hard to quantitatively measure aspects such as
-the quality of language documentation (longer is not always better,
-and it might be outdated). Also, as mentioned by Lutz Prechelt in his
-2001 paper ``Empirical Comparison of Seven Programming Languages'':
+* No such thing exists with our scope
 
-\begin{quote}
-  ``Any programming language comparison based on actual sample programs
-  is valid only to the degree to which the capabilities of the
-  respective programmers using these languages are similar.''
-\end{quote}
+* Look for common problems, how this problem should be attacked, also
+  in future research at the HIPERFIT research center
 
-We would thus have to either acquire the same level of experience in all the
-languages ourselves or find experts in each of the languages to do the
-implementation. We have not had the resources to conduct a survey
-following the standards set in the paper by Lutz Prechelt. For each
-language under comparison he acquired 10-20 implementations of the
-same algorithm from different programmers (mostly graduate
-students). We could have set up a similar experiment by presenting a
-programming challenge to the ``Haskell-Cafe''-mailing list and/or the
-Haskell section on the Reddit website, and surely we could perhaps get
-a decent benchmark in terms speed and memory usage for different
-implementations by different developers, but we would not get answers
-to qualitative questions about the development process. Another aspect
-is that these languages are all in their early stages, and most people
-we would find on those channels might be amateurs. We do not find
-amateur work a good basis for an objective comparison.
+\section{Subjects}
+% Alternative title: "Scope: Language"
+% Which languages are we comparing? Why this selection?
+* R because of use for prototyping in finance
 
-%\todo{could still be an interesting experiment to make in the future.}
-%\todo{look through the above argument again}
+* CUDA because of of its use for high-performance computing in finance
 
-\section{Comparison Metrics}
-From the survey we want to uncover three main questions about each
-language, and it is from answers to these questions that we will make
-a comparison. The three questions revolve around the health of
-the project, the expressiveness and ease of use of the language, and the
-performance of the language. The following three sections will pose
-these questions and describe how we have decided to test them.
+* Repa and Vector for popular functional approaches to data-parallel languages.
 
-\subsection{Project Health}
+* Nikola and Accelerate because of being
 
-How good is the project health? That is, we want to determine how likely is it
-that development on the language will continue and that it will keep getting
-funding and interest from developers.
+* We would initially also include both Feldspar, Obsidian, Data
+  Parallel Haskell, Copperhead and GPU-NESL, lack of time made it impossible.
+
+* We have later also found Bohrium, Theano and CnC-CUDA (perhaps others?)
+  interesting to include, if we were to extend the survey in the future.
+
+\section{Survey perspective}
+% Alternative title: "Scope: Experiments"
+% What do we want to measure?
+
+* Can simple financial algorithms be written in the tested languages?
+
+* Are the necessary implementation techniques idiomatic, such that
+  others would be able to learn the language once and apply it to other
+  similar problems? And such that the employed algorithm stays clear
+  (``programs must be written for people to read, and only incidentally
+     for machines to execute'', SICP)
+
+* Do we obtain good performance by writing programs in the idiomatic
+  style of the language?
+
+* (Something to motivate spending time on the project health section
+  ??? - perhaps wait until the project health section is rewritten
+  with this)
+
+* How do the languages practically compare in performance? Are
+  Accelerate and Nikola close to optimized CUDA implementations?
+
+% \section{Surveying}
+% meta-survey of how others perform programming language survey's
+
+\section{Methodology}
+\subsection{Experimentation}
+% How do we want to perform the above experiments?
+
+* Outset was to implement both Binomial pricing and Longstaff \&
+Schwartz.
+
+* We new Black-Scholes was possible in both Nikola and Accelerate (and
+thus also all other), as documented in their papers. It is thus a less
+interesting example for the Devil's advocate.
+
+* As Longstaff and Schwartz did not go through in either Accelerate
+and LSM we changed our scope, and put a larger focus on Sobol than the
+actual LSM algorithm.
+
+\subsection{Result evaluation}
+% How do we want to evaluate the experiments?
+
+
+
+% In this and the following chapters we present a small-scale survey of
+% a few current vector languages. The survey was originally conducted to
+% orient ourselves in the current landscape of parallel functional
+% languages and their implementation, but the results might be of
+% interest for others. We do not know of other comparisons with a
+% similar scope.
+
+% \section{Languages}
+% We have decided to evaluate and compare the languages Accelerate
+% \cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
+% Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
+% package\footnote{\url{http://hackage.haskell.org/package/vector}}. We
+% compare these four libraries to the R programming language and
+% NVIDIA's CUDA platform, which are some of the languages currently used
+% by financial engineers
+% %\todo{cite - that both are used in finance}.
+% The R language is used for expressing financial algorithms
+% succinctly, while CUDA is used for performance reasons, which is why
+% we have chosen to include both of these. Because of time constraints,
+% we have had to limit ourselves more than we had originally
+% intended. This means we have had to leave out languages such as
+% Feldspar\cite{axelsson2010feldspar},
+% Obsidian\cite{svensson2011obsidian}, Data Parallel Haskell \cite{keller2010regular},
+% Copperhead\cite{Catanzaro2011} and NESL\cite{nesl} from the survey,
+% although they might have provided further insights. Also, as noted
+% previously, we have not been able to implement the complete Longstaff
+% and Schwartz algorithm in neither Nikola or Accelerate
+% \todo{make sure this is indeed written down somewhere in the previous chapter}.
+
+% %\todo{Why only Haskell? Are there any languages we have left out
+% %  entirely? What about Theano, ArBB, Qilin, Erlang, SaC, CnC-CUDA? Why
+% %  aren't they here?}
+
+% \section{Programming language surveys}
+% To make a fair comparison, we have to be objective in our evaluation
+% of the languages. Obtaining objectivity in such a comparison is not
+% an easy task, as it is hard to quantitatively measure aspects such as
+% the quality of language documentation (longer is not always better,
+% and it might be outdated). Also, as mentioned by Lutz Prechelt in his
+% 2001 paper ``Empirical Comparison of Seven Programming Languages'':
+
+% \begin{quote}
+%   ``Any programming language comparison based on actual sample programs
+%   is valid only to the degree to which the capabilities of the
+%   respective programmers using these languages are similar.''
+% \end{quote}
+
+% We would thus have to either acquire the same level of experience in all the
+% languages ourselves or find experts in each of the languages to do the
+% implementation. We have not had the resources to conduct a survey
+% following the standards set in the paper by Lutz Prechelt. For each
+% language under comparison he acquired 10-20 implementations of the
+% same algorithm from different programmers (mostly graduate
+% students). We could have set up a similar experiment by presenting a
+% programming challenge to the ``Haskell-Cafe''-mailing list and/or the
+% Haskell section on the Reddit website, and surely we could perhaps get
+% a decent benchmark in terms speed and memory usage for different
+% implementations by different developers, but we would not get answers
+% to qualitative questions about the development process. Another aspect
+% is that these languages are all in their early stages, and most people
+% we would find on those channels might be amateurs. We do not find
+% amateur work a good basis for an objective comparison.
+
+% %\todo{could still be an interesting experiment to make in the future.}
+% %\todo{look through the above argument again}
+
+% \section{Comparison Metrics}
+% From the survey we want to uncover three main questions about each
+% language, and it is from answers to these questions that we will make
+% a comparison. The three questions revolve around the health of
+% the project, the expressiveness and ease of use of the language, and the
+% performance of the language. The following three sections will pose
+% these questions and describe how we have decided to test them.
+
+% \subsection{Project Health}
+
+% How good is the project health? That is, we want to determine how likely is it
+% that development on the language will continue and that it will keep getting
+% funding and interest from developers.
 
 %%% Local Variables:
 %%% mode: latex
