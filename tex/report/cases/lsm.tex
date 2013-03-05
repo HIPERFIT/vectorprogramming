@@ -282,19 +282,23 @@ efficient on GPU architectures. Instead of each letting each thread
 fill a separate block of memory using \eqref{eq:sobol-recurse}, we can
 instead let all threads cooperate on filling one block at a time, by
 using the inductive algorithm (Algorithm \ref{alg:sobol-inductive}) to
-fill the first block and use \eqref{eq:sobol-skipahead} to fill each
-successive block. This thus requires a block size of a power of two.
-\todo[noinline]{Can we do something smart if the block is not a power
-  of two? Alternatively the section below should be changed, to say
-  that we don't need information about block size, but need to
-  actively control the block size.}
+fill the first block of memory and use \eqref{eq:sobol-skipahead} to
+fill each successive block. This thus requires a skipsize of a power
+of two.
+
+On a GPU this can done by letting a group of $2^b$ blocks of size
+$2^p$ threads cooperate on filling a block of size $2^{p+b}$ before
+continuing work on the next block.
 
 This also illustrates that optimized GPU algorithms in some cases
-needs information about how kernel scheduling is performed, as we need
-to know the size of a block to determine how much we have to skip
-($p$).\todo{The survey should be aware of this: How much control do we
-  have over kernel execution in Nikola and Accelerate? Is it possible
-  to drop down to a lower layer for such implementations?}
+needs to instruct kernel scheduling should be, as we need to make sure
+that the size of a block and the number of blocks is a power of two,
+and the algorithm needs information about these parameters.
+
+\todo{The survey should be aware of this: How much control do we have
+  over kernel execution in Nikola and Accelerate? Is it possible to
+  drop down to a lower layer (without writing CUDA C) for such
+  implementations?}
 
 
 % \begin{align}
@@ -305,21 +309,22 @@ to know the size of a block to determine how much we have to skip
 
 \begin{algorithm}
   \begin{algorithmic}
-    \Function{SobolSkipping}{$v$, $N$, $p$}
+    \Function{SobolSkipping}{$v$, $N$, $p$, $b$}
 %    \State $p \gets$ number of processor cores (e.g. CUDA cores)
 %    \State $r \gets \lfloor n/m \rfloor$
-    \ParFor{$n \gets 0$ \textbf{to} $p-1$}
+    \ParFor{$n \gets 0$ \textbf{to} $2^{p+b}-1$}
     \State $A[n] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $n$)
     \While{$n < N$}
-    \State $q \gets lsb(n \blor (2^p - 1))$
-    \State $A[n+2^p] \gets A[n] \oplus v_p~\oplus v_q$
-    \State $n <- n+2^p$
+    \State $q \gets lsb(n \blor (2^{p+b} - 1))$
+    \State $A[n+2^{p+b}] \gets A[n] \oplus v_{p+b}~\oplus v_q$
+    \State $n <- n+2^{p+b}$
     \EndWhile
     \EndParFor
     \EndFunction
   \end{algorithmic}
   \caption{Parallel Sobol sequence generator. $v$ is the direction
-    vector, $N$ is the length of the sequence and $2^p$ is the block.}
+    vector, $N$ is the length of the sequence, $2^p$ is the block size
+    and $2^b$ is the number of blocks.}
   \label{alg:sobol-parallel-2}
 \end{algorithm}
 
