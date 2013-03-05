@@ -1,15 +1,27 @@
-\chapter{Language discussions}
+\chapter{Language expressiveness}
 %\todo{Introduce the contents of this chapter}
 %\todo{Can we find a more precise heading?} - Nope. Not now at least.
 
 In this chapter we discuss and compare the expressiveness of each of the
-languages we are considering.  We here concern ourselves only with this aspect
-of the programming language, and disregard other aspects such as performance.
-In the case that we encounter hindrances to a language's expressivity we give
-as short as possible motivated example that should convey the problem to the reader.
+languages we are considering.  The property of programming language
+expressiveness is traditionally associated only with how beautiful and simple
+encodings a set of algorithms lend themselves to. But since we are dealing with
+a domain of algorithms where high computer performance is prerequisite for
+acceptability, the need for control over the management of resources invariably
+enters the picture -- at least with current programming technology. In this
+survey therefore, resource management features of a programming language may
+contribute to the lanugages expressivity.
+
+We evaluate expressiveness of a lanugage by discussing its general features,
+and by discussing noteworthy issues we have encountered while implementing our
+benchmarks in the evaluated languages.
+
+Although we already know that our eventual choice of language to extend stands
+only between Nikola and Accelerate, here we also include CUDA, Repa,
+Data.Vector and R to give a better perspective.
 
 \section{CUDA/C}
-Since CUDA/C is close to a one-to-one mapping of hardware capabilities to language
+CUDA/C is close to a one-to-one mapping of hardware capabilities to language
 primitives, it is possible though not necessarily easy to implement anything
 that the hardware is capable of running.
 
