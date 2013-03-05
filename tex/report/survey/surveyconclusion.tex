@@ -25,7 +25,7 @@ made us worried, as we would have to make major modifications to break
 this barrier down. Another plus in the favour of Nikola, is that it
 allows interaction with other CUDA libraries, e.g. CUBLAS, without
 having to get the data roundtrip to the CPU and back again (see
-Section \todo{ref}).
+Section \ref{sec:language-discussion-nikola}).
 
 Another choice is which languages would be suitable for application
 development. Currently \texttt{Data.Vector} with more than 150 reverse
@@ -43,35 +43,37 @@ getting it to run on our machine, we would probably have had been more
 keen at recommending it.
 
 \section{Unfold}
-As demonstrated in Section \todo{ref}, several of our cases requires a
-way of building up an array from repeated application of a
-non-associative operator. Neither Accelerate nor Nikola provides
-built-in functionality that can be combined to do perform such
+
+As demonstrated in sections \ref{subsec:path-generation},\ref{sec:sobol},
+several of our cases requires a way of building up an array from repeated
+application of a non-associative operator. Neither Accelerate nor Nikola
+provides built-in functionality that can be combined to do perform such
 operation. They can only construct new GPU arrays where there are no
 dependencies between elements (through \texttt{generate} and
 \texttt{fromFunction} respectively) or from existing CPU-arrays.
 
-Chapter \todo{ref} will present our work on an implementation of such
+Chapter \ref{chap:unfold} will present our work on an implementation of such
 an idea in Nikola.
 
 \section{Nesting}
-We have in Section \todo{ref} shown how in certain cases, both
-Accelerate and Nikola breaks down in cumbersome notation, where
-algorithms could be written clearly if nested layers of array
-operations were allowed. We can in certain cases get out of this by
-relying on fusion of a surrounding \texttt{generate} function that
-indexes into the nested call. This will not work in the general case
-though, as it breaks down if we for instance raise the dimensionality
-of the involved arrays by one.
+
+We have in sections \ref{sec:language-discussion-accelerate}
+and \ref{sec:language-discussion-nikola} shown how in certain cases, both
+Accelerate and Nikola breaks down in cumbersome notation, where algorithms
+could be written clearly if nested layers of array operations were allowed. We
+can in certain cases get out of this by relying on fusion of a surrounding
+\texttt{generate} function that indexes into the nested call. This will not
+work in the general case though, as it breaks down if we for instance raise the
+dimensionality of the involved arrays by one.
 
 We argue that it is worth incorporating nesting in one way or another,
 as many algorithms are more naturally expressed in a nested style.
 
-We will go into a possible way of mapping this to GPU devices in
-Chapter \todo{ref}. The method is an alternative to full vectorisation
-and allows you to direct how parallelism is added to the
-program. Parallelism can be incorporated at several different layers
-of programs, and we thus provide a way of selecting between them.
+We will go into a possible way of mapping this to GPU devices in Chapter
+\ref{chap:directing-parallelism}. The method is an alternative to full
+vectorisation and allows you to direct how parallelism is added to the program.
+Parallelism can be incorporated at several different layers of programs, and we
+thus provide a way of selecting between them.
 
 \section{Level of synchronization}
 In the implementation of the binomial option pricer we found it

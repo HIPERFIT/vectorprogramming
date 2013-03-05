@@ -9,7 +9,7 @@ expiration to initiation time.
 
 % In a historical context, Monte Carlo methods is relatively new
 % approach to option pricing. Lattice methods where introduced in 1973,
-% but only since 
+% but only since
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -47,11 +47,12 @@ least squares regression, these will be treated in more detail in the
 subsequent sections.
 
 \subsection{Path generation}
+\label{subsec:path-generation}
 A standard approach to constructing the corpus of price paths is by
 sampling paths of geometric Brownian motion.
 
 This can be done by iterative application of the following equation:
-$$S_{t+\Delta t}=S_te^{\Delta t(r-\sigma^2/2) + \sigma v\sqrt{\Delta t}}$$ where 
+$$S_{t+\Delta t}=S_te^{\Delta t(r-\sigma^2/2) + \sigma v\sqrt{\Delta t}}$$ where
 $v$ is a real number drawn from $\mathcal{N}(0,1)$, $\Delta t$ is the
 size of the time period, and $\sigma$ is the volatility. Volatility is
 the standard deviation of the option value over time and corresponds
@@ -111,9 +112,9 @@ shows a graph of a low-discrepancy sequence compared with sequence of
 uniformly generated numbers from a PRNG.
 
 \begin{figure}
-	\centering
-	\subbottom[]{\includegraphics[width=0.45\textwidth]{graphics/2D-sobol-sequence.pdf}\hspace{0.55cm}\label{fig:2d-sobol-sequence}}
-	\subbottom[]{\includegraphics[width=0.45\textwidth]{graphics/2D-mersenne-sequence.pdf}\hspace{0.55cm}}
+  \centering
+  \subbottom[]{\includegraphics[width=0.45\textwidth]{graphics/2D-sobol-sequence.pdf}\hspace{0.55cm}\label{fig:2d-sobol-sequence}}
+  \subbottom[]{\includegraphics[width=0.45\textwidth]{graphics/2D-mersenne-sequence.pdf}\hspace{0.55cm}}
 
   \caption{\textbf{(a)} A 2D sequence of low-discrepancy numbers
     generated using the Sobol generator \textbf{(b)} A uniform 2D

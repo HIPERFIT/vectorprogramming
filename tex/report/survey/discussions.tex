@@ -79,6 +79,7 @@ nested parallelism and issues a warning if \texttt{computeP} is issued
 below another call to \texttt{computeP}.
 
 \section{Accelerate}
+\label{sec:language-discussion-accelerate}
 Accelerate provides a variety of array operations: Both scans,
 segmented scans, folds, permutations, maps and zips, implemented as
 parallel algorithmic skeletons. Arrays may be multidimensional,
@@ -187,6 +188,7 @@ There is no way to define recursive functions in Accelerate. Trying to do so
 will result in compilation not terminating.
 
 \section{Nikola}
+\label{sec:language-discussion-nikola}
 
 Nikola does not provide the variety of array operations that Accelerate does: Only
 a few mapping operations are provided, and an iteration construct.  Nikola has
@@ -200,7 +202,6 @@ typeclasses.  While this architecture allows for specialisation of operations
 to different array representations, actually using the operations results in quite
 elaborate types. These are often too compilcated for type inference to resolve
 and require a human programmer to supply a type signature.
-
 
 Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
 leveraging the \texttt{RebindableSyntax} GHC-extension. Also, in our programming
@@ -231,8 +232,11 @@ elaborate type errors that were hard for us to decode. Luckily our
 ability to decode compilation-related type errors improved over time,
 but they are nevertheless still unpleasant.
 
-\todo{Integration with other CUDA libraries by exporting CUDA device
-  points as \texttt{UnboxedForeign} Arrays}
+Nikola also integrates with the array representation facility of Repa, by
+implementing a representation for arrays that reside in the CUDA device's
+memory. By using this array representation it is possible to have both Nikola
+programs and other foreign functions manipulate the same physical memory withot
+requiring any memory transfers of data to take place between host and device.
 
 %%% Local Variables:
 %%% mode: latex
