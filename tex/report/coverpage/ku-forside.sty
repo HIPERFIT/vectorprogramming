@@ -1,0 +1,135 @@
+% KU-forside pakke. Forsider til opgaver skrevet på Københavns Universitet
+% Skrevet af Christian Aastrup. Designet af forsiderne følger det på http://www.ku.dk/designmanual
+%
+\ProvidesPackage{ku-forside}[2007/07/07 v1.0 Frontpages with University of Cph. logos]
+%
+%Definerer Standard SPROG/AFDELING/FARVE
+\def\SPROG{da}\def\FARVE{farve}\def\AFDELING{nat}\def\FORSIDE{titelside}
+%
+% Laver SPROG-mulighederne til 'if's
+\newif\if@en \newif\if@da
+%
+% Laver AFDELINGS-mulighederne til 'if's
+\newif\if@ku   \newif\if@farma \newif\if@hum
+\newif\if@jur  \newif\if@life  \newif\if@nat
+\newif\if@samf \newif\if@sund  \newif\if@teo
+%
+% Laver FARVE-mulighederne til 'if's
+\newif\if@farve \newif\if@sh
+%
+% Laver FORSIDE-mulighederne til 'if's
+\newif\if@titelside \newif\if@stor \newif\if@lille
+%
+\newif\if@babel \DeclareOption{babel}{\@babeltrue}
+%
+% Erklærer sprogene som 'options' i pakke-kaldet
+\DeclareOption{en}{\@entrue} \DeclareOption{da}{\@datrue}
+%
+% Erklærer afdelingerne som 'options' i pakke-kaldet
+\DeclareOption{ku}{\@kutrue}     \DeclareOption{farma}{\@farmatrue} \DeclareOption{hum}{\@humtrue}
+\DeclareOption{jur}{\@jurtrue}   \DeclareOption{life}{\@lifetrue}   \DeclareOption{nat}{\@nattrue}
+\DeclareOption{samf}{\@samftrue} \DeclareOption{sund}{\@sundtrue}   \DeclareOption{teo}{\@teotrue}
+%
+% Erklærer farverne som 'options' i pakke-kaldet
+\DeclareOption{farve}{\@farvetrue} \DeclareOption{sh}{\@shtrue}
+%
+% Erklærer forsidemulighederne som 'options' i pakke-kaldet
+\DeclareOption{lille}{\@lilletrue} \DeclareOption{stor}{\@stortrue}
+\DeclareOption{titelside}{\@titelsidetrue}
+%
+\ProcessOptions\relax
+%
+% Definerer hvad der skal ske når sprogene er TRUE
+\if@en \def\SPROG{en} \fi \if@da \def\SPROG{da} \fi
+%
+% Definerer hvad der skal ske når afdelingerne er TRUE
+\if@ku   \def\AFDELING{ku}   \fi \if@farma \def\AFDELING{farma} \fi \if@hum \def\AFDELING{hum} \fi
+\if@jur  \def\AFDELING{jur}  \fi \if@life  \def\AFDELING{life}  \fi \if@nat \def\AFDELING{nat} \fi
+\if@samf \def\AFDELING{samf} \fi \if@sund  \def\AFDELING{sund}  \fi \if@teo \def\AFDELING{teo} \fi
+%
+% Definerer hvad der skal ske når farverne er TRUE
+\if@sh \def\FARVE{sh} \fi \if@farve \def\FARVE{farve} \fi
+%
+% Definerer hvad der skal ske når de forskellige forsidemuligheder er TRUE
+\if@stor \def\FORSIDE{stor} \fi \if@lille \def\FORSIDE{lille} \fi
+\if@titelside \def\FORSIDE{titelside} \fi
+%
+\def\OPGAVE{$\backslash$opgave$\{\ldots\}$}
+\def\FORFATTER{$\backslash$forfatter$\{\ldots\}$ el. $\backslash$author$\{\ldots\}$ }
+\def\FORFATTERET{$\backslash$forfatter$\{\ldots\}$ el. $\backslash$author$\{\ldots\}$ }
+\def\FORFATTERTO{$\backslash$forfatter$\{\ldots\}$ el. $\backslash$author$\{\ldots\}$ }
+\def\TITEL{$\backslash$titel$\{\ldots\}$ el. $\backslash$title$\{\ldots\}$}
+\def\UNDERTITEL{$\backslash$undertitel$\{\ldots\}$}
+\def\VEJLEDER{$\backslash$vejleder$\{\ldots\}$}
+\def\AFLEVERINGSDATO{$\backslash$dato$\{\ldots\}$ el. $\backslash$date$\{\ldots\}$}
+%
+\renewcommand{\author}[1]{\def\FORFATTER{#1}}
+\renewcommand{\title}[1]{\def\TITEL{#1}}
+\renewcommand{\date}[1]{\def\AFLEVERINGSDATO{#1}}
+%
+\newcommand{\opgave}[1]{\def\OPGAVE{#1}}
+\newcommand{\forfatter}[1]{\def\FORFATTER{#1}}
+\newcommand{\forfatterET}[1]{\def\FORFATTERET{#1}}
+\newcommand{\forfatterTO}[1]{\def\FORFATTERTO{#1}}
+\newcommand{\titel}[1]{\def\TITEL{#1}}
+\newcommand{\undertitel}[1]{\def\UNDERTITEL{#1}}
+\newcommand{\vejleder}[1]{\def\VEJLEDER{#1}}
+\newcommand{\dato}[1]{\def\AFLEVERINGSDATO{#1}}
+%
+% Pakker nødvendige for at sætte forsiden op %
+%
+%\RequirePackage[OT2,OT4]{fontenc}
+\RequirePackage{eso-pic,graphicx,fix-cm,ae,aecompl,ifthen}         %
+%\RequirePackage[usenames]{color} %
+%% BABEL-option: Undersøger det erklærede sprog og sætter pakken Babel derefter %%
+\if@babel
+\ifthenelse{\equal{\SPROG}{en}}{\RequirePackage[danish,english]{babel}}{} % Engelsk ordeling, overskrifts- og kapitel struktur   %
+\ifthenelse{\equal{\SPROG}{da}}{\RequirePackage[english,danish]{babel}}{} % Dansk ordeling, overskrifts- og kapitel struktur     %
+% Bemærk at begge sprog indlæses. Rækkefølgen er vigtig, idet det er det sidste sprog som dokumnetet generelt sættes i.          %
+% Det andet sprogs orddeling mm. kan man få fat i ved at skrive \selectlanguage{sprog} i brødteksten                             %
+\fi
+%
+%% FORSIDEN DEFINERES:  %
+%
+% Mulighed: titelside
+\ifthenelse{\equal{\FORSIDE}{titelside}}{
+\def\tyk{\fontfamily{ppl}\fontseries{bx}\selectfont} %Bold extended                                                              %
+\def\tynd{\fontfamily{ppl}\fontseries{sb}\selectfont} % Semi-bold                                                                %
+\def\maketitle{\thispagestyle{empty}                                                                                             %
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{\AFDELING-\FARVE}}}%                                     %
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{\AFDELING-\FARVE}}}%                                %
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{\AFDELING-\SPROG}}}%                                                           %
+\AddToShipoutPicture*{\put(50,583.5){\fontsize{20 pt}{22 pt} \tyk \OPGAVE  }} %                                                  %
+\AddToShipoutPicture*{\put(50,555.3){\fontsize{14 pt}{16 pt} \tynd \FORFATTER  }} %                                              %
+\AddToShipoutPicture*{\put(50,555.3){\fontsize{14 pt}{16 pt} \tynd \FORFATTERET  }} %                                              %
+\AddToShipoutPicture*{\put(50,535.3){\fontsize{14 pt}{16 pt} \tynd \FORFATTERTO  }} %                                              %
+\AddToShipoutPicture*{\put(50,485){\fontsize{22 pt}{24 pt} \tynd \TITEL  }} %                                                    %
+\AddToShipoutPicture*{\put(50,480.5){\fontsize{14 pt}{16 pt} \tynd \UNDERTITEL  }} %                                             %
+\AddToShipoutPicture*{\put(50,92){\fontsize{11 pt}{12 pt} \tynd \VEJLEDER  }} %                                                  %
+\AddToShipoutPicture*{\put(50,66.7){\fontsize{11 pt}{12 pt} \tynd \AFLEVERINGSDATO   }} %                                        %
+\phantom{Usynlig, men nødvendig}                                                                                                 %
+\newpage \noindent}}{}                                                                                                              %
+% Mulighed: lille
+\ifthenelse{\equal{\FORSIDE}{lille}}{
+\def\maketitle{\thispagestyle{plain}
+\AddToShipoutPicture*{\put(035,613){\includegraphics*[viewport=0 600 700 1600, scale=0.88]{\AFDELING-\FARVE}}}% Billedet bruges
+\AddToShipoutPicture*{\put(-010,613){\includegraphics*[viewport=0 600 420 1600, scale=0.88]{\AFDELING-\FARVE}}}% tre gange for at
+\AddToShipoutPicture*{\put(400,613){\includegraphics*[viewport=0 600 420 1600, scale=0.88]{\AFDELING-\FARVE}}}% få stregen lang.
+\AddToShipoutPicture*{\put(79,755){\large{\textbf{\TITEL}}}}%
+\AddToShipoutPicture*{\put(79,733){\UNDERTITEL}}%
+\AddToShipoutPicture*{\put(79,715){\tiny{\emph{\FORFATTER}}}}%
+\AddToShipoutPicture*{\put(79,702){\tiny{\AFLEVERINGSDATO}}}%
+\phantom{Usynlig, men nødvendig}
+\vspace*{3.2cm}                                                                                                 %
+\noindent}}{}                                                                                                              %
+% Mulighed: stor
+\ifthenelse{\equal{\FORSIDE}{stor}}{
+\def\maketitle{\thispagestyle{plain}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=156 649 700 1600, scale=1.4]{\AFDELING-\FARVE}}}   %             %
+\AddToShipoutPicture*{\put(79,755){\LARGE{\textbf{\TITEL}}}}%
+\AddToShipoutPicture*{\put(79,723){\Large{\UNDERTITEL}}}%
+\AddToShipoutPicture*{\put(79,695){\normalsize{\emph{\FORFATTER}}}}%
+\AddToShipoutPicture*{\put(79,670){\footnotesize{\AFLEVERINGSDATO}}}%
+\phantom{Usynlig, men nødvendig}
+\vspace*{5cm}                                                                                                 %
+\noindent}}{}

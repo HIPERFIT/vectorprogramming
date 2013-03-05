@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper,final,openright]{memoir}
+\documentclass[10pt,a4paper,final,openright,twoside]{memoir}
 
 \input{defaultprelude.tex}
 
@@ -13,19 +13,37 @@ University of Copenhagen, DIKU}
 
 \bibliography{../bibliography/bibliography}
 
+% Write "Part II" etc. in TOC instead of just "II"
+\renewcommand*{\cftpartname}{Part\space}
+
 \begin{document}
 \frontmatter
-\maketitle
-\thispagestyle{empty}
-\begin{abstract}
-This abstract is intentionally left blank
-\end{abstract}
 
-\renewcommand*{\cftpartname}{Part\space}
-%\renewcommand*{\cftchaptername}{Chapter\space}
-%\renewcommand{\cftchapterindent}{1em}
-\clearpage
-~\thispagestyle{empty}
+% % Center title page
+% \begin{titlingpage}
+%   \calccentering{\unitlength} % forudsat \unitlength ikke bruges til andet
+%   \begin{adjustwidth*}{\unitlength}{-\unitlength}
+%   \begin{adjustwidth}{-1cm}{-1cm}
+
+%   \maketitle
+
+%   \begin{abstract}
+%     This abstract is intentionally left blank
+%   \end{abstract}
+
+%   \end{adjustwidth}
+%   \end{adjustwidth*}
+% \end{titlingpage}
+
+\includepdf{coverpage/coverpage}
+% ~  ~\thispagestyle{empty}
+% \clearpage
+  \begin{abstract}
+    This abstract is intentionally left blank
+  \end{abstract}
+
+% \clearpage
+%  ~\thispagestyle{empty}
 \clearpage
 \tableofcontents*
 %\openany
@@ -60,6 +78,7 @@ This abstract is intentionally left blank
 \defbibheading{bibliography}{\chapter*{Bibliography}}
 \printbibliography
 
+\backmatter
 \appendix
 \input{appendix.tex}
 
