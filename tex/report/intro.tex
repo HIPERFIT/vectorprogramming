@@ -98,16 +98,20 @@ have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
 current approaches.
 
+\todo{Add note on mapping nested data-parallelism to flat
+  architectures is still an open problem, as vectorisation is not the
+  holy grail}
+
 \section{Contributions}
 
 We have conducted a small survey comparing a few Haskell libraries and
 languages with respect to their performance, expressivity and the apparent
 health of their supporting projects infrastructure.
 
-Taking an outset in two common financial algorithms for option pricing and a
-quasi-random number generator, we have found that the lack of nesting in a
-language such as Accelerate is too limiting to implement concise and performing
-solutions.
+Taking an outset in two common financial algorithms for option pricing
+and a quasi-random number generator, we have found that the lack of
+nesting in a language such as Accelerate and Nikola is too limiting to
+implement concise and performing solutions.
 
 As this lack of nesting is due to excessive and concious limitation, we suggest
 taking a step back and give the programmer more control. Of our surveyed
@@ -145,8 +149,8 @@ by mapping nested data parallelism to flat parallel hardware.
 %* An alternative approach to specifying
 
 All the source code associated with the practical execution of the survey, as well as this report is hosted at
-\href{https://github.com/HIPERFIT/vectorprogramming/}.
-The extensions developed for Nikola are to be found at \href{https://github.com/HIPERFIT/nikola/}.
+\url{https://github.com/HIPERFIT/vectorprogramming/}.
+The extensions developed for Nikola are to be found at \url{https://github.com/HIPERFIT/nikola/}.
 
 \section{Report outline}
 The remainder of the report is structured as follows. This
@@ -158,6 +162,8 @@ divided into two more or less independent parts. The first part
 contains a survey of currently used data-parallel languages. The
 second part describes our own efforts into extending the GPU language
 Nikola with functionality we found lacking when performing our survey.
+
+\todo{Use refs to chapters and parts in outline}
 
 %%% Local Variables:
 %%% mode: latex
