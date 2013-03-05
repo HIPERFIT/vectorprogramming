@@ -5,7 +5,7 @@
 
 * Orient ourselves
 
-* No such thing exists with our scope
+* No such survey exists with a scope similar our scope.
 
 * Look for common problems, how this problem should be attacked, also
   in future research at the HIPERFIT research center
@@ -13,25 +13,26 @@
 \section{Subjects}
 % Alternative title: "Scope: Language"
 % Which languages are we comparing? Why this selection?
+
 * R because of use for prototyping in finance
 
 * CUDA because of of its use for high-performance computing in finance
 
 * Repa and Vector for popular functional approaches to data-parallel languages.
 
-* Nikola and Accelerate because of being
+* Nikola and Accelerate because of being new approaches targeting GPU
 
 * We would initially also include both Feldspar, Obsidian, Data
-  Parallel Haskell, Copperhead and GPU-NESL, lack of time made it impossible.
+  Parallel Haskell, Copperhead and GPU-NESL, lack of time (and project stability) made it impossible.
 
 * We have later also found Bohrium, Theano and CnC-CUDA (perhaps others?)
   interesting to include, if we were to extend the survey in the future.
 
-\section{Survey perspective}
+\section{Survey perspective} %PLC: 'perspective' is a bit too vague in my oppinion.
 % Alternative title: "Scope: Experiments"
 % What do we want to measure?
 
-* Can simple financial algorithms be written in the tested languages?
+* Can our sample financial algorithms be written in the tested languages?
 
 * Are the necessary implementation techniques idiomatic, such that
   others would be able to learn the language once and apply it to other
@@ -59,7 +60,7 @@
 * Outset was to implement both Binomial pricing and Longstaff \&
 Schwartz.
 
-* We new Black-Scholes was possible in both Nikola and Accelerate (and
+* We knew Black-Scholes was possible in both Nikola and Accelerate (and
 thus also all other), as documented in their papers. It is thus a less
 interesting example for the Devil's advocate.
 
