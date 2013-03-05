@@ -1,54 +1,133 @@
-\chapter{Surveying methodology}
+\chapter{Survey scope and methodology}
 
-\section{Motivation}
+%\section{Motivation}
 % Why do we want to do a language comparison?
+%
+% * Orient ourselves
+%
+% * No such survey exists with a scope similar our scope.
+%
+% * Look for common problems, how this problem should be attacked, also
+%   in future research at the HIPERFIT research center
 
-* Orient ourselves
+In this and the following chapters we present a small-scale survey of
+a few current vector languages. The survey was originally conducted to
+orient ourselves in the current landscape of data-parallel functional
+languages and their implementation, but the results might be of
+interest for others. We do not know of other comparisons with a
+similar scope.
 
-* No such survey exists with a scope similar our scope.
+We will also identify some key issues used in some of the current
+languages, which will be valuable knowledge for future research in the
+area.
 
-* Look for common problems, how this problem should be attacked, also
-  in future research at the HIPERFIT research center
+In the rest of this chapter we define the scope of our survey and go
+through the methodology we have followed.
 
-\section{Subjects}
+\section{Scope}
+\subsection{Subject languages}
 % Alternative title: "Scope: Language"
 % Which languages are we comparing? Why this selection?
+%
+% * R because of use for prototyping in finance
+%
+% * CUDA because of of its use for high-performance computing in finance
+%
+% * Repa and Vector for popular functional approaches to data-parallel languages.
+%
+% * Nikola and Accelerate because of being new approaches targeting GPU
+%
+% * We would initially also include both Feldspar, Obsidian, Data
+%   Parallel Haskell, Copperhead and GPU-NESL, lack of time (and project stability) made it impossible.
+%
+% * We have later also found Bohrium, Theano and CnC-CUDA (perhaps others?)
+%   interesting to include, if we were to extend the survey in the future.
+\todo{insert references to languages mentioned}
+As this is a half-year project, we had to limit our survey
+considerably in size, and thus only included a few programming
+languages. We decided to evaluate and compare R, CUDA, Accelerate
+\cite{chakravarty2011accelerating}, Repa \cite{keller2010regular},
+Nikola \cite{mainland2010nikola} and the \texttt{Data.Vector}
+library\footnote{\url{http://hackage.haskell.org/package/vector}}. 
 
-* R because of use for prototyping in finance
+Nikola and Accelerate was included in the survey as they are
+functional approaches to GPU computation. We had initially also wished
+to include Obsidian, Copperhead and GPU-NESL in this category, but
+time constraints and installation problems made us leave them out.
 
-* CUDA because of of its use for high-performance computing in finance
+The remaining languages included in the survey are not meant as being
+subjects for the study, but to serve as reference models for the
+comparison.
 
-* Repa and Vector for popular functional approaches to data-parallel languages.
+We have included the R programming language and NVIDIA's CUDA platform
+because of their use in the financial industry and research
+communities. Financial engineers and mathematicians use R for quick
+prototyping and expressing algorithms succinctly and CUDA when
+high-performance computing is required. Repa and \texttt{Data.Vector}
+are two Haskell libraries, that provides array operations for
+CPU-execution. They are included, because of their popularity as
+functional approaches to data-parallel programming languages. R, Repa
+and \texttt{Data.Vector} are thus mostly included to evaluate how easy
+the Nikola and Accelerate languages are to \texttt{use}. Whereas CUDA
+is included as a measuring stick and goal for their performance in
+execution speed.
 
-* Nikola and Accelerate because of being new approaches targeting GPU
+Since we initially started, we have discovered several other languages
+which would have been interesting to look closer at. These include
+Bohrium, Theano, CnC-CUDA and R+GPU (library of common R functions
+running on CUDA).
 
-* We would initially also include both Feldspar, Obsidian, Data
-  Parallel Haskell, Copperhead and GPU-NESL, lack of time (and project stability) made it impossible.
-
-* We have later also found Bohrium, Theano and CnC-CUDA (perhaps others?)
-  interesting to include, if we were to extend the survey in the future.
-
-\section{Survey perspective} %PLC: 'perspective' is a bit too vague in my oppinion.
+\subsection{Experiments} %PLC: 'perspective' is a bit too vague in my oppinion.
 % Alternative title: "Scope: Experiments"
 % What do we want to measure?
+%
+% * Can our sample financial algorithms be written in the tested languages?
+%
+% * Are the necessary implementation techniques idiomatic, such that
+%   others would be able to learn the language once and apply it to other
+%   similar problems? And such that the employed algorithm stays clear
+%   (``programs must be written for people to read, and only incidentally
+%      for machines to execute'', SICP)
 
-* Can our sample financial algorithms be written in the tested languages?
+% * Do we obtain good performance by writing programs in the idiomatic
+%   style of the language?
 
-* Are the necessary implementation techniques idiomatic, such that
-  others would be able to learn the language once and apply it to other
-  similar problems? And such that the employed algorithm stays clear
-  (``programs must be written for people to read, and only incidentally
-     for machines to execute'', SICP)
+% * (Something to motivate spending time on the project health section
+%   ??? - perhaps wait until the project health section is rewritten
+%   with this)
 
-* Do we obtain good performance by writing programs in the idiomatic
-  style of the language?
+% * How do the languages practically compare in performance? Are
+%   Accelerate and Nikola close to optimized CUDA implementations?
 
-* (Something to motivate spending time on the project health section
-  ??? - perhaps wait until the project health section is rewritten
-  with this)
+There are several aspects of the languages that we want to examine,
+falling into the three categories:
 
-* How do the languages practically compare in performance? Are
-  Accelerate and Nikola close to optimized CUDA implementations?
+\begin{description}
+\item[Expressiveness] To which extent are the languages easy to work
+  with, express ones thought, mathematical expressions and established
+  algorithms. 
+
+  Specifically, we want to test whether the selected languages allows
+  us to write the financial algorithms presented in Section
+  \ref{chap:cases}, and that the underlying algorithm remains readable
+  when implemented. To quote \emph{Structure and interpretation of
+    computer programs} \todo{insert citation}:
+
+  \begin{quote}
+    ``Programs must be written for people to read, and only
+    incidentally for machines to execute''
+  \end{quote}
+
+  We thus want to check that the techniques necessary for implementing
+  our sample programs does not insert unnecessary clutter.
+  
+\item[Project health] Here we want to take the side of the library
+  user that has to select a stable library for some program, and we
+  thus want to determine which projects are the most stable.
+
+\item[Performance] In the last section we want to establish how the
+  languages in practice compare in raw execution performance.
+\end{description}
 
 % \section{Surveying}
 % meta-survey of how others perform programming language survey's
@@ -57,16 +136,43 @@
 \subsection{Experimentation}
 % How do we want to perform the above experiments?
 
-* Outset was to implement both Binomial pricing and Longstaff \&
-Schwartz.
+% * Outset was to implement both Binomial pricing and Longstaff \&
+% Schwartz.
 
-* We knew Black-Scholes was possible in both Nikola and Accelerate (and
-thus also all other), as documented in their papers. It is thus a less
-interesting example for the Devil's advocate.
+% * We knew Black-Scholes was possible in both Nikola and Accelerate (and
+% thus also all other), as documented in their papers. It is thus a less
+% interesting example for the Devil's advocate.
 
-* As Longstaff and Schwartz did not go through in either Accelerate
-and LSM we changed our scope, and put a larger focus on Sobol than the
-actual LSM algorithm.
+% * As Longstaff and Schwartz did not go through in either Accelerate
+% and LSM we changed our scope, and put a larger focus on Sobol than the
+% actual LSM algorithm.
+
+To perform the above mentioned experiments we set out to implement
+both the binomial pricing algorithm and the Longstaff and Schwartz
+algorithm. 
+
+We also considered the Black-Scholes option pricer a possibility, but
+we knew that Black-Scholes was possible to implement in both Nikola
+and Accelerate (and thus the remaining languages in our survey), as
+they were documented in their respective research papers
+\todo{cite}. It was thus a less interesting example for the Devil's
+advocate, and as had enough work just by implementing the binomial
+pricer and LSM, we ended up leaving it out.
+
+As we discovered that Longstaff and Schwartz was hard (perhaps
+impossible) to implement in Accelerate and Nikola, we changed our
+scope and put a larger focus on the Sobol algorithm than the actual
+LSM algorithm.
+
+It is from these implementations that we have documented our findings
+of expressivity and performance, which will be presented in Chapter
+\ref{chap:expressiveness} and \ref{chap:performance}. 
+
+When it comes to project health, we have investigated by tracking
+information about number of contributors, number of reverse
+dependencies and so on, from information available on Hackage and
+their commit logs. These findings are presented in Chapter
+\ref{chap:project-health}.
 
 \subsection{Result evaluation}
 % How do we want to evaluate the experiments?
