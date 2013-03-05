@@ -303,30 +303,30 @@ to know the size of a block to determine how much we have to skip
 %          & = x_n \oplus v_2 \oplus v_3 \\
 % \end{align}
 
-\todo{Correct algorithm~\ref{alg:sobol-parallel-2}}
 \begin{algorithm}
   \begin{algorithmic}
-    \Function{SobolSkipping}{$v$,$n$}
-    \State $m \gets$ number of processor cores (e.g. CUDA cores)
-    \State $r \gets \lfloor n/m \rfloor$
-    \ParFor{$p \gets 0$ \textbf{to} $m-1$}
-    \State $A[p] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $p$)
-    \State $i \gets p + m$
-    \While{$i < n$}
-    \State $A[i] \gets A[i - 1] \oplus \ldots$
-    \State $i <- i + m$
+    \Function{SobolSkipping}{$v$, $N$, $p$}
+%    \State $p \gets$ number of processor cores (e.g. CUDA cores)
+%    \State $r \gets \lfloor n/m \rfloor$
+    \ParFor{$n \gets 0$ \textbf{to} $p-1$}
+    \State $A[n] \gets$ \textsc{SobolInductive} (\textsc{GrayCode} $n$)
+    \While{$n < N$}
+    \State $q \gets lsb(n \blor (2^p - 1))$
+    \State $A[n+2^p] \gets A[n] \oplus v_p~\oplus v_q$
+    \State $n <- n+2^p$
     \EndWhile
     \EndParFor
     \EndFunction
   \end{algorithmic}
-  \caption{Parallel Sobol sequence generator.}
+  \caption{Parallel Sobol sequence generator. $v$ is the direction
+    vector, $N$ is the length of the sequence and $2^p$ is the block.}
   \label{alg:sobol-parallel-2}
 \end{algorithm}
 
-In the same paper \todo[noinline]{it is technically not a paper, what
-  is it then?} they present skip-ahead strategies for two PRNGs, the
-Mersenne Twister (the MT19937 variant) and L'Ecuyer's Multiple
-Recursive Generator (MRG32k3a).
+In the same book chapter they present skip-ahead strategies for two
+PRNGs, the Mersenne Twister (the MT19937 variant) and L'Ecuyer's
+Multiple Recursive Generator (MRG32k3a). \todo{Write some more about
+  how they parallelise}
 
 \subsection{Sampling the standard normal distribution}
 \label{sec:sampling_normaldist}
