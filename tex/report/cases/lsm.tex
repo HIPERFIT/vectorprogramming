@@ -197,7 +197,10 @@ we can improve on the above by using the Gray code binary
 representation of the index instead of the ordinary, whereby a
 recursive definition of Sobol sequences can be made
 \cite{bratley1988algorithm}. It has been shown that
-$$x_{i+1} = x_n \oplus v_c$$
+\begin{equation}
+x_{n+1} = x_n \oplus v_c\label{eq:sobol-recurse}
+\end{equation}
+
 where $c = \mathit{lsb}(n)$ is the index of the least set bit in
 $n$. A sequential algorithm using this strategy is presented in Figure
 \ref{alg:sobol-recursive}.
@@ -257,8 +260,50 @@ dispersed, as each thread will fill out each its own region of the
 array A.
 
 Luckily, an alternative strategy has been shown by Thomas Bradley et
-al. \cite[Chapter~16]{hwy2011emerald}.
+al. \cite[Chapter~16]{hwy2011emerald}. They observed that applying
+\eqref{eq:sobol-recurse} several times, would lead to repeated
+exclusive or operations with the same direction number. As the
+\emph{exclusive or} operation is associative, commutative and is its
+own inverse, some of these operations will cancel out. Especially,
+when skipping a power of two ahead, all but two exclusive or
+operations will cancel out. The least set bit will change in a
+systematic way, and analysis shows that (see the above mentioned book
+chapter):
 
+\begin{equation}
+  \label{eq:sobol-skipahead}
+  x_{n+2^p} = x_n \oplus v_p \oplus v_{q(n)}
+\end{equation}
+
+where $q(n) = lsb(n \blor (2^p - 1))$. We use $\blor$ for bitwise or.
+
+This fact can be used to develop a parallel algorithm which is memory
+efficient on GPU architectures. Instead of each letting each thread
+fill a separate block of memory using \eqref{eq:sobol-recurse}, we can
+instead let all threads cooperate on filling one block at a time, by
+using the inductive algorithm (Algorithm \ref{alg:sobol-inductive}) to
+fill the first block and use \eqref{eq:sobol-skipahead} to fill each
+successive block. This thus requires a block size of a power of two.
+\todo[noinline]{Can we do something smart if the block is not a power
+  of two? Alternatively the section below should be changed, to say
+  that we don't need information about block size, but need to
+  actively control the block size.}
+
+This also illustrates that optimized GPU algorithms in some cases
+needs information about how kernel scheduling is performed, as we need
+to know the size of a block to determine how much we have to skip
+($p$).\todo{The survey should be aware of this: How much control do we
+  have over kernel execution in Nikola and Accelerate? Is it possible
+  to drop down to a lower layer for such implementations?}
+
+
+% \begin{align}
+%   x_{n+4} & = x_n \oplus v_{lsb(n)} \oplus v_{lsb(n+1)} \oplus v_{lsb(n+2)} \oplus v_{lsb(n+3)} \\
+%          & = x_n \oplus v_1 \oplus v_1 \oplus v_2 \oplus v_3 \\
+%          & = x_n \oplus v_2 \oplus v_3 \\
+% \end{align}
+
+\todo{Correct algorithm~\ref{alg:sobol-parallel-2}}
 \begin{algorithm}
   \begin{algorithmic}
     \Function{SobolSkipping}{$v$,$n$}
@@ -278,6 +323,10 @@ al. \cite[Chapter~16]{hwy2011emerald}.
   \label{alg:sobol-parallel-2}
 \end{algorithm}
 
+In the same paper \todo[noinline]{it is technically not a paper, what
+  is it then?} they present skip-ahead strategies for two PRNGs, the
+Mersenne Twister (the MT19937 variant) and L'Ecuyer's Multiple
+Recursive Generator (MRG32k3a).
 
 \subsection{Sampling the standard normal distribution}
 \label{sec:sampling_normaldist}
