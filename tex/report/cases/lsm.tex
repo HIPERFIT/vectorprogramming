@@ -417,14 +417,17 @@ originating from a coordinate $(a_i, b_i)$. We write the system as:
 
 The $\mathbf{A}$ matrix is called a Vandermonde matrix.  To find the
 minimizing $x$ vector, we want to minimize the residual vector
-$\mathbf{r} = \mathbf{b} - \mathbf{Ax}$. By \todo{magic} we know that
-we can find the minimizing $\mathbf{x}$ by solving the system
-$\mathbf{A}^T\mathbf{A}\mathbf{x} = \mathbf{A}^T\mathbf{b}$.
+$\mathbf{r} = \mathbf{b} - \mathbf{Ax}$. Michael T. Heath shows how
+this can be done by solving the linear system
+$\mathbf{A}^T\mathbf{A}\mathbf{x} = \mathbf{A}^T\mathbf{b}$ in
+\emph{Scientific Computing: An Introductory Survey} \cite[Section
+3.2.1]{heath2002scicomp}.
 
-There are several ways to solve such systems, for instance
+There are several ways to solve linear systems, for instance
 LU-decomposition, QR-decomposition or Cholesky-decomposition. We have
-chosen to implement Cholesky-decomposition, though that choice was a
-bit arbitrary.
+chosen to implement Cholesky-decomposition.
+\todo{perhaps reference that Cholesky-decompositions are used other
+  places in Finance, see Paul Glasserman book}
 
 With Cholesky decomposition we find a lower triangular matrix
 $\mathbf{L}$ such that $\mathbf{A} = \mathbf{LL}^T$. And now forward
