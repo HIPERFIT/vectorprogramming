@@ -52,8 +52,10 @@ library\footnote{\url{http://hackage.haskell.org/package/vector}}.
 
 Nikola and Accelerate was included in the survey as they are
 functional approaches to GPU computation. We had initially also wished
-to include Obsidian, Copperhead and GPU-NESL in this category, but
-time constraints and installation problems made us leave them out.
+to include Obsidian\cite{svensson2011obsidian},
+Copperhead\cite{Catanzaro2011} and GPU-NESL\cite{bergstrom2012nested}
+in this category, but time constraints and installation problems made
+us leave them out.
 
 The remaining languages included in the survey are not meant as being
 subjects for the study, but to serve as reference models for the
@@ -74,8 +76,9 @@ execution speed.
 
 Since we initially started, we have discovered several other languages
 which would have been interesting to look closer at. These include
-Bohrium, Theano, CnC-CUDA and R+GPU (library of common R functions
-running on CUDA).
+Bohrium\cite{homepage:bohrium}, Theano\cite{bergstra2010theano},
+CnC-CUDA\cite{grossman2011cnc} and R+GPU\cite{homepage:rgpu} (library
+of common R functions running on CUDA).
 
 \subsection{Experiments} %PLC: 'perspective' is a bit too vague in my oppinion.
 % Alternative title: "Scope: Experiments"
@@ -110,8 +113,8 @@ falling into the three categories:
   Specifically, we want to test whether the selected languages allows
   us to write the financial algorithms presented in Section
   \ref{chap:cases}, and that the underlying algorithm remains readable
-  when implemented. To quote \emph{Structure and interpretation of
-    computer programs} \todo{insert citation}:
+  when implemented. Quoting a famous line from \emph{Structure and
+    interpretation of computer programs} \cite{abelson1996structure}:
 
   \begin{quote}
     ``Programs must be written for people to read, and only
@@ -155,9 +158,10 @@ We also considered the Black-Scholes option pricer a possibility, but
 we knew that Black-Scholes was possible to implement in both Nikola
 and Accelerate (and thus the remaining languages in our survey), as
 they were documented in their respective research papers
-\todo{cite}. It was thus a less interesting example for the Devil's
-advocate, and as had enough work just by implementing the binomial
-pricer and LSM, we ended up leaving it out.
+\cite{mainland2010nikola, chakravarty2011accelerating}. It was thus a
+less interesting example for the Devil's advocate, and as we had
+enough work in implementing the binomial pricer and LSM, we ended up
+leaving it out.
 
 As we discovered that Longstaff and Schwartz was hard (perhaps
 impossible) to implement in Accelerate and Nikola, we changed our
