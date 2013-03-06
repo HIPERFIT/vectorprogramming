@@ -1,4 +1,5 @@
 \chapter{Evaluation of expressiveness}
+\label{chap:expressiveness}
 %\todo{Introduce the contents of this chapter}
 %\todo{Can we find a more precise heading?} - Nope. Not now at least.
 
@@ -77,7 +78,7 @@ functional code. There is also a version of vectors working on unboxed values.
 This vector library interfaces with the GHC compiler to provide the array
 fusion optimisation. Taken together with the use of unboxed vectors one is able
 to remove a lot of overhead associated with array and thunk construction, even
-from ideomatic, functional Haskell code. 
+from ideomatic, functional Haskell code.
 
 \section{Repa}
 
@@ -138,61 +139,127 @@ constructs significantly, as the programmer needs to manually transform
 algorithms with a naturally nested definition into something that will fit into
 the view of Accelerate.
 
-Consider this small example, derived from a problem we actually encountered
-while exploring the Sobol sequence generation case:
+To illustrate this problem, consider the following small example.  While the example may seem a bit
+abstract, it is directly derived from a problem we actually encountered while exploring
+the Sobol sequence generation case, depicted in Algorithm
+\ref{alg:sobol-inductive}. The actual code is included in Appendix
+\ref{appendix:accelerate-sobol}.
 
-Suppose we have a function \texttt{f} performing some simple vector operation \texttt{h}:
-
-\begin{verbatim}
-f :: Vector Double -> Double -> Double
-f as b = foldl (\ak a -> h b ak a) 0.0 as
-\end{verbatim}
-
-Now, if we want to do scalar multiplication with a vector of scalars, in
-\texttt{Data.Vector} Haskell, this could reasonably be writen:
+Suppose we have a function \texttt{f}, defined for normal Haskell lists for notational clarity,
+using the functions \texttt{k} and \texttt{h}:
 
 \begin{verbatim}
-g :: Vector Double -> Vector Double -> Vector Double
-g as bs = map (f as) bs
+f :: [Int] -> Int -> [Int]
+f xs i = zipWith k xs (h i)
+  where
+    k :: Int -> Int
+    h :: Int -> [Int]
 \end{verbatim}
 
-If we set out to code this program in Accelerate we would have a slightly different
-\texttt{f}, as \texttt{fold} is intrinsically mapped:
+Now, if we want to apply \texttt{f} to a range of different \texttt{i}'s, what
+we would reasonably do in Haskell would be just:
 
 \begin{verbatim}
-f :: Acc (Array (sh :. Ix) Double) -> Exp Double -> Acc (Array sh Double)
-f as b = foldl (\ak a -> h b ak a) 0.0 as
+g :: [Int] -> [Int] -> [[Int]]
+g xs ns = map (f xs) ns
 \end{verbatim}
 
-But since Accelerate does not allow nested arrays, we need to model the
-\texttt{Vector (Vector c)} type  as \texttt{Acc (Array DIM2 c)}. Thus we end up
-wanting the function \texttt{g} below, defined using \texttt{f}.
+And for illustration, depictions of \texttt{f} and \texttt{g} as mathematical
+expressions. Each application of \texttt{f} yields a row of the matrix:
+
+\[
+xs =
+\begin{bmatrix}
+  xs_0 \\
+\vdots \\
+xs_n
+\end{bmatrix}
+\qquad\qquad
+ns =
+\begin{bmatrix}
+  ns_0 \\
+\vdots \\
+ns_m \\
+\end{bmatrix}
+\]
+\[
+f\ \ xs\ \ i =
+\begin{bmatrix}
+  k\ \ xs_0\ \ hi_0 \\
+\vdots \\
+  k\ \ xs_n\ \ hi_n \\
+\end{bmatrix}
+\quad
+g\ \ xs\ \ ns =
+\begin{bmatrix}
+  f\ \left[xs_0 \ldots xs_n\right]\ ns_0 \\
+\vdots \\
+f\ \left[xs_0 \ldots xs_n\right]\ ns_m \\
+\end{bmatrix}
+\]
+
+Now we want to port \texttt{f} and \texttt{g} to Accelerate.
+For \texttt{f} there seems to be an obvious translation:
 
 \begin{verbatim}
-g :: Acc (Vector a) -> Acc (Vector b) -> Acc (Array DIM2 c)
+f :: Acc (Vector Int) -> Exp Int -> Acc (Vector Int)
+f xs i = zipWith k xs (h i)
+  where
+    k :: Exp Int -> Exp Int
+    h :: Exp Int -> Acc (Vector Int)
 \end{verbatim}
 
-But there seems to be no way to construct a high-dimensional array from array
-functions of lower dimension. So we need to rewrite \texttt{f} itself:
+But due to the lack of nested vectors, for \texttt{g} we must resort to a two-dimensional
+array. And due to the restriction that mapped functions must reside in
+\texttt{Exp}, we cannot simply do with just: \verb|map f (xs) ns|.
+
+Instead we must distribute the map into the definition of \texttt{f} and
+replicate \texttt{xs} to fit. But then we are left with an identical problem
+relating to function \texttt{h}!. Now, assuming we succeed and denominate the
+vectorised \texttt{h} function as
+\verb|h' :: Acc (Vector Int) -> Acc (Array DIM2 Int)|,
+here is what we arrived at for \verb|g'|:
 
 \begin{verbatim}
-g as bs = generate
-  (index2 $ (size as) (size bs))
-  (\ix ->
-  let (Z :. ia :. ib) = unlift ix
-  in bs ! (Z :. ib) * as ! (Z :. ia))
+g' :: Acc (Vector Int) -> Acc (Vector Int) -> Acc (Array DIM2 Int)
+g' xs ns = let ns' = h' ns
+              Z :. m :. n = unlift $ shape ns'
+              xs' = replicate (Z :. m :. All) xs
+          in zipWith k xs' ns'
 \end{verbatim}
 
-Furthermore, this is only possible because \texttt{f} is itself defined by an
-elementwise operation. Had \texttt{f} been defined by a reduction such as
-\texttt{fold}, the transformation would have been even more elaborate and
-require replication of both vector \texttt{as} and \texttt{bs} and zipping to
-properly distribute \texttt{b} into the folding operation.
+The transformation is illustrated below.
 
-\todo{It would be really nice to have a proper explanation of this, preferably
-with an illustration of the replication. But that is definitely beyond our
-current schedule}
-\todo{Add Accelerate Sobol-example as appendix, reference it here - hand drawing?!}
+\[
+\textrm{ns'} =
+\begin{bmatrix}
+  h(ns_0) \\
+  \vdots \\
+  h(ns_m)
+\end{bmatrix}
+\qquad
+\textrm{xs'} =
+\begin{bmatrix}
+  xs_0 & xs_1 \ldots & xs_n \\
+  \vdots & \ddots \\
+  xs_0 & xs_1 \ldots & xs_n \\
+\end{bmatrix}
+\]
+\[
+g'\ \ xs\ \ ns =
+\begin{bmatrix}
+  k\ \ xs_0\ \ ns'_{0,0} & k\ \ xs_1\ \ ns'_{0,1} & \ldots &  k\ \ xs_n\ \ ns'_{0,n}  \\
+\vdots & \ddots \\
+  k\ \ xs_0\ \ ns'_{m,0} & k\ \ xs_1\ \ ns'_{m,1}  & \ldots &  k\ \ xs_n\ \ ns'_{m,n}   \\
+\end{bmatrix}
+\]
+
+Using the above notation it is relatively easy to verify that \texttt{g} for
+lists and \texttt{g'} for arrays should be equivalent.  The transformation of
+the code however is quite drastic.  This transformation is similar to the
+vectorisation transformation of NESL\cite{nesl}.  But since Accelerate provides
+no way to automate it, the programmer needs to give up composability of
+Accelerate terms.
 
 This sharp division between scalar and array operations is easily the biggest
 hindrance to the expressiveness of Accelerate, and therefore very relevant to
