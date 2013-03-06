@@ -24,7 +24,6 @@ area.
 In the rest of this chapter we define the scope of our survey and go
 through the methodology we have followed.
 
-\section{Scope}
 \subsection{Subject languages}
 % Alternative title: "Scope: Language"
 % Which languages are we comparing? Why this selection?
@@ -42,7 +41,6 @@ through the methodology we have followed.
 %
 % * We have later also found Bohrium, Theano and CnC-CUDA (perhaps others?)
 %   interesting to include, if we were to extend the survey in the future.
-\todo{insert references to languages mentioned}
 As this is a half-year project, we had to limit our survey
 considerably in size, and thus only included a few programming
 languages. We decided to evaluate and compare R, CUDA, Accelerate
@@ -80,7 +78,7 @@ Bohrium\cite{homepage:bohrium}, Theano\cite{bergstra2010theano},
 CnC-CUDA\cite{grossman2011cnc} and R+GPU\cite{homepage:rgpu} (library
 of common R functions running on CUDA).
 
-\subsection{Experiments} %PLC: 'perspective' is a bit too vague in my oppinion.
+\section{Scope of Experiments} %PLC: 'perspective' is a bit too vague in my oppinion.
 % Alternative title: "Scope: Experiments"
 % What do we want to measure?
 %
@@ -102,35 +100,53 @@ of common R functions running on CUDA).
 % * How do the languages practically compare in performance? Are
 %   Accelerate and Nikola close to optimized CUDA implementations?
 
-There are several aspects of the languages that we want to examine,
-falling into the three categories:
+There are three language facets that we want to examine: Their
+expressivity, project health and execution performance. In the next
+three subsection we detail and motivate these aspects.
 
-\begin{description}
-\item[Expressiveness] To which extent are the languages easy to work
-  with, express ones thought, mathematical expressions and established
-  algorithms. 
+\subsection{Expressiveness}
+By the expressiveness of a language, we intend to ... the ease
+expression of ones thoughts, mathematical models and natural
+implementation of algorithms.
 
-  Specifically, we want to test whether the selected languages allows
-  us to write the financial algorithms presented in Section
-  \ref{chap:cases}, and that the underlying algorithm remains readable
-  when implemented. Quoting a famous line from \emph{Structure and
-    interpretation of computer programs} \cite{abelson1996structure}:
+%  To which extent are the languages easy to work with, express ones
+% thought, mathematical expressions and established algorithms.
 
-  \begin{quote}
-    ``Programs must be written for people to read, and only
-    incidentally for machines to execute''
-  \end{quote}
+Specifically, we want to test whether the selected languages allows us
+to write the financial algorithms presented in Section
+\ref{chap:cases}, and that the underlying algorithms when implemented,
+remains in a natural and readable form. Quoting a famous line from the
+preface to \emph{Structure and interpretation of computer programs}
+\cite{abelson1996structure}:
+\begin{quote}
+  ``Programs must be written for people to read, and only
+  incidentally for machines to execute''
+\end{quote}
+We thus want to check that the techniques necessary for implementing
+our sample programs does not insert unnecessary clutter, that
+performance can be obtained by writing in an idiomatic style for the
+language and \ldots\todo{extend and elaborate}.
 
-  We thus want to check that the techniques necessary for implementing
-  our sample programs does not insert unnecessary clutter.
-  
-\item[Project health] Here we want to take the side of the library
-  user that has to select a stable library for some program, and we
-  thus want to determine which projects are the most stable.
 
-\item[Performance] In the last section we want to establish how the
+\todo{perhaps something about composability}
+
+\subsection{Project health} 
+The health of a software project is an aspect worth investigating, if
+you intend to use the product of that project in your own work. 
+
+When evaluating project health of programming languages, we want to
+take the side of the language user, who that has to select a stable
+language for a program, and we thus want to look at aspects such as
+which projects seems guaranteed continued development, is not subject
+to large changes in programming interface and are properly documented.
+
+We have written a short chapter on the project health of
+\texttt{Data.Vector}, Repa, Accelerate and Nikola. The contents are
+not particularly relevant for the rest of the report \todo{why then
+  include it?  completeness of the study?}
+
+\subsection{Performance} In the last section we want to establish how the
   languages in practice compare in raw execution performance.
-\end{description}
 
 % \section{Surveying}
 % meta-survey of how others perform programming language survey's
