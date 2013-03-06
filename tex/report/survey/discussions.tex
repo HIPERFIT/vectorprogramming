@@ -1,7 +1,5 @@
 \chapter{Evaluation of expressiveness}
 \label{chap:expressiveness}
-%\todo{Introduce the contents of this chapter}
-%\todo{Can we find a more precise heading?} - Nope. Not now at least.
 
 In this chapter we discuss and compare the expressiveness of each of the
 languages we are considering.  The property of programming language
@@ -59,7 +57,6 @@ package\cite{crangputools}.
 
 R has become popular in scientific fields that are not primarily centered on
 computer programming, such as biology and statistics
-%\todo{cite}.
 That in itself is good testament to the practical usefulnes of the language.
 
 As a result of the extensive library support for this domain in R, the case
@@ -102,10 +99,14 @@ potential for expressing nested parallelism. In Repa, nested calls to
 \texttt{computeP} is considered an error. A warning is issued on the terminal,
 and the documentation says to expect reduced performance.
 
-A consequence of this is that a hypothetical library using Repa that require
-the use of array manifestation internally must provide separate parallel and
-sequential versions, as a client program cannot use only the parallel version
-if it intends to parallise on a another level of the program.
+A consequence of this is that a library of Repa functions that require the use
+of array manifestation must provide separate parallel and sequential versions
+of each function, as a client program cannot use only the parallel version if
+it intends to parallise on a another level of the program.  A remedy for this
+would be to adopt the policy that nested occurences of \texttt{computeP} just
+revert silently to \texttt{computeS}. In Chapter
+\ref{chap:directing-parallelism} we present another similar solution to the
+problem of nested parallelism.
 
 \section{Accelerate}
 \label{sec:language-discussion-accelerate}
