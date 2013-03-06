@@ -20,55 +20,34 @@
 %   - Show graph of execution speed versus the best performing
 %     solution we have without the new construct)
 
-
 In this chapter we present our takes on adding support for expressing
-iteratively defined arrays.  Unfortunately we have not been able to get any of
-these extensions completely ready for use and possible inclusion into Nikola.
-We will however give an analysis of what is lacking for a more complete
+iteratively defined arrays. Unfortunately we have not been able to get any of these
+extensions completely ready for use and possible inclusion into Nikola.  We
+will however give an analysis of what is lacking for a more complete
 implementation.
 
-All our efforts on iterative array construction draw on Nikolas implementation
-of 'push' arrays. As mentioned earlier, delayed arrays and push arrays are each
-others opposites. Delayed arrays are \texttt{Source} arrays, and their
-manifestation is at the mercy of the consumer of the array -- Therefore it is
-required that the elements of a delayed array are completely independent from
-each other.  Push arrays on the other hand are defined as a stream of
-index-value pairs, and thus need not obey the same restriction on element
-dependence.
+Our need to iteratively define arrays is motivated directly from our case work
+on the variants of the recursive Sobol sequence generator, depicted in
+Algorithms \ref{alg:sobol-recursive}, \ref{alg:sobol-parallel-2} and
+\ref{alg:lsm-pathgeneration}. While the specific needs for a specific example
+does not always warrant language extensions, the case of incremental
+construction of output data is arguably a common one.
 
-Push arrays in Nikola are defined by means of the for-loop constructor \texttt{ForE}
-of \texttt{S.Exp}. This loop constructor however, is very low-level in the
-sense that it includes as arguments a list of variables to be looped over and a
-list of loop bounds corresponding to each of the variables.
+But in isolation, the ability to construct a single array iteratively is
+insufficient. It must also be possible to produce multiple iteratively
+constructed arrays in parallel. This due to both the desire for performance and
+the desire for expressivity. To meet this end we will analyse two possible ways
+to go about this: a nested parallel version and a flat parallel version.
 
-The \texttt{Shape} typeclass defines an accessible interface for constructing
-for-loops that visit each index of given shape to loop over.  The operation
-\texttt{seqfor :: Shape sh => sh -> P sh} that we use for constructing our
-loops is defined using the \texttt{shift} action, and thus needs to be paired
-with an enclosing \texttt{reset}.  Due to the way that \texttt{shift} operates,
-what happens is that upon issuing \texttt{seqfor} in the \texttt{P} monad, the
-entire surrounding action up to the nearest enclosing reset is placed inside
-the body of the for-loop defined by \texttt{seqfor}.
+\section{Nested data parallel version}
 
-However to our regret, using this approach for defining the operators discussed
-below proved unfruitful, as the part of the C code generation that pertains to
-for loops in Nikola does not handle cross-iteration data dependencies properly,
-assuming that variables overwritten inside the body of the loop constitute new,
-fresh variables. Due to our time constraints we were not able to address this,
-and have to leave our operations be for now. If however we disregard this
-problem, we are not aware of any more obstacles for implementing our extensions
-properly.
-
-\section{unfolding and nested maps}
-
-Since it is not possible to use recursion in Nikola to incrementally construct
-arrays, there must instead be provided some other primitive iterative operator.
-We have turned our attention towards the common \texttt{unfoldr} list operator
-for inspiration.
+Since it is not possible to use recursion in Nikola, we must implement a
+primitive iterative operator to incrementally construct arrays.
 
 In Haskell, \texttt{unfoldr} has the type \texttt{(b -> Maybe (a,b)) -> b ->
 [a]}.  \texttt{unfoldr f a} recursively populates the element of a list with
-\texttt{f}, as long as it evaluates to \texttt{Just (a,b)}.
+\texttt{f}, as long as it evaluates to \texttt{Just (a,b)}. It is a well known
+way to construct a list, so we pursue that as an extension.
 
 In Nikola the length of an array is the only intrinsic property shared across
 all array representations. Therefore we must know the length of the result array a
@@ -136,7 +115,47 @@ by defining \texttt{mapNest} as a function in a typeclass parametrised over the
 involved array representations, as is already the case for typeclass
 \texttt{Map} in module \texttt{Data.Array.Nikola.Operators.Mapping}.
 
-\subsection{Intrinsically mapped unfold}
+The most important issue about this definition however, is that it permits
+expressing nested parallelism, which is not directly executable on the flat
+parallel hardware. Treating this issue is the subject of Chapter
+\ref{chap:directing-parallelism}.
+
+\subsection{The inadequacies of our implementation}
+
+All our efforts on iterative array construction draw on Nikolas implementation
+of 'push' arrays. As mentioned earlier, delayed arrays and push arrays are each
+others opposites. Delayed arrays are \texttt{Source} arrays, and their
+manifestation is at the mercy of the consumer of the array -- Therefore it is
+required that the elements of a delayed array are completely independent from
+each other.  Push arrays on the other hand are defined as a stream of
+index-value pairs, and thus need not obey the same restriction on element
+dependence.
+
+Push arrays in Nikola are defined by means of the for-loop constructor
+\texttt{ForE} of \texttt{S.Exp}. This loop constructor however, is very
+low-level in the sense that it includes as arguments a list of variables to be
+looped over and a list of loop bounds corresponding to each of the variables,
+and corresponds directly to a for-loop in C.
+
+% The \texttt{Shape} typeclass defines an accessible interface for constructing
+% for-loops that visit each index of given shape to loop over.  The operation
+% \texttt{seqfor :: Shape sh => sh -> P sh} that we use for constructing our
+% loops is defined using the \texttt{shift} action, and thus needs to be paired
+% with an enclosing \texttt{reset}.  Due to the way that \texttt{shift} operates,
+% what happens is that upon issuing \texttt{seqfor} in the \texttt{P} monad, the
+% entire surrounding action up to the nearest enclosing reset is placed inside
+% the body of the for-loop defined by \texttt{seqfor}.
+
+However to our regret, using this approach for defining \texttt{unfold} and
+\texttt{mapNest} proved unfruitful, as the part of the C code generation that
+pertains to for-loops in Nikola does not handle cross-iteration data
+dependencies properly. It assumes that variables that are overwritten inside
+the body of the loop constitute new, fresh variables. Due to our time
+constraints we were not able to address this, and have to leave our operations
+be for now. If however we disregard this problem, we are not aware of any more
+obstacles for implementing our extensions properly.
+
+\section{Flat data parallel version}
 
 Our first attempt at defining an unfolding operation was inspired by the
 collective operators of Accelerate.
@@ -152,11 +171,12 @@ unfold ::
 \end{verbatim}
 
 By avoiding the need for a nested map, it is guaranteed that the resulting
-unfolded arrays all have the same size. However, upon realizing that we would
-be able to define a nested mapping operation, we felt that that was a more
-compositional approach, being able to map any function on arrays.
+unfolded arrays all have the same size. Furthermore, since the operation is a
+mapped version of \texttt{unfold}, the outer structure of the computation is
+completely static, and it is possible to assign a parallel execution semantics,
+given that the unfolded function is executed sequentially.
 
-An inviting property of this version however is that the its type is a bit
-simpler, as one does not need to concern oneself with shape specifications
-beyond the desired length of the unfolded arrays.
-
+As such it fits quite well with the other array operations in Accelerate. If it
+were to be implemented in Accelerate, it would enable us to express the
+optimised version of Sobol sequences, Algorithm \ref{alg:sobol-parallel-2},
+which is currently inexpressible.
