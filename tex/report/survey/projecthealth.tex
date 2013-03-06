@@ -1,156 +1,62 @@
 \chapter{Evaluation of project health}
 \label{chap:project-health}
 
-* Define project health
+% * Define project health
+%  * How likely is it that development will continue and bugs will be fixed?
+
+As mentioned in previously (see Chapter
+\ref{cha:survey-setup}) we define the health of a project as
+how likely it is that development will continue, whether programming
+interfaces are subject to large change and properly documented.
+
+% * Motivation for at undersøge det
+%   * We take the stance of a library user, which has to decide on
+%     a library, which seems they would be continuously maintained, such
+%     that derivative works would be okay
+%   * Not very important for the rest of our project, as the state of
+%     the project does not make it unsuitable for research purposes.
+
+We take the stance of a programming language user, which has to select
+a data-parallel language with which he will base derivative work. The
+goals of this chapter is not important for the rest of our project, as
+bad project health does not make a programming language an unsuitable
+subject for research.
+
+In the following section we will look closer at the portability,
+documentation quality, installation process and stability of Repa,
+\texttt{Data.Vector}, Accelerate and Nikola.
+
+\section{Portability}
+% * Portability 
   
-  * How likely is it that development will continue and bugs will be fixed?
+%   * As GHC is the defacto standard for Haskell developers, we have
+%     only tested the libraries on this compiler.
 
-* Motivation for at undersøge det
-  
-  * We take the stance of a library user, which has to decide on
-    a library, which seems they would be continuously maintained, such
-    that derivative works would be okay
+%   * Nikola and Accelerate of course requires an NVIDIA CUDA graphics
+%     card. OpenCL would be nice
 
-  * Not very important for the rest of our project, as the state of
-    the project does not make it unsuitable for research purposes.
+Shared by all four languages/libraries is that they were developed for
+Glasgow Haskell Compiler, which currently is the defactor stsandard
+for Haskell development. We have only tested the libraries on this
+compiler and we suspect none of them will run else where because they
+rely on numerous GHC extensions (see Table
+\ref{tab:dependency_status}).
 
-* Scope
-  
-  * Activity
-  * Stability
-  * Portability
-  * Documentation
+Nikola and Accelerate only runs on NVIDIA GPUs as they rely on CUDA as
+intermediate language in the compilation process. An incomplete
+Accelerate backend for the more widely implemented OpenCL standard,
+has been in developed by one of the authors of this master's thesis
+(see \cite{dybdal2011opencl}), and has not been maintained for quite
+a while.
 
-* Portability 
-  
-  * As GHC is the defacto standard for Haskell developers, we have
-    only tested the libraries on this compiler.
+We have collected a number of additional statistics about dependencies
+in Table \ref{tab:dependency_status}, which we will let the reader
+interpret as he wishes.
 
-  * Nikola and Accelerate of course requires an NVIDIA CUDA graphics
-    card. OpenCL would be nice
-
-* Stability 
-  
-  * The two senses of the word: Likely to change and Likely to break in use
-
-  * Accelerate CUDA backend seems very unstable in use. Language
-    interface seems stabilized.
-
-  * Nikola seems very likely to change: 1 contributor, huge change
-    last year
-
-  * Repa and Vector stable in both aspects. More dependencies,
-    less cutting edge.
-
-* Activity
-
-  * Repa, Vector and Accelerate are updated regularly, while it seems
-    that development on Nikola is currently stagnated, until Geoffrey
-    Mainlan again finds time.
-
-* Installation issues
-
-  * Nothing to note for Repa and Data.Vector
-  * Accelerate CUDA backend, horrible problems, see below
-  * Nikola ?!?!
-
-* Conclusion
-
-  * Repa, Vector and Accelerate are all maintained at UNSW, and work
-    seems ongoing. We thus believe that work will continue. Repa, Vector
-    and the accelerate frontend seems stable, and the Accelerate CUDA
-    backend will probably follow.
-
-  * Nikola is maintained by a single user, it is not yet released on
-    Hackage (thus little exposure) and perhaps no users. Also, there
-    is almost no documentation. From a library user point of view it
-    thus not a wise selection
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Everything below this point should be seen as notes, not finished text %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
- \todo{Document the procedures and scripts that were used to collect reverse dependencies and to carry out installs}
-
-
-\section{Accelerate}
-\paragraph{Documentation.} The documentation for Accelerate resides mainly in
-two different places: The haddock API-docs on hackage, and more high-level
-documentation on the project's github wiki.  Other documentation reside in
-somewhat scattered web pages, most notably in the paper
-\cite{chakravarty2011accelerating}.  As of this writing, the main introductory
-material seems to be the github project wiki and the paper
-\cite{chakravarty2011accelerating}. Of these two, the wiki pages are more
-oriented towards building applications using Accelerate, while the paper
-focuses on detailing the current implementation and only briefly introduces the
-Accelerate language in an academic fashion.
-
-Unfortunately, many of the wiki pages are rather incomplete, so we must
-conclude that there has yet to be published any comprehensive introductory
-material on programming using Accelerate.
-The API reference documentation however is extensive.
-
-\paragraph{Installation process} We succeeded in getting Accelerate to run on
-GHC 7.4.2, but it still doesn't support GHC 7.6.1, possibly because of external
-dependencies.  We had some trouble installing the version on hackage, because
-of a minor bug in the cuda-bindings. The bug was caused by code generated by
-c2hs, so it might be something that depends on the version of CUDA installed.
-
-We had major trouble installing the development-version from their repository,
-mainly caused by a lot of dependency issues and conflicts. We still have to
-compile the CUDA-backend.  \todo{Text above is copied verbatim from wiki.}
-
-\section{Repa}
-
-\paragraph{Documentation.} Repa is extensively documented through both API
-documentation on hackage, various papers, tutorials and example programs, eg in
-\cite{lippmeier2012guiding} and \cite{keller2010regular}.  Everything is easily
-accessible directly from the front page of the repa homepage
-\cite{homepage:repa}.
-
-\section{Nikola}
-
-\paragraph{Documentation.} As Nikola is not published on Hackage, there is no
-automatically searchable generated documentation, and one has to manually
-generate haddock documentation. Counting source lines reveals a figure of 24\%
-comment lines, which is above the average comment ratio according to the
-ohloh.net open source project visualisation website\footnote{14-11-2012:
-``Across all Haskell projects on Ohloh, 17\% of all source code lines are
-comments. For nikola-haskell, this figure is 24\%.''}. This figure turned out
-to be quite useless in this case, as we discovered most comments were just
-disabled code rather than documentation. Further, Nikola is described in the
-paper \cite{mainland2010nikola}.
-
-\paragraph{Installation process} Nikola requires running a classical style
-automake "configure"-script to produce the binding to the cuda-backend.
-
-We had a sizable amount of trouble executing the installation. \todo{why
-exactly? (Difficult to link with CUDA sdk, cabal dependency hell)}
-
-\section{Vector}
-
-\paragraph{Documentation.} The Vector package has extensive api-documentation
-available. Furthermore there is a tutorial on
-\cite{homepage:haskell:vectortutorial}.
-
-\subsection{Maintainance} Vector has seen regular maintainance as of October 2012.
 
 \begin{table}
   \centering
-  \begin{tabular}{l|rrllllr}
-    Language    & Project age & Latest release & License & Contributors \\ \hline
-    Accelerate  & 3-4 years   & June 2012      & BSD3    & 3 \\
-    Nikola      & 1-2 years   & Not released   & \todo{???}    & 1 \\
-    Repa        & 1-2 years   & October 2012   & BSD3    & 4 \\
-    Data.Vector & 4 years     & October 2012   & BSD3    & 9 \\
-  \end{tabular}
-  \caption{Project status}
-  \label{tab:project_status}
-\end{table}
-
-\begin{table}
-  \centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
   \begin{tabular}{l|rrllllr}
     Language    & Dependencies & Reverse dependencies & GHC extensions & GHC version \\ \hline
     Accelerate  & 5 (+18)      & 2                    & 19 (+9)        & 7.6.1 \\
@@ -158,12 +64,184 @@ available. Furthermore there is a tutorial on
     Repa        & 6            & 11                   & 20             & 7.6.1 \\
     Data.Vector & 4            & 150+                 & 15             & 7.6.1 \\
   \end{tabular}
-  \caption{Dependency status. Reverse dependencies are found through Hackage. 
-    Nikola is not release on Hackage yet, why we can not count any reverse dependencies.
-    When counting dependencies for Accelerate, there is one number for 
-    the accelerate package, that defines the language and an additional number for the CUDA backend.}
+\caption{Status on language dependencies. Reverse dependencies were counted on Hackage in October 2012. 
+  Nikola does not yet have a Hackage-release yet, why we could not count any reverse dependencies.
+  When counting dependencies for Accelerate, there is one number for 
+  the \texttt{accelerate} package, the frontend, and an additional number for the CUDA backend.}
+\end{adjustbox}
   \label{tab:dependency_status}
 \end{table}
+
+
+\section{Documentation}
+Repa, Accelerate and \texttt{Data.Vector} all have excellent
+documentation available on Hackage and both Repa and Accelerate's
+internals are documented in research papers
+\cite{chakravarty2011accelerating}\todo[noinline]{cite repa papers}. We have not
+been able to find information much documentation about
+\texttt{Data.Vector} internals, which would have been helpful in
+analysing its performance behavior.
+
+Nikola does not provides almost no documentation, the most helpful
+resource is the research paper from 2010 \cite{mainland2010nikola},
+which is a bit outdated, as Nikola has undergone a major revision last
+year. Geoffrey responded quickly on any questions we sent him, which
+compensated a bit for the lack of documentation.
+
+\section{Installation process}
+% * Installation issues
+
+%   * Nothing to note for Repa and Data.Vector
+%   * Accelerate CUDA backend, horrible problems, see below
+%   * Nikola ?!?!
+
+\todo{write this section, notes below}
+
+
+Accelerate and Nikola initially had contradicting dependencies, as
+Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
+additional dependencies was also incompatible. Luckily, it is possible
+to install several versions of GHC side-by-side\footnote{We have used
+  the \texttt{hsenv} package with good results. Our fork of
+  \texttt{hsenv} is available at
+  \url{https://github.com/dybber/hsenv}}. We are not sure if the
+status is still the same, but our experience installing boths packages
+-- and our failure to get the Feldspar library in a runnable state in
+decent time -- examplified a large problem with the core Haskell
+infrastructure. Many packages are not updated when newer versions of
+their dependencies are released or new GHC releases are made. We will
+thus suggest a change of policy on the Haskell Package Archive,
+Hackage, to make sure that policies are updated or made unavailable
+for installation through Cabal (see Section
+\ref{sec:haskell_infrastructure}).
+
+
+\section{Stability}
+% * The two senses of the word: Likely to change and Likely to break in use
+% * Accelerate CUDA backend seems very unstable in use. Language
+%   interface seems stabilized.
+% * Nikola seems very likely to change: 1 contributor, huge change
+%   last year
+% * Repa and Vector stable in both aspects. More dependencies,
+%   less cutting edge.
+
+There are two senses of the word stability that we want to evaluate,
+we both want to evaluate whether the projects are \emph{likely to
+  change} and whether they are \emph{likely to break in use}
+(i.e. runtime errors).
+
+Repa, Vector and Accelerate are all maintained at the University of
+New South Wales, and work on all projects seems active, with regular
+commits. We thus believe that work will continue. All three seems to
+have stabilized on a frontend (unlikely to change), though backend
+work on especially the Accelerate CUDA backend is still work in
+progress, and is thus unstable (likely to break) and we have
+encountered several bugs and installation issues with the CUDA
+backend.
+
+Nikola is maintained by a single author and is not yet released on
+Hackage. It thus receives little exposure and we've been unable to
+evaluate the number of users (which is thus potentially zero). There
+currently is not any active development activity. Also, there is almost
+no documentation, and we had to dig into the code to discover the
+capabilities and limitations. From a users perspective it thus not a
+wise selection for an implementation project, but that does not make
+it unsuitable for a research project.
+
+
+\begin{table}
+  \centering
+\begin{adjustbox}{minipage=1.1\textwidth,margin=0pt \smallskipamount,center}
+  \begin{tabular}{l|rrllllr}
+    Language    & Project age & Latest release & License & Contributors \\ \hline
+    Accelerate  & 3-4 years   & June 2012      & BSD3    & 3 \\
+    Nikola      & 1-2 years   & Not released   & Harvard (Berkeley style) & 1 \\
+    Repa        & 1-2 years   & October 2012   & BSD3    & 4 \\
+    Data.Vector & 4 years     & October 2012   & BSD3    & 9 \\
+  \end{tabular}
+  \caption{Project status. The number of contributors was acquired by
+    inspection of commit logs. The data is from October 2012.}
+\end{adjustbox}
+\label{tab:project_status}
+\end{table}
+\todo{Perhaps update the above table. Project age could be given as absolute value (first commit).}
+
+% * Activity
+
+%   * Repa, Vector and Accelerate are updated regularly, while it seems
+%     that development on Nikola is currently stagnated, until Geoffrey
+%     Mainlan again finds time.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Everything below this point should be seen as notes, not finished text %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ % \todo{Document the procedures and scripts that were used to collect reverse dependencies and to carry out installs}
+
+
+% \section{Accelerate}
+% \paragraph{Documentation.} The documentation for Accelerate resides mainly in
+% two different places: The haddock API-docs on hackage, and more high-level
+% documentation on the project's github wiki.  Other documentation reside in
+% somewhat scattered web pages, most notably in the paper
+% \cite{chakravarty2011accelerating}.  As of this writing, the main introductory
+% material seems to be the github project wiki and the paper
+% \cite{chakravarty2011accelerating}. Of these two, the wiki pages are more
+% oriented towards building applications using Accelerate, while the paper
+% focuses on detailing the current implementation and only briefly introduces the
+% Accelerate language in an academic fashion.
+
+% Unfortunately, many of the wiki pages are rather incomplete, so we must
+% conclude that there has yet to be published any comprehensive introductory
+% material on programming using Accelerate.
+% The API reference documentation however is extensive.
+
+% \paragraph{Installation process} We succeeded in getting Accelerate to run on
+% GHC 7.4.2, but it still doesn't support GHC 7.6.1, possibly because of external
+% dependencies.  We had some trouble installing the version on hackage, because
+% of a minor bug in the cuda-bindings. The bug was caused by code generated by
+% c2hs, so it might be something that depends on the version of CUDA installed.
+
+% We had major trouble installing the development-version from their repository,
+% mainly caused by a lot of dependency issues and conflicts. We still have to
+% compile the CUDA-backend.  \todo{Text above is copied verbatim from wiki.}
+
+% \section{Repa}
+
+% \paragraph{Documentation.} Repa is extensively documented through both API
+% documentation on hackage, various papers, tutorials and example programs, eg in
+% \cite{lippmeier2012guiding} and \cite{keller2010regular}.  Everything is easily
+% accessible directly from the front page of the repa homepage
+% \cite{homepage:repa}.
+
+% \section{Nikola}
+
+% \paragraph{Documentation.} As Nikola is not published on Hackage, there is no
+% automatically searchable generated documentation, and one has to manually
+% generate haddock documentation. Counting source lines reveals a figure of 24\%
+% comment lines, which is above the average comment ratio according to the
+% ohloh.net open source project visualisation website\footnote{14-11-2012:
+% ``Across all Haskell projects on Ohloh, 17\% of all source code lines are
+% comments. For nikola-haskell, this figure is 24\%.''}. This figure turned out
+% to be quite useless in this case, as we discovered most comments were just
+% disabled code rather than documentation. Further, Nikola is described in the
+% paper \cite{mainland2010nikola}.
+
+% \paragraph{Installation process} Nikola requires running a classical style
+% automake "configure"-script to produce the binding to the cuda-backend.
+
+% We had a sizable amount of trouble executing the installation. \todo{why
+% exactly? (Difficult to link with CUDA sdk, cabal dependency hell)}
+
+% \section{Vector}
+
+% \paragraph{Documentation.} The Vector package has extensive api-documentation
+% available. Furthermore there is a tutorial on
+% \cite{homepage:haskell:vectortutorial}.
+
+% \subsection{Maintainance} Vector has seen regular maintainance as of October 2012.
 
 
 %%% Local Variables:

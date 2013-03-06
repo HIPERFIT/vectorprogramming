@@ -1,4 +1,5 @@
 \chapter{Survey scope and methodology}
+\label{cha:survey-setup}
 
 %\section{Motivation}
 % Why do we want to do a language comparison?
@@ -123,36 +124,36 @@ preface to \emph{Structure and interpretation of computer programs}
   incidentally for machines to execute''
 \end{quote}
 We thus want to check that the techniques necessary for implementing
-our sample programs does not insert unnecessary clutter, that
+our sample programs does not insert unnecessary clutter and that
 performance can be obtained by writing in an idiomatic style for the
-language and \ldots\todo{extend and elaborate}.
+language.
 
-
+\todo{extend and elaborate the paragraph above}
 \todo{perhaps something about composability}
 
 \subsection{Project health} 
-The health of a software project is an aspect worth investigating, if
-you intend to use the product of that project in your own work. 
-
 When evaluating project health of programming languages, we want to
 take the side of the language user, who that has to select a stable
 language for a program, and we thus want to look at aspects such as
 which projects seems guaranteed continued development, is not subject
 to large changes in programming interface and are properly documented.
 
+The health of a software project is an aspect worth investigating, if
+you intend to use the product of that project in your own work. 
+
 We have written a short chapter on the project health of
 \texttt{Data.Vector}, Repa, Accelerate and Nikola. The contents are
 not particularly relevant for the rest of the report \todo{why then
   include it?  completeness of the study?}
 
-\subsection{Performance} In the last section we want to establish how the
-  languages in practice compare in raw execution performance.
+\subsection{Performance} The final thing we want to evaluate is how
+the languages compare in raw execution performance.
 
 % \section{Surveying}
 % meta-survey of how others perform programming language survey's
 
 \section{Methodology}
-\subsection{Experimentation}
+% \subsection{Experimentation}
 % How do we want to perform the above experiments?
 
 % * Outset was to implement both Binomial pricing and Longstaff \&
@@ -165,6 +166,33 @@ not particularly relevant for the rest of the report \todo{why then
 % * As Longstaff and Schwartz did not go through in either Accelerate
 % and LSM we changed our scope, and put a larger focus on Sobol than the
 % actual LSM algorithm.
+
+To make a fair comparison, we have to be objective in our evaluation
+of the languages. Obtaining objectivity in such a comparison is not
+an easy task, as it is hard to quantitatively measure aspects such as
+the quality of language documentation (longer is not always better,
+and it might be outdated). Also, as mentioned by Lutz Prechelt in his
+2001 paper ``Empirical Comparison of Seven Programming Languages'':
+\begin{quote}
+  ``Any programming language comparison based on actual sample programs
+  is valid only to the degree to which the capabilities of the
+  respective programmers using these languages are similar.''
+\end{quote}
+We would thus have to either acquire the same level of experience in all the
+languages ourselves or find experts in each of the languages to do the
+implementation. We have not had the resources to conduct a survey
+following the standards set in the paper by Lutz Prechelt. For each
+language under comparison he acquired 10-20 implementations of the
+same algorithm from different programmers (mostly graduate
+students). We could have set up a similar experiment by presenting a
+programming challenge to the ``Haskell-Cafe''-mailing list and/or the
+Haskell section on the Reddit website, and surely we could perhaps get
+a decent benchmark in terms speed and memory usage for different
+implementations by different developers, but we would not get answers
+to qualitative questions about the development process. Another aspect
+is that these languages are all in their early stages, and most people
+we would find on those channels might be amateurs. We do not find
+amateur work a good basis for an objective comparison.
 
 To perform the above mentioned experiments we set out to implement
 both the binomial pricing algorithm and the Longstaff and Schwartz
@@ -191,11 +219,14 @@ of expressivity and performance, which will be presented in Chapter
 When it comes to project health, we have investigated by tracking
 information about number of contributors, number of reverse
 dependencies and so on, from information available on Hackage and
-their commit logs. These findings are presented in Chapter
+commit logs. These findings are presented in Chapter
 \ref{chap:project-health}.
 
-\subsection{Result evaluation}
-% How do we want to evaluate the experiments?
+\todo{add text: we discuss the results of the entire survey in Chapter
+  (ref survey conclusion) and present our conclusions}
+
+% \subsection{Result evaluation}
+% % How do we want to evaluate the experiments?
 
 
 

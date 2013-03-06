@@ -160,13 +160,13 @@ both Nikola and Accelerate.
 \subsection{Software and compilation}
 For each case, we have a set of different implementations and we want
 to measure the time used by each implementation on varying problem
-sizes. This was accomplished by developing a small benchmarking tool
-\todo[noinline]{new appendix of benchmark script ''how to'', use
-  README from github, and add footnote here} that executed each
-experiment in succession, providing the input through a small protocol
-over Unix standard I/O, and letting the program respond with a result
-between each experiment. This response was used to stop the time
-measurement.
+sizes. This was accomplished by developing a small benchmarking
+tool\footnote{The tool is documented in the README available at
+  \url{https://github.com/HIPERFIT/vectorprogramming/blob/master/README.md}}
+that executed each experiment in succession, providing the input
+through a small protocol over Unix standard I/O, and letting the
+program respond with a result between each experiment. This response
+was used to stop the time measurement.
 
 Several of the libraries and languages we have used requires
 individual compilation steps before the actual computation can take
@@ -190,24 +190,6 @@ deviations are not listed, but are in all cases negligible). The
 significance of of course depends on the application, for most of our
 purposes it is too small to make a difference, we will note when it
 should be considered a source of error.
-
-Accelerate and Nikola initially had contradicting dependencies, as
-Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
-additional dependencies was also incompatible. Luckily, it is possible
-to install several versions of GHC side-by-side\footnote{We have used
-  the \texttt{hsenv} package with good results. Our fork of
-  \texttt{hsenv} is available at
-  \url{https://github.com/dybber/hsenv}}. We are not sure if the
-status is still the same, but our experience installing boths packages
--- and our failure to get the Feldspar library in a runnable state in
-decent time -- examplified a large problem with the core Haskell
-infrastructure. Many packages are not updated when newer versions of
-their dependencies are released or new GHC releases are made. We will
-thus suggest a change of policy on the Haskell Package Archive,
-Hackage, to make sure that policies are updated or made unavailable
-for installation through Cabal (see Section
-\ref{sec:haskell_infrastructure}).
-
 
 \section{Benchmarks}
 We will now present the results of our benchmarks. We have two plots
