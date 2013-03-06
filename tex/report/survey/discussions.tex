@@ -262,15 +262,14 @@ no way to automate it, the programmer needs to give up composability of
 Accelerate terms.
 
 This sharp division between scalar and array operations is easily the biggest
-hindrance to the expressiveness of Accelerate, and therefore very relevant to
-our interest in language research. However, as this is a pervasive part of the
-architecture of Accelerate, removing the distinction of \texttt{Acc} and
-\texttt{Exp} would result in an entirely different language, and every single
-backend would have to be rewritten.
+hindrance to the expressiveness of Accelerate. However, as this is a pervasive
+part of the architecture of Accelerate, removing the distinction of
+\texttt{Acc} and \texttt{Exp} would result in an entirely different language,
+and every single backend would have to be rewritten.
 
 The embedding of Accelerate leaves some things to be desired. It is for
 instance not easily possible to pattern match on tuples and shapes, as these
-need to be properly lifted and unlifted to be used (see above in function \texttt{g}).
+need to be properly lifted and unlifted to be used (see above in function \texttt{g'}).
 
 Also, lifting using \texttt{lift :: Lift c e => e -> c (Plain e)} uses the
 \texttt{Plain} associated type, the definition of which is not shown in the
@@ -294,7 +293,7 @@ To exploit the ability to differentiate according to array representations,
 operations such as \texttt{map} and \texttt{zipWith} are implemented using
 typeclasses.  While this architecture allows for specialisation of operations
 to different array representations, actually using the operations results in quite
-elaborate types. These are often too compilcated for type inference to resolve
+elaborate types. These are often too complicated for type inference to resolve
 and require a human programmer to supply a type signature.
 
 Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
@@ -312,13 +311,19 @@ Accelerate.
 There is no way to define recursive functions in Nikola. Trying to do so
 will result in compilation not terminating.
 
-Nikola functions are compiled to CUDA code, linked dynamically into
-the running Haskell program and then wrapped as a Haskell function of
+Nikola functions are compiled to CUDA code and then linked dynamically into
+the running Haskell program. Then they are wrapped Haskell functions of
 the corresponding type.  Exactly which types are possible is derived
-from a menu of instances of the typeclass \texttt{Compilable a b},
-denoting that a value of type \texttt{a} may be compiled into one of
-type \texttt{b}, with \texttt{b} determined by a type signature in the
-client program. This typeclass is not yet implemented for a lot of the
+from a menu of instances of the typeclass \texttt{Compilable a b}.
+
+An instance of this typeclass denotes that a Nikola value of type \texttt{a}
+may be compiled and wrapped into a regular Haskell value of type \texttt{b}.
+There are instances for all the various Nikola values, and it is possible to
+wrap Nikola arrays in many different vector implementations. Therefore it is
+not in general the case that \texttt{a} determines \texttt{b}, and often one is
+best served by just supplying a type signature.
+
+However, this typeclass is not yet implemented for a lot of the
 possible choices of array representations and combinations. During the
 implementation of our case studies, we observed that trying to compile
 a function with an instance missing often resulted in very lengthy and
