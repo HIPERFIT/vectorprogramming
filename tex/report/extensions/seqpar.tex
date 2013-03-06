@@ -7,26 +7,82 @@
 
 % * What we have done and our progress with implementation
 
+As presented in the survey, Chapter \ref{chap:expressiveness}, we have
+found that flat data-parallelism in the style of Accelerate and Nikola
+(without our mapNest extension) is incomposable and unnatural program
+structure that hides the intended meaning of a program in clutter.
+
+To look for alternatives, we have taken a look into nested
+data-parallelism, and how it can be implemented in a GPU language. We
+have contemplated an implementation of the vectorisation
+transformation \todo{ref}, but ended up opting for a solution that is
+more lightweight and hopefully easier to understand the execution
+semantics (and thus performance properties).
+
+Currently our effort concerning the implementation of our proposal
+into Nikola has been mostly hypothetical and we find it worthy of
+further study.  While we have made some effort at implementing it in
+Nikola, this is far from complete.
+
+In the next section we will introduce our take on nested
+data-parallelism, and in the remaining sections of the chapter we will
+discuss the implications and alternatives to such an extension.
+
 % * Presentation of sequential
 %   - A few small examples
 %   - Use-cases in our option pricing examples
 
+\section{The \texttt{sequential}-operator}
+Thus motivated, we will now take a look at a typical nested
+data-parallel program.
+
+<some example>
+
+<transformation to flat program>
+
 % * Discussion
 %   - Presentation of alternatives
+%      * Full vectorisation
 %      * Repa computeS/computeP
 %      * Type tagging
 
+\section{Alternative implementations}
 %   - Interactions with fusion
 
+\section{Comparison with CUDA programs}
 %   - How it allows you to write programs much in the same style as
-%     you currently are writing CUDA programs.
+%     you are currently writing CUDA programs.
 
+%   - We believe that we can obtain comparable performance to code
+%     written directly in CUDA
+
+
+\section{Possible runtime errors}
 %   - How it will introduce possibilities for runtime errors (by
 %     irregularity), and that we do not have a proposal for how to solve
 %     this, and we are not that happy about that aspect.
 
-%   - We believe that we can obtain comparable performance to code
-%     written directly in CUDA
+* Put purity aside, to attain interface that allows access to all
+
+\section{Repa}
+%   - Possible alternative to Repa computeS/computeP
+As mentioned\todo[noinline]{remember to actually mention it above},
+Repa uses ``computeS'' for much the same as we use ``computeP''. We
+believe that it is unnecessary to include both.
+
+\section{Experimentation}
+%   - Allows for experimentation with different parallelization
+%   strategies
+Another interesting aspect of such a light-weight construct as
+sequential, that only instructs how computation is mapped to the
+hardware, and not, for example.
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 We are interested in exploiting as much parallelism as possible, but the
@@ -122,3 +178,8 @@ has been mostly hypothetical. The idea arose as a simple and versatile
 alternative to full program vectorisation, and we think it holds some promising
 in that respect. At least it appears worthy of further study.  While we have
 made some effort at implementing it in Nikola, this is far from complete.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End: 
