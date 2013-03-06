@@ -1,4 +1,32 @@
 \label{chap:directing-parallelism}
+% * Motivation
+%   - NDP
+%   - Search for alternatives to full vectorisation
+%   - Vectorisation overhead
+
+% * What we have done and our progress with implementation
+
+% * Presentation of sequential
+%   - A few small examples
+%   - Use-cases in our option pricing examples
+
+% * Discussion
+%   - Presentation of alternatives
+%      * Repa computeS/computeP
+%      * Type tagging
+
+%   - Interactions with fusion
+
+%   - How it allows you to write programs much in the same style as
+%     you currently are writing CUDA programs.
+
+%   - How it will introduce possibilities for runtime errors (by
+%     irregularity), and that we do not have a proposal for how to solve
+%     this, and we are not that happy about that aspect.
+
+%   - We believe that we can obtain comparable performance to code
+%     written directly in CUDA
+
 
 We are interested in exploiting as much parallelism as possible, but the
 ability to express nested maps leaves us in a dilemma: Which of the nested maps
