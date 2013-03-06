@@ -160,13 +160,13 @@ both Nikola and Accelerate.
 \subsection{Software and compilation}
 For each case, we have a set of different implementations and we want
 to measure the time used by each implementation on varying problem
-sizes. This was accomplished by developing a small benchmarking tool
-\todo[noinline]{new appendix of benchmark script ''how to'', use
-  README from github, and add footnote here} that executed each
-experiment in succession, providing the input through a small protocol
-over Unix standard I/O, and letting the program respond with a result
-between each experiment. This response was used to stop the time
-measurement.
+sizes. This was accomplished by developing a small benchmarking
+tool\footnote{The tool is documented in the README available at
+  \url{https://github.com/HIPERFIT/vectorprogramming/blob/master/README.md}}
+that executed each experiment in succession, providing the input
+through a small protocol over Unix standard I/O, and letting the
+program respond with a result between each experiment. This response
+was used to stop the time measurement.
 
 Several of the libraries and languages we have used requires
 individual compilation steps before the actual computation can take
