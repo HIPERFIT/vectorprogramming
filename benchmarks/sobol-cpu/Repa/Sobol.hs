@@ -48,5 +48,5 @@ sobolInd dirVs ix = normalise $ foldAllS xor 0 xs
     normalise :: Elem -> SpecReal
     normalise = ((/sobol_divisor ) . fromIntegral)
 
-sobolSequence_ :: Monad m => Index -> M (Array U DIM1 SpecReal)
-sobolSequence_ num_iters = computeUnboxedP $ fromFunction (Z :. num_iters) $ \(Z :. i) -> sobolInd sobol_dirVs_array i
+sobolSequence :: Monad m => Index -> m (Array U DIM1 SpecReal)
+sobolSequence num_iters = computeUnboxedP $ fromFunction (Z :. num_iters) $ \(Z :. i) -> sobolInd sobol_dirVs_array i
