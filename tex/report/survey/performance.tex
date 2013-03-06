@@ -191,24 +191,6 @@ significance of of course depends on the application, for most of our
 purposes it is too small to make a difference, we will note when it
 should be considered a source of error.
 
-Accelerate and Nikola initially had contradicting dependencies, as
-Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
-additional dependencies was also incompatible. Luckily, it is possible
-to install several versions of GHC side-by-side\footnote{We have used
-  the \texttt{hsenv} package with good results. Our fork of
-  \texttt{hsenv} is available at
-  \url{https://github.com/dybber/hsenv}}. We are not sure if the
-status is still the same, but our experience installing boths packages
--- and our failure to get the Feldspar library in a runnable state in
-decent time -- examplified a large problem with the core Haskell
-infrastructure. Many packages are not updated when newer versions of
-their dependencies are released or new GHC releases are made. We will
-thus suggest a change of policy on the Haskell Package Archive,
-Hackage, to make sure that policies are updated or made unavailable
-for installation through Cabal (see Section
-\ref{sec:haskell_infrastructure}).
-
-
 \section{Benchmarks}
 We will now present the results of our benchmarks. We have two plots
 for each benchmark: One showing the actual time used on each

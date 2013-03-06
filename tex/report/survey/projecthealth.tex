@@ -64,11 +64,11 @@ interpret as he wishes.
     Repa        & 6            & 11                   & 20             & 7.6.1 \\
     Data.Vector & 4            & 150+                 & 15             & 7.6.1 \\
   \end{tabular}
-\end{adjustbox}
 \caption{Status on language dependencies. Reverse dependencies were counted on Hackage in October 2012. 
   Nikola does not yet have a Hackage-release yet, why we could not count any reverse dependencies.
   When counting dependencies for Accelerate, there is one number for 
   the \texttt{accelerate} package, the frontend, and an additional number for the CUDA backend.}
+\end{adjustbox}
   \label{tab:dependency_status}
 \end{table}
 
@@ -95,8 +95,26 @@ compensated a bit for the lack of documentation.
 %   * Accelerate CUDA backend, horrible problems, see below
 %   * Nikola ?!?!
 
-\todo{write this section}
-\todo{move some text from performance chapter}
+\todo{write this section, notes below}
+
+
+Accelerate and Nikola initially had contradicting dependencies, as
+Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
+additional dependencies was also incompatible. Luckily, it is possible
+to install several versions of GHC side-by-side\footnote{We have used
+  the \texttt{hsenv} package with good results. Our fork of
+  \texttt{hsenv} is available at
+  \url{https://github.com/dybber/hsenv}}. We are not sure if the
+status is still the same, but our experience installing boths packages
+-- and our failure to get the Feldspar library in a runnable state in
+decent time -- examplified a large problem with the core Haskell
+infrastructure. Many packages are not updated when newer versions of
+their dependencies are released or new GHC releases are made. We will
+thus suggest a change of policy on the Haskell Package Archive,
+Hackage, to make sure that policies are updated or made unavailable
+for installation through Cabal (see Section
+\ref{sec:haskell_infrastructure}).
+
 
 \section{Stability}
 % * The two senses of the word: Likely to change and Likely to break in use
@@ -133,7 +151,7 @@ it unsuitable for a research project.
 
 \begin{table}
   \centering
-\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+\begin{adjustbox}{minipage=1.1\textwidth,margin=0pt \smallskipamount,center}
   \begin{tabular}{l|rrllllr}
     Language    & Project age & Latest release & License & Contributors \\ \hline
     Accelerate  & 3-4 years   & June 2012      & BSD3    & 3 \\
@@ -141,11 +159,12 @@ it unsuitable for a research project.
     Repa        & 1-2 years   & October 2012   & BSD3    & 4 \\
     Data.Vector & 4 years     & October 2012   & BSD3    & 9 \\
   \end{tabular}
+  \caption{Project status. The number of contributors was acquired by
+    inspection of commit logs. The data is from October 2012.}
 \end{adjustbox}
-\caption{Project status}
 \label{tab:project_status}
 \end{table}
-
+\todo{Perhaps update the above table. Project age could be given as absolute value (first commit).}
 
 % * Activity
 
