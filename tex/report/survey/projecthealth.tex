@@ -95,26 +95,25 @@ compensated a bit for the lack of documentation.
 %   * Accelerate CUDA backend, horrible problems, see below
 %   * Nikola ?!?!
 
-\todo{write this section, notes below}
+Installation of Repa and Vector on GHC 7.6.1 was straightforward, as Repa
+depends on Vector. The circumstances quickly changed however when attempting
+to install Accelerate and Nikola. Both depended on some of the same packages,
+but with conflicting bounds on versions, triggering the infamous Cabal
+dependency hell. After having first solved the dependency hell by adjusting the
+version bounds of package dependencies and fixed minor superficial
+incompatibilities with the bumped versions we were able to install both
+Accelerate and Nikola. However, due to some deeper incompatibility somewhere we
+were unable to get both working at the same time, and thus had to work out
+something else.
 
+In the end we managed to install every language package in separate package
+databases using the \texttt{hsenv}\footnote{Our fork is accessible at
+\url{https://github.com/dybber/hsenv}} tool.  Using this method we also managed
+to install Feldspar, but using it was unstable, and we had to discontinue
+trying to get it working in order to make progress in the survey.
 
-Accelerate and Nikola initially had contradicting dependencies, as
-Accelerate had to run on GHC 7.6.1 and Nikola on GHC 7.4.2, and a few
-additional dependencies was also incompatible. Luckily, it is possible
-to install several versions of GHC side-by-side\footnote{We have used
-  the \texttt{hsenv} package with good results. Our fork of
-  \texttt{hsenv} is available at
-  \url{https://github.com/dybber/hsenv}}. We are not sure if the
-status is still the same, but our experience installing boths packages
--- and our failure to get the Feldspar library in a runnable state in
-decent time -- examplified a large problem with the core Haskell
-infrastructure. Many packages are not updated when newer versions of
-their dependencies are released or new GHC releases are made. We will
-thus suggest a change of policy on the Haskell Package Archive,
-Hackage, to make sure that policies are updated or made unavailable
-for installation through Cabal (see Section
-\ref{sec:haskell_infrastructure}).
-
+We spent a great amount of time just getting everything setup due to these
+infrastructural mishaps. See Section \ref{sec:haskell_infrastructure} for more.
 
 \section{Stability}
 % * The two senses of the word: Likely to change and Likely to break in use
