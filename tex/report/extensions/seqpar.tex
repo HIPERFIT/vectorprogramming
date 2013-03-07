@@ -164,6 +164,7 @@ DSL and use standard Haskell constructs in all other cases. With our
 proposal we unify host and device code of a problem into a single
 language.
 
+
 \subsection{Evaluation strategy}
 % * Use the syntax tree as a dependency graph
 % * Execute kernels which have met all their dependencies
@@ -218,9 +219,9 @@ Another problematic, but similar, example is functions of several arguments:
 zipWith f (sequential as) bs
 \end{lstlisting}
 
-Here \lstlisting{zipWith} is forced to proceed sequentially, as the elements of
-\lstlisting{as} must be evaluated sequentially. However, any potential
-parallelism in \lstlisting{f} and \lstlisting{bs} would still be exploitable,
+Here \lstinline{zipWith} is forced to proceed sequentially, as the elements of
+\lstinline{as} must be evaluated sequentially. However, any potential
+parallelism in \lstinline{f} and \lstinline{bs} would still be exploitable,
 and the two even fusable.
 
 \subsection{The type of \texttt{sequential}}
@@ -241,8 +242,8 @@ not accept a function argument. Our code would instead be:
 portfolio@$_2$@ = map (sequential . binomial)
 \end{lstlisting}
 The only thing that all Nikola terms have in common is instances of typeclass
-\lstlisting{Reifiable a S.Exp}. So the most inclusive type would be
-\lstlisting{sequential :: Reifiable a S.Exp -> a -> a}. However, we do not take
+\lstinline{Reifiable a S.Exp}. So the most inclusive type would be
+\lstinline{sequential :: Reifiable a S.Exp -> a -> a}. However, we do not take
 for granted that a function of that signature with our intended purpose is
 definable.
 
@@ -288,9 +289,9 @@ static safety but limited expression.
 %      * Type tagging
 
 We have speculated about various ways to express a code marker such as
-\lstlisting{sequential}. Our initial idea was to add yet another type variable
+\lstinline{sequential}. Our initial idea was to add yet another type variable
 to Nikola expressions, such that the "sequentiality" of a term would be encoded
-in the type. The types of \lstlisting{map},\lstlisting{zipWith} etc. should
+in the type. The types of \lstinline{map},\lstinline{zipWith} etc. should
 then implement the semantics of switching mode in accordance with their
 arguments.
 
@@ -314,10 +315,10 @@ might be interesting to look closer at.
 Repa also employs a notion of array manifestation in separate parallel and
 sequential markers.
 
-With the invention of \lstlisting{sequential}, Repa could enjoy a simpler
+With the invention of \lstinline{sequential}, Repa could enjoy a simpler
 execution strategy with less space for runtime errors.  Contrary to Nikola, we
 have speculated that it might be possible to implement a
-\lstlisting{sequential} construct as a type parametrised monad. But this
+\lstinline{sequential} construct as a type parametrised monad. But this
 remains a speculation.
 
 \subsection{Experimentation}
