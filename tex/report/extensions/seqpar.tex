@@ -25,18 +25,18 @@
 
 As presented in the survey, Chapter \ref{chap:expressiveness}, we have
 found that flat data-parallelism in the style of Accelerate and Nikola
-(without our mapNest extension) is incomposable and unnatural program
+(without our mapNest extension) is a non-composable and unnatural program
 structure that hides the intended meaning of a program in clutter.
 
-To look for alternatives, we have taken a look into nested
-data-parallelism, and how it can be implemented in a GPU language. We
-have contemplated an implementation of the vectorisation
-transformation \todo{ref}, but ended up opting for a solution that is
-more lightweight and hopefully easier to understand the execution
-semantics (and thus performance properties).
+To look for alternatives, we have taken a look into nested data-parallelism,
+and how it can be implemented in a GPU language. We have contemplated an
+implementation of the vectorisation transformation (see
+\cite{blelloch1990vector}), but ended up opting for a solution that is more
+lightweight and hopefully easier to understand the execution semantics (and
+thus performance properties).
 
 Currently our effort concerning the implementation of our proposal
-into Nikola has been mostly hypothetical and we find it worthy of
+into Nikola has been mostly hypothetical but we find it worthy of
 further study.  While we have made some effort at implementing it in
 Nikola, this is far from complete.
 
@@ -83,24 +83,31 @@ portfolio@$_2$@ = parmap binomial
 where the \lstinline{map} of the the \lstinline{binomial} algorithm is
 executed sequentially.
 
-We will get back to the block-level parallel solution from the CUDA
-SDK, Algorithm \ref{alg:cuda-binom}, Section
-\ref{sec:binomial-model}. \todo[noinline]{make sure that we return to
-  this}. For now we will look at the performance of these two
-implementations. In the first case, \lstinline[mathescape]{portfolio$_1$}, will
-be an efficient strategy for few long-running options of various
-length, as we have few problems that use all resources of our parallel
-computer. On the other hand \lstinline[mathescape]{portfolio$_2$} will be
-efficient for problems with many options of similar
-length. \todo{uddyb ovenstående. Evt. forklar vha. noget asymptotic
-  køretid, evt. work og depth, inddrag expiration time \lstinline{t}}
+%We will get back to the block-level parallel solution from the CUDA SDK,
+%Algorithm \ref{alg:cuda-binom}, Section \ref{sec:binomial-model}.
+%\todo[noinline]{make sure that we return to this}.
+For now we will look at the theoretical performance of these two
+implementations.  Defining $t_i$ to be the duration time of option number $i$
+in the portfolio consisting of $n$ options, here is the expected depth
+complexities for each variant:
+
+\begin{align*}
+  \text{\lstinline{portfolio}}_1 &= \textrm{Depth}\left(\sum_{i=1}^{n} \text{\lstinline{t}}_i\right) \\
+  \text{\lstinline{portfolio}}_2 &= \textrm{Depth}\left(\max_{i=1}^{n} \frac{\text{\lstinline{t}}_i(\text{\lstinline{t}}_i+1)}{2}\right) \\
+\end{align*}
+
+The first case, \lstinline[mathescape]{portfolio$_1$}, will plausibly be an
+efficient strategy for few long-running options of various length, as there are
+few inputs that each display good parallel resource usage. On the other hand
+\lstinline[mathescape]{portfolio$_2$} will be more efficient for problems with
+many options of shorter and similar length.
 
 \subsection{Our proposal}
 Now, what we propose is to add a primitive construct to Nikola that
 serves as a separator between what should be executed sequentially and
-what should be executed in parallel. The idea being that it should be
-simple to move between different parallelization strategies, without
-changing the code logic. We have chosen the name \lstinline{sequential}
+what should be executed in parallel, the idea being that it should be
+simple to move between different parallelization strategies  without
+changing the structure of the code. We have chosen the name \lstinline{sequential}
 for the construct that represents this division.
 
 In the above example, we could use \lstinline{sequential} to write
@@ -110,18 +117,18 @@ and a \lstinline{map}:
 portfolio@$_2$@ = map (sequential binomial)
 \end{lstlisting}
 which should be understood as ``convert binomial'' to a sequential
-function, where by the outer \lstinline{map} can be executed in
+function, whereby the outer \lstinline{map} can be executed in
 parallel. Such a conversion is of course possible, as all parallel
 programs can be rewritten as a sequential program.
 
-One should think about a map as a ``potentially parallel'' operation,
-and only after investigating the point of use, can we determine
+One should then think about a map as a ``potentially parallel'' operation,
+and only after investigating the point of use can we determine
 whether it is to be evaluated in parallel or sequentially. In this
 case the inner \lstinline{map} ends up being evaluated sequentially
 rather than parallel, the \lstinline{foldl} operation does not have a
 parallel version, and thus only have sequential semantics.
 
-The suggested parallel execution semantics of programs written using
+Informally, the suggested parallel execution semantics of programs written using
 \lstinline{sequential} is:
 \begin{quote}
   \emph{The innermost potentially parallel operation enclosing the
@@ -139,11 +146,12 @@ reduction. If we look at the case of
 \lstinline{foldl} will have to be a host function, that serves as
 synchronization point between each parallel \lstinline{map}.
 
-That is, our proposal has the influence that we merge the host and GPU
-code into a single language. Depending on the placement of
-\lstinline{sequential}-flags in the code, we get different
+That is, our proposal has the influence that we merge the host and GPU code
+into a single language. Depending on the placement of
+\lstinline{sequential}-markers in the code, we get different theoretical
+complexities.
 
-We can see \lstinline{sequential} as a meta-language construct, which
+We can view \lstinline{sequential} as a meta-language construct, which
 in a preprocessing step converts our language into a lower level
 language where array operations are materialized as concrete
 implementations which are either: sequential device code, parallel
@@ -159,8 +167,8 @@ language.
 \subsection{Evaluation strategy}
 % * Use the syntax tree as a dependency graph
 % * Execute kernels which have met all their dependencies
-% asynchronously. 
-% * Synchronize before a kernel launch 
+% asynchronously.
+% * Synchronize before a kernel launch
 % * If a sequential expression is not enclosed by a parallel
 %   array operator, the expression could be executed in a CPU thread
 % *
@@ -174,28 +182,28 @@ any operation waiting can to be executed.
 
 Executing the kernels asynchronously leaves CPU time for other tasks,
 and we might be able to extend this to a heterogeneous language. See
-Section \todo{ref} below.
+Section \ref{sec:parallelism-future-work} below.
 
 \section{Consequences and complications}
 % zipWith f (sequential as) bs
 % map (\b -> if b then sequential $ map f ys else map f ys) xs
 
-Eventhough the semantics explained above might seem simple, which is
+Even though the semantics explained above might seem simple, which is
 also one of our goals, there is still a lot of complications that we
 have to be aware of. As an example, how does \lstinline{sequential}
 interact with conditionals, as in the following example:
 \begin{lstlisting}
-map (\b -> if b 
-           then sequential $ map f ys 
+map ( \b -> if b
+           then sequential (map f ys)
            else map f ys)
 \end{lstlisting}
 We have to decide the parallel execution semantics of the outer
-\lstinline{map} before we can launch it. In such cases we have make
+\lstinline{map} before we can launch it. In such cases we have to make
 special cases for our otherwise simple rule above. One option could be
 to make \lstinline{sequential} spill over to the
 \lstinline{else}-branch, and the outer \lstinline{map} would be a
 parallel map. Another option is that the outer map is executed as a
-host function and depending on the value of \lstinline{b} we use
+host function and depending on the value of \lstinline{b} we
 execute the inner \lstinline{map} sequentially on the host version or
 in parallel on the device.
 
@@ -203,14 +211,17 @@ A third alternative is to add restrictions such that the above code is
 not possible to write. That is, such that each branch of the
 sequential must located on the same execution level. This is perhaps
 possible by adding the execution strategy to the type of expressions,
-we will discuss this further below (see Section \todo{ref and make
-  sure this is written})
+we will discuss this further below (see Section \ref{sec:parallelism-future-work})
 
 Another problematic, but similar, example is functions of several arguments:
 \begin{lstlisting}
 zipWith f (sequential as) bs
 \end{lstlisting}
-\todo{write about this}
+
+Here \lstlisting{zipWith} is forced to proceed sequentially, as the elements of
+\lstlisting{as} must be evaluated sequentially. However, any potential
+parallelism in \lstlisting{f} and \lstlisting{bs} would still be exploitable,
+and the two even fusable.
 
 \subsection{The type of \texttt{sequential}}
 % Exp t a -> Exp t a
@@ -229,11 +240,13 @@ not accept a function argument. Our code would instead be:
 \begin{lstlisting}
 portfolio@$_2$@ = map (sequential . binomial)
 \end{lstlisting}
+The only thing that all Nikola terms have in common is instances of typeclass
+\lstlisting{Reifiable a S.Exp}. So the most inclusive type would be
+\lstlisting{sequential :: Reifiable a S.Exp -> a -> a}. However, we do not take
+for granted that a function of that signature with our intended purpose is
+definable.
 
-\todo{Philip should perhaps write about other possibilities}
-
-
-\subsection{Interactions with fusion}
+%\subsection{Interactions with fusion}
 % - Interactions with fusion
 % - If we employ it as a meta-language construct, fusion can perhaps
 % be performed as usual
@@ -246,19 +259,24 @@ portfolio@$_2$@ = map (sequential . binomial)
 As mentioned in the previous chapter, the introduction of nested maps
 in the form suggested by our \lstinline{mapNest} Nikola-construct,
 also introduces the possibility of runtime errors, as the suggested
-contruct does not prevent irregular arrays.
-\todo{Refer to mapNest section in previous chapter.}
+contruct does not prevent irregular arrays, see Section \ref{sec:unfold-mapNest}.
 
 Further problems such as this one might also arise for other
 operations, when defining nestable versions.
 
-\todo{hypothese a solution and say that this is perhaps the greatest
-  obstacle for acceptance among other researchers, but we believe that
-  we should start with a language that can operate in the way that we
-  need, and then afterwards look for solutions to such problems. This
-  language can eventually serve as a lower level language for other
-  more targetted domain-specific languages where such problems has
-  been hidden}
+In our mindset we have adopted the notion that seems to prevail especially in
+high performance computing, that it is sometimes better to be complete with
+regards to expressivity and potentially unsafe, rather than offering full
+static safety but limited expression.
+
+%\todo{plc: I somewhat fail to see the exact purpose of this subsection}
+%\todo{hypothesize a solution and say that this is perhaps the greatest
+%  obstacle for acceptance among other researchers, but we believe that
+%  we should start with a language that can operate in the way that we
+%  need, and then afterwards look for solutions to such problems. This
+%  language can eventually serve as a lower level language for other
+%  more targetted domain-specific languages where such problems has
+%  been hidden}
 
 \section{Alternative implementations}
 % * Discussion
@@ -269,7 +287,20 @@ operations, when defining nestable versions.
 %      * Repa computeS/computeP
 %      * Type tagging
 
+We have speculated about various ways to express a code marker such as
+\lstlisting{sequential}. Our initial idea was to add yet another type variable
+to Nikola expressions, such that the "sequentiality" of a term would be encoded
+in the type. The types of \lstlisting{map},\lstlisting{zipWith} etc. should
+then implement the semantics of switching mode in accordance with their
+arguments.
+
+While this idea appears to hold some merit, in the concrete case of Nikola we
+made the judgement that the type system was already saturated with modeled
+constraints, and thus we setteled for an untyped version.
+
 \section{Extensions and future work}
+\label{sec:parallelism-future-work}
+
 We of course have a lot of future work, as the suggestions in this
 chapter are highly hypothetical, in that we have not found time to
 finish an actual implementation. There might (and we are almost that
@@ -279,10 +310,15 @@ of making a real implementation, we a further set of extensions that
 might be interesting to look closer at.
 
 \subsection{Repa}
-%   - Possible alternative to Repa computeS/computeP
-As mentioned\todo[noinline]{remember to actually mention it above},
-Repa uses ``computeS'' for much the same as we use ``computeP''. We
-believe that it is unnecessary to include both.
+
+Repa also employs a notion of array manifestation in separate parallel and
+sequential markers.
+
+With the invention of \lstlisting{sequential}, Repa could enjoy a simpler
+execution strategy with less space for runtime errors.  Contrary to Nikola, we
+have speculated that it might be possible to implement a
+\lstlisting{sequential} construct as a type parametrised monad. But this
+remains a speculation.
 
 \subsection{Experimentation}
 % - Allows for experimentation with different parallelization
@@ -295,7 +331,7 @@ strategies, just be moving it around in the code. This might even
 allow for automatic experimentation of different parallelizations on
 the current hardware or perhaps some strategies based on either
 \emph{machine-learning} (see for instance the the Qilin system or the
-method presented in \todo{insert references to both Qilin and
+method presented in \\todo{insert references to both Qilin and
   heterogeneous opencl paper}) or a developed set of rules can be used
 to insert \lstinline{sequential} automatically, such that it will not
 even have to be exposed to the programmer.
@@ -440,7 +476,7 @@ even have to be exposed to the programmer.
 % in that respect. At least it appears worthy of further study.  While we have
 % made some effort at implementing it in Nikola, this is far from complete.
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../master"
-%%% End: 
+%%% End:

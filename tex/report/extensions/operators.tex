@@ -26,28 +26,39 @@ extensions completely ready for use and possible inclusion into Nikola.  We
 will however give an analysis of what is lacking for a more complete
 implementation.
 
-Our need to iteratively define arrays is motivated directly from our
-case work on the variants of the recursive Sobol-sequence generator
-and the LSM path generator, depicted in Algorithms
-\ref{alg:lsm-pathgeneration}, \ref{alg:sobol-recursive} and
-\ref{alg:sobol-parallel-2}.  While in general the needs for a specific
-example does not always warrant language extensions, the case of
-incremental construction of output data is arguably a common one, and
-thus well motivated.
+Our need to iteratively define arrays is motivated directly from our case work
+on the variants of the recursive Sobol-sequence generator, depicted in
+Algorithms \ref{alg:sobol-recursive}, \ref{alg:sobol-parallel-2} and
+\ref{alg:lsm-pathgeneration}. While in general the needs for a specific example
+does not always warrant language extensions, the case of incremental
+construction of output data is arguably a common one, and thus well motivated.
 
-But in isolation, the ability to construct a single array iteratively
-is insufficient. It must also be possible to produce multiple
-iteratively constructed arrays in parallel. This is due to both the
-desire for performance and the desire for expressivity. To meet this
-end we will analyse two possible ways to go about this: a version
-using nested array operators and a flat parallel version.
+But in isolation, the ability to construct a single array iteratively is
+insufficient. It must also be possible to produce multiple iteratively
+constructed arrays in parallel. This is due to both the desire for performance and
+the desire for expressivity. To meet this end we will analyse two possible ways
+to go about this: a nested parallel version and a flat parallel version.
 
-\section{Nested array operators}
+\section{Nested data parallel version}
+\label{sec:unfold-mapNest}
 
-Since it is not possible to use recursion in Nikola, we must implement
-a primitive iterative operator to incrementally construct arrays. In
-Haskell, a function with a similar effect is \lstinline{unfoldr} of
-the \lstinline{Data.List}-module:
+Since it is not possible to use recursion in Nikola, we must implement a
+primitive iterative operator to incrementally construct arrays.
+
+In Haskell, the function \lstinline{unfoldr} of the
+\lstinline{Data.List}-module has the type
+\lstinline{(b -> Maybe (a,b)) -> b -> [a]}.
+
+\lstinline{unfoldr f a} recursively populates the element of a list with
+\lstinline{f}, as long as it evaluates to a \lstinline{Just}-value. It is a well known
+way to construct a list, so we pursue that as an extension.
+
+In Nikola the length of an array is the only intrinsic property shared across
+all array representations. Therefore we must know the length of the result array a
+priori to evaluating a Nikola \lstinline{unfoldr}.
+
+For a prototype that only uses the last generated element as state, we settle
+for the type signature:
 \begin{lstlisting}
 unfoldr :: (b -> Maybe (a,b)) -> b -> [a]
 \end{lstlisting}
