@@ -27,7 +27,7 @@ will however give an analysis of what is lacking for a more complete
 implementation.
 
 Our need to iteratively define arrays is motivated directly from our case work
-on the variants of the recursive Sobol sequence generator, depicted in
+on the variants of the recursive Sobol-sequence generator, depicted in
 Algorithms \ref{alg:sobol-recursive}, \ref{alg:sobol-parallel-2} and
 \ref{alg:lsm-pathgeneration}. While in general the needs for a specific example
 does not always warrant language extensions, the case of incremental
@@ -44,20 +44,21 @@ to go about this: a nested parallel version and a flat parallel version.
 Since it is not possible to use recursion in Nikola, we must implement a
 primitive iterative operator to incrementally construct arrays.
 
-In Haskell, \texttt{unfoldr} has the type \texttt{(b -> Maybe (a,b)) -> b ->
-[a]}.
+In Haskell, the function \lstinline{unfoldr} of the
+\lstinline{Data.List}-module has the type
+\lstinline{(b -> Maybe (a,b)) -> b -> [a]}.
 
-\texttt{unfoldr f a} recursively populates the element of a list with
-\texttt{f}, as long as it evaluates to a \texttt{Just}-value. It is a well known
+\lstinline{unfoldr f a} recursively populates the element of a list with
+\lstinline{f}, as long as it evaluates to a \lstinline{Just}-value. It is a well known
 way to construct a list, so we pursue that as an extension.
 
 In Nikola the length of an array is the only intrinsic property shared across
 all array representations. Therefore we must know the length of the result array a
-priori to evaluating a Nikola \texttt{unfoldr}.
+priori to evaluating a Nikola \lstinline{unfoldr}.
 
 For a prototype that only uses the last generated element as state, we settle
 for the type signature:
-\begin{verbatim}
+\begin{lstlisting}
 unfold ::
   Shape sh =>
   IsElem a =>
@@ -66,19 +67,19 @@ unfold ::
     (sh -> a -> a) ->
     a ->
     Array PSH sh a
-\end{verbatim}
+\end{lstlisting}
 
-In order to be useful however, \texttt{unfoldr} by itself is not enough.  We
+In order to be useful however, \lstinline{unfoldr} by itself is not enough.  We
 need to be able to iteratively produce entire rows or columns of a matrix as
 required in Algorithm \ref{alg:lsm-algorithm}.
 
 To remedy this, we set out to explore nested maps. Again, lacking nested arrays
 we must use array shapes to express the structure of our computation.  Like in
-the case of \texttt{unfoldr} we thus must express the resulting shape beforehand.
+the case of \lstinline{unfoldr} we thus must express the resulting shape beforehand.
 
 The type we eventually arrived at for our maps capable of nesting is depicted
 here:
-\begin{verbatim}
+\begin{lstlisting}
 mapNest ::
   Shape sh =>
   Shape sh' =>
@@ -89,14 +90,14 @@ mapNest ::
       sh' -> (Exp t Ix -> Array D sh a -> Array PSH sh' b)
           -> Array r  (sh :. Exp t Ix) a
           -> Array PSH (sh' :. Exp t Ix) b
-\end{verbatim}
+\end{lstlisting}
 
-While we require the shape \texttt{sh'} to be specified, there is no guarantee
-in the application \texttt{mapNest f xs} that \texttt{f x} will not produce an
-array exactly the size denoted by \texttt{sh'}. If the resulting array is
-smaller than denoted by \texttt{sh'}, an eventual manifestation of the map to
+While we require the shape \lstinline{sh'} to be specified, there is no guarantee
+in the application \lstinline{mapNest f xs} that \lstinline{f x} will not produce an
+array exactly the size denoted by \lstinline{sh'}. If the resulting array is
+smaller than denoted by \lstinline{sh'}, an eventual manifestation of the map to
 memory will leave some cells uninitialized. Similarly, if the resulting array
-is not bounded by \texttt{sh'}, manifesting it will result in writing out of
+is not bounded by \lstinline{sh'}, manifesting it will result in writing out of
 bounds.
 
 For now we have chosen to accept the existence of these fallacies,
@@ -108,17 +109,17 @@ the type of the array, as done in \cite{thiemannagda}.
   scope. Eventually reference AGDA-Accelerate paper. Isn't it sort of
   what they do?}
 
-Another issue with this definition is the \texttt{Source r a} restriction on
-\texttt{xs}. If the mapped function does not need to index into the array, it
+Another issue with this definition is the \lstinline{Source r a} restriction on
+\lstinline{xs}. If the mapped function does not need to index into the array, it
 is an unnecessary restriction to impose.  Similarly, if the mapped function
 performs only elementwise operations, preserving the porperty of being
 indexable would be valuable to retain for possible further processing of the
 result array.
 
 Risking to further complicate the types, the situation is somewhat remediable
-by defining \texttt{mapNest} as a function in a typeclass parametrised over the
+by defining \lstinline{mapNest} as a function in a typeclass parametrised over the
 involved array representations, as is already the case for typeclass
-\texttt{Map} in module \texttt{Data.Array.Nikola.Operators.Mapping}.
+\lstinline{Map} in module \lstinline{Data.Array.Nikola.Operators.Mapping}.
 
 The most important issue about this definition however, is that it permits
 expressing nested parallelism, which is not directly executable on the flat
@@ -129,7 +130,7 @@ parallel hardware. Treating this issue is the subject of Chapter
 
 All our efforts on iterative array construction draw on Nikola's implementation
 of 'push' arrays. As mentioned earlier, delayed arrays and push arrays are each
-others opposites. Delayed arrays are \texttt{Source} arrays, and their
+others opposites. Delayed arrays are \lstinline{Source} arrays, and their
 manifestation is at the mercy of the consumer of the array -- Therefore it is
 required that the elements of a delayed array are completely independent from
 each other.  Push arrays on the other hand are defined as a stream of
@@ -137,22 +138,22 @@ index-value pairs, and thus need not obey the same restriction on element
 dependence.
 
 Push arrays in Nikola are defined by means of the for-loop constructor
-\texttt{ForE} of \texttt{S.Exp}. This loop constructor however, is very
+\lstinline{ForE} of \lstinline{S.Exp}. This loop constructor however, is very
 low-level in the sense that it includes as arguments a list of variables to be
 looped over and a list of loop bounds corresponding to each of the variables,
 and corresponds directly to a for-loop in C.
 
-% The \texttt{Shape} typeclass defines an accessible interface for constructing
+% The \lstinline{Shape} typeclass defines an accessible interface for constructing
 % for-loops that visit each index of given shape to loop over.  The operation
-% \texttt{seqfor :: Shape sh => sh -> P sh} that we use for constructing our
-% loops is defined using the \texttt{shift} action, and thus needs to be paired
-% with an enclosing \texttt{reset}.  Due to the way that \texttt{shift} operates,
-% what happens is that upon issuing \texttt{seqfor} in the \texttt{P} monad, the
+% \lstinline{seqfor :: Shape sh => sh -> P sh} that we use for constructing our
+% loops is defined using the \lstinline{shift} action, and thus needs to be paired
+% with an enclosing \lstinline{reset}.  Due to the way that \lstinline{shift} operates,
+% what happens is that upon issuing \lstinline{seqfor} in the \lstinline{P} monad, the
 % entire surrounding action up to the nearest enclosing reset is placed inside
-% the body of the for-loop defined by \texttt{seqfor}.
+% the body of the for-loop defined by \lstinline{seqfor}.
 
-However to our regret, using this approach for defining \texttt{unfold} and
-\texttt{mapNest} proved unfruitful, as the part of the C code generation that
+However to our regret, using this approach for defining \lstinline{unfold} and
+\lstinline{mapNest} proved unfruitful, as the part of the C code generation that
 pertains to for-loops in Nikola does not handle cross-iteration data
 dependencies properly. It assumes that variables that are overwritten inside
 the body of the loop constitute new, fresh variables. Due to our time
@@ -165,7 +166,7 @@ obstacles for implementing our extensions properly.
 Our first attempt at defining an unfolding operation was inspired by the
 collective operators of Accelerate.
 
-\begin{verbatim}
+\begin{lstlisting}
 unfold ::
   IsElem a =>
   IsElem (Exp t Ix) =>
@@ -173,11 +174,11 @@ unfold ::
   Source r a =>
     Exp t Ix -> (Exp t Ix -> a -> a)
     -> Array r sh a -> Array PSH (sh :. Exp t Ix) a
-\end{verbatim}
+\end{lstlisting}
 
 By avoiding the need for a nested map, it is guaranteed that the resulting
 unfolded arrays all have the same size. Furthermore, since the operation is a
-mapped version of \texttt{unfold}, the outer structure of the computation is
+mapped version of \lstinline{unfold}, the outer structure of the computation is
 completely static, and it is possible to assign a parallel execution semantics,
 given that the unfolded function is executed sequentially.
 

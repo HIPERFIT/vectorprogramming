@@ -58,7 +58,7 @@ Algorithm \ref{alg:binomial-algorithm} from Section
 \ref{sec:binomial-model} can be written in functional style as the
 function:
 \begin{lstlisting}
-  binomial optionParameters = foldl (map f ...) bs [t..0]
+binomial optionParameters = foldl (map f ...) bs [t..0]
 \end{lstlisting}
 Here we have left out quite a lot of detail, to keep focus on what is
 important for our example, the structure of the program.
@@ -73,12 +73,12 @@ context. In this case, there are two possible parallization
 strategies. We can either take one option at a time, and parallize in
 the way just described:
 \begin{lstlisting}
-  portfolio@$_1$@ = map binomial
+portfolio@$_1$@ = map binomial
 \end{lstlisting}
 Alternatively, we could issue the pricing of each option as a separate
 thread, where the pricing of the individual option is a sequential algorithm:
 \begin{lstlisting}
-  portfolio@$_2$@ = parmap binomial
+portfolio@$_2$@ = parmap binomial
 \end{lstlisting}
 where the \lstinline{map} of the the \lstinline{binomial} algorithm is
 executed sequentially.
@@ -107,7 +107,7 @@ In the above example, we could use \lstinline{sequential} to write
 \lstinline[mathescape]{portfolio$_2$}, without having both a \lstinline{parmap}
 and a \lstinline{map}:
 \begin{lstlisting}
-  portfolio@$_2$@ = map (sequential binomial)
+portfolio@$_2$@ = map (sequential binomial)
 \end{lstlisting}
 which should be understood as ``convert binomial'' to a sequential
 function, where by the outer \lstinline{map} can be executed in
@@ -185,9 +185,9 @@ also one of our goals, there is still a lot of complications that we
 have to be aware of. As an example, how does \lstinline{sequential}
 interact with conditionals, as in the following example:
 \begin{lstlisting}
-  map (\b -> if b 
-             then sequential $ map f ys 
-             else map f ys)
+map (\b -> if b 
+           then sequential $ map f ys 
+           else map f ys)
 \end{lstlisting}
 We have to decide the parallel execution semantics of the outer
 \lstinline{map} before we can launch it. In such cases we have make
@@ -208,7 +208,7 @@ we will discuss this further below (see Section \todo{ref and make
 
 Another problematic, but similar, example is functions of several arguments:
 \begin{lstlisting}
-  zipWith f (sequential as) bs
+zipWith f (sequential as) bs
 \end{lstlisting}
 \todo{write about this}
 
@@ -221,13 +221,13 @@ system. The semantics of the operation is purely about execution and
 it thus has a type similar to identity function, with the restriction
 of working on Nikola terms. One possibility is to give it the type
 \begin{lstlisting}
-  sequential :: Array r sh a -> Array r sh a
+sequential :: Array r sh a -> Array r sh a
 \end{lstlisting}
 but in this case we would not be able to write our
 \lstinline[mathescape]{portfolio$_2$} as we did, as sequential would
 not accept a function argument. Our code would instead be:
 \begin{lstlisting}
-  portfolio@$_2$@ = map (sequential . binomial)
+portfolio@$_2$@ = map (sequential . binomial)
 \end{lstlisting}
 
 \todo{Philip should perhaps write about other possibilities}
