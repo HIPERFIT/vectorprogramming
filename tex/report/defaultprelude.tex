@@ -26,7 +26,27 @@
 \usepackage{listings}
 \usepackage{pdfpages}
 
-\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true, language=Haskell}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true, 
+  language=Haskell, 
+  keywords={map,parmap,foldl,zipWith,replicate,let,in,if,forall,then,else}, 
+  escapechar=@,
+  identifierstyle=\idstyle
+}
+
+\makeatletter
+\newcommand*\idstyle{%
+        \expandafter\id@style\the\lst@token\relax
+}
+\def\id@style#1#2\relax{%
+        \ifcat#1\relax\else
+                \ifnum`#1=\uccode`#1%
+                        \color{blue}
+                \fi
+        \fi
+}
+\makeatother
 
 % ADD "parfor" to algorithmic environment
   % declaration of the new block

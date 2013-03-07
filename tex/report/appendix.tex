@@ -7,7 +7,7 @@ sobol_divisor = Prelude.fromIntegral (2^30)
 grayCode :: Exp Int -> Exp Word32
 grayCode n = fromIntegral (n `xor` (n `shiftR` 1))
 
--- ^ Generate a length @n@ Sobol sequence using the given
+-- Generate a length @n@ Sobol sequence using the given
 -- direction vector by parallelising the inductive algorithm
 sobolN :: Array DIM2 Word32 -> Int -> Acc (Array DIM2 Double)
 sobolN dirVs n =
@@ -40,8 +40,13 @@ unindex3 ix =
   in lift (fromIntegral i, fromIntegral j, fromIntegral k)
 
 fst3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp a
-fst3 e = let (x, _:: Exp b, _:: Exp c) = unlift e in x
+fst3 e = let (x1, x2 :: Exp b, x3 :: Exp c) = unlift e in x1
 
 thd3 :: forall a b c. (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp c
-thd3 e = let (_ :: Exp a, _:: Exp b, x) = unlift e in x
+thd3 e = let (x1 :: Exp a, x2 :: Exp b, x3) = unlift e in x3
 \end{lstlisting}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 

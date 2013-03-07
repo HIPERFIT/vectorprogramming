@@ -1,5 +1,21 @@
 \chapter{Directing parallelism}
 \label{chap:directing-parallelism}
+% \item Discussion
+%   \begin{itemize}
+%   \item Presentation of alternatives
+%     \begin{itemize}
+%     \item Full vectorisation
+%     \item CUDA 5.0 nested calls, we should definitely read about how
+%        NVIDIA tackles the problem of mapping nested programs.
+%      \item Repa computeS/computeP
+%      \item Type tagging
+%     \end{itemize}
+%   \item Allows for experimentation with different parallelization
+%   strategies
+%   \item Possible alternative to Repa computeS/computeP
+%   \end{itemize}
+% \end{itemize}
+
 % * Motivation
 %   - NDP
 %   - Search for alternatives to full vectorisation
@@ -28,156 +44,401 @@ In the next section we will introduce our take on nested
 data-parallelism, and in the remaining sections of the chapter we will
 discuss the implications and alternatives to such an extension.
 
+\section{The \texttt{sequential}-operator}
 % * Presentation of sequential
 %   - A few small examples
 %   - Use-cases in our option pricing examples
 
-\section{The \texttt{sequential}-operator}
 Thus motivated, we will now take a look at a typical nested
-data-parallel program.
+data-parallel program, inspired by our binomial option pricing case,
+and the employ our suggested extension, to direct how the
+parallelization is performed.
 
-<some example>
+Algorithm \ref{alg:binomial-algorithm} from Section
+\ref{sec:binomial-model} can be written in functional style as the
+function:
+\begin{lstlisting}
+  binomial optionParameters = foldl (map f ...) bs [t..0]
+\end{lstlisting}
+Here we have left out quite a lot of detail, to keep focus on what is
+important for our example, the structure of the program.
 
-<transformation to flat program>
+We have seen one way this can be parallelized by issuing the
+\lstinline{map} in parallel and synchronize between each
+iteration of the fold, but we will now look at the problem of
+portfolio pricing, where several options are priced simultaneously. Do
+to time constraint we have not studied this problem closely in the
+survey, but it serves as a good illustration in the current
+context. In this case, there are two possible parallization
+strategies. We can either take one option at a time, and parallize in
+the way just described:
+\begin{lstlisting}
+  portfolio@$_1$@ = map binomial
+\end{lstlisting}
+Alternatively, we could issue the pricing of each option as a separate
+thread, where the pricing of the individual option is a sequential algorithm:
+\begin{lstlisting}
+  portfolio@$_2$@ = parmap binomial
+\end{lstlisting}
+where the \lstinline{map} of the the \lstinline{binomial} algorithm is
+executed sequentially.
 
-% * Discussion
-%   - Presentation of alternatives
-%      * Full vectorisation
-%      * Repa computeS/computeP
-%      * Type tagging
+We will get back to the block-level parallel solution from the CUDA
+SDK, Algorithm \ref{alg:cuda-binom}, Section
+\ref{sec:binomial-model}. \todo[noinline]{make sure that we return to
+  this}. For now we will look at the performance of these two
+implementations. In the first case, \lstinline[mathescape]{portfolio$_1$}, will
+be an efficient strategy for few long-running options of various
+length, as we have few problems that use all resources of our parallel
+computer. On the other hand \lstinline[mathescape]{portfolio$_2$} will be
+efficient for problems with many options of similar
+length. \todo{uddyb ovenstående. Evt. forklar vha. noget asymptotic
+  køretid, evt. work og depth, inddrag expiration time \lstinline{t}}
 
-\section{Alternative implementations}
-%   - Interactions with fusion
+\subsection{Our proposal}
+Now, what we propose is to add a primitive construct to Nikola that
+serves as a separator between what should be executed sequentially and
+what should be executed in parallel. The idea being that it should be
+simple to move between different parallelization strategies, without
+changing the code logic. We have chosen the name \lstinline{sequential}
+for the construct that represents this division.
 
-\section{Comparison with CUDA programs}
-%   - How it allows you to write programs much in the same style as
-%     you are currently writing CUDA programs.
+In the above example, we could use \lstinline{sequential} to write
+\lstinline[mathescape]{portfolio$_2$}, without having both a \lstinline{parmap}
+and a \lstinline{map}:
+\begin{lstlisting}
+  portfolio@$_2$@ = map (sequential binomial)
+\end{lstlisting}
+which should be understood as ``convert binomial'' to a sequential
+function, where by the outer \lstinline{map} can be executed in
+parallel. Such a conversion is of course possible, as all parallel
+programs can be rewritten as a sequential program.
 
-%   - We believe that we can obtain comparable performance to code
-%     written directly in CUDA
+One should think about a map as a ``potentially parallel'' operation,
+and only after investigating the point of use, can we determine
+whether it is to be evaluated in parallel or sequentially. In this
+case the inner \lstinline{map} ends up being evaluated sequentially
+rather than parallel, the \lstinline{foldl} operation does not have a
+parallel version, and thus only have sequential semantics.
+
+The suggested parallel execution semantics of programs written using
+\lstinline{sequential} is:
+\begin{quote}
+  \emph{The innermost potentially parallel operation enclosing the
+    expression with the }\lstinline{sequential}\emph{-marker gets to
+    be executed in parallel.}
+\end{quote}
+
+As mentioned, the \lstinline{foldl} in the example can not be executed
+in parallel as there is a strict dependence between each iteration,
+but there are still more than one possible execution strategy for the
+reduction. If we look at the case of
+\lstinline[mathescape]{portfolio$_1$} where there is no use of
+\lstinline{sequential}, we have the semantics that the innermost
+\lstinline{map} will be executed in parallel. Thus, the
+\lstinline{foldl} will have to be a host function, that serves as
+synchronization point between each parallel \lstinline{map}.
+
+That is, our proposal has the influence that we merge the host and GPU
+code into a single language. Depending on the placement of
+\lstinline{sequential}-flags in the code, we get different
+
+We can see \lstinline{sequential} as a meta-language construct, which
+in a preprocessing step converts our language into a lower level
+language where array operations are materialized as concrete
+implementations which are either: sequential device code, parallel
+device code or sequential host code. We are not suggesting that this
+is the optimal strategy for an actual implementation of a language
+with \lstinline{sequential}.
+
+Using Nikola or Accelerate, one is to write GPU code in the embedded
+DSL and use standard Haskell constructs in all other cases. With our
+proposal we unify host and device code of a problem into a single
+language.
+
+\subsection{Evaluation strategy}
+% * Use the syntax tree as a dependency graph
+% * Execute kernels which have met all their dependencies
+% asynchronously. 
+% * Synchronize before a kernel launch 
+% * If a sequential expression is not enclosed by a parallel
+%   array operator, the expression could be executed in a CPU thread
+% *
+There are several ways this can be mapped to a concrete machine with a
+graphics card. We suggest that the runtime uses the syntax tree as a
+an acyclic dependency graph, and for all kernels where all
+dependencies are met, executes them concurrently and asynchronuously.
+
+Synchronization with possible dependencies is then necessary before
+any operation waiting can to be executed.
+
+Executing the kernels asynchronously leaves CPU time for other tasks,
+and we might be able to extend this to a heterogeneous language. See
+Section \todo{ref} below.
+
+\section{Consequences and complications}
+% zipWith f (sequential as) bs
+% map (\b -> if b then sequential $ map f ys else map f ys) xs
+
+Eventhough the semantics explained above might seem simple, which is
+also one of our goals, there is still a lot of complications that we
+have to be aware of. As an example, how does \lstinline{sequential}
+interact with conditionals, as in the following example:
+\begin{lstlisting}
+  map (\b -> if b 
+             then sequential $ map f ys 
+             else map f ys)
+\end{lstlisting}
+We have to decide the parallel execution semantics of the outer
+\lstinline{map} before we can launch it. In such cases we have make
+special cases for our otherwise simple rule above. One option could be
+to make \lstinline{sequential} spill over to the
+\lstinline{else}-branch, and the outer \lstinline{map} would be a
+parallel map. Another option is that the outer map is executed as a
+host function and depending on the value of \lstinline{b} we use
+execute the inner \lstinline{map} sequentially on the host version or
+in parallel on the device.
+
+A third alternative is to add restrictions such that the above code is
+not possible to write. That is, such that each branch of the
+sequential must located on the same execution level. This is perhaps
+possible by adding the execution strategy to the type of expressions,
+we will discuss this further below (see Section \todo{ref and make
+  sure this is written})
+
+Another problematic, but similar, example is functions of several arguments:
+\begin{lstlisting}
+  zipWith f (sequential as) bs
+\end{lstlisting}
+\todo{write about this}
+
+\subsection{The type of \texttt{sequential}}
+% Exp t a -> Exp t a
+% Array r sh a -> Array r sh a
+In the Nikola context, it is worth looking at how
+\lstinline{sequential} can be incorporated into the existing type
+system. The semantics of the operation is purely about execution and
+it thus has a type similar to identity function, with the restriction
+of working on Nikola terms. One possibility is to give it the type
+\begin{lstlisting}
+  sequential :: Array r sh a -> Array r sh a
+\end{lstlisting}
+but in this case we would not be able to write our
+\lstinline[mathescape]{portfolio$_2$} as we did, as sequential would
+not accept a function argument. Our code would instead be:
+\begin{lstlisting}
+  portfolio@$_2$@ = map (sequential . binomial)
+\end{lstlisting}
+
+\todo{Philip should perhaps write about other possibilities}
 
 
-\section{Possible runtime errors}
+\subsection{Interactions with fusion}
+% - Interactions with fusion
+% - If we employ it as a meta-language construct, fusion can perhaps
+% be performed as usual
+
+\subsection{Possible runtime errors}
 %   - How it will introduce possibilities for runtime errors (by
 %     irregularity), and that we do not have a proposal for how to solve
 %     this, and we are not that happy about that aspect.
 
-* Put purity aside, to attain interface that allows access to all
+As mentioned in the previous chapter, the introduction of nested maps
+in the form suggested by our \lstinline{mapNest} Nikola-construct,
+also introduces the possibility of runtime errors, as the suggested
+contruct does not prevent irregular arrays.
+\todo{Refer to mapNest section in previous chapter.}
 
-\section{Repa}
+Further problems such as this one might also arise for other
+operations, when defining nestable versions.
+
+\todo{hypothese a solution and say that this is perhaps the greatest
+  obstacle for acceptance among other researchers, but we believe that
+  we should start with a language that can operate in the way that we
+  need, and then afterwards look for solutions to such problems. This
+  language can eventually serve as a lower level language for other
+  more targetted domain-specific languages where such problems has
+  been hidden}
+
+\section{Alternative implementations}
+% * Discussion
+%   - Presentation of alternatives
+%      * Full vectorisation
+%      * CUDA 5.0 nested calls, we should definitely read about how
+%        NVIDIA tackles the problem of mapping nested programs.
+%      * Repa computeS/computeP
+%      * Type tagging
+
+\section{Extensions and future work}
+We of course have a lot of future work, as the suggestions in this
+chapter are highly hypothetical, in that we have not found time to
+finish an actual implementation. There might (and we are almost that
+there will) be more corner cases that we have not thought about, than
+those mentioned in Section \todo{ref}. In addition to the obvious task
+of making a real implementation, we a further set of extensions that
+might be interesting to look closer at.
+
+\subsection{Repa}
 %   - Possible alternative to Repa computeS/computeP
 As mentioned\todo[noinline]{remember to actually mention it above},
 Repa uses ``computeS'' for much the same as we use ``computeP''. We
 believe that it is unnecessary to include both.
 
-\section{Experimentation}
-%   - Allows for experimentation with different parallelization
+\subsection{Experimentation}
+% - Allows for experimentation with different parallelization
 %   strategies
+% - Allows for automatic experimentation
 Another interesting aspect of such a light-weight construct as
 sequential, that only instructs how computation is mapped to the
-hardware, and not, for example.
+hardware, is that we can experiment using different parallelization
+strategies, just be moving it around in the code. This might even
+allow for automatic experimentation of different parallelizations on
+the current hardware or perhaps some strategies based on either
+\emph{machine-learning} (see for instance the the Qilin system or the
+method presented in \todo{insert references to both Qilin and
+  heterogeneous opencl paper}) or a developed set of rules can be used
+to insert \lstinline{sequential} automatically, such that it will not
+even have to be exposed to the programmer.
 
+\subsection{Heterogeneous computing}
+% cpuEval and more than one graphics card
 
-
-
-
+\subsection{Cluster computing}
+% cloudEval
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% \section{Comparison with CUDA programs}
+% %   - How it allows you to write programs much in the same style as
+% %     you are currently writing CUDA programs.
 
-We are interested in exploiting as much parallelism as possible, but the
-ability to express nested maps leaves us in a dilemma: Which of the nested maps
-should be run in parallel?
+% If we take a step back, and look at programs written directly in CUDA
+% C, they will all follow more or less the same pattern \todo{again
+%   mention that CUDA 5.0 allows nesting, so newer programs might
+%   operate entirely differently} of sequential host code interleaved by
+% kernel launches, where each kernel contains sequential code.
 
-Various ways exist to treat the problem of nested parallelism, with the
-extremes being disallowing nested parallelism at all and the vectorisation
-transformation of NESL \cite{nesl}. While the vectorisation transformation
-removes issues of both nesting and irregularity, it may also incur a certain
-amount of overhead that can be prohibitive to its practical application, see
-\cite{Catanzaro2011}.
+% \begin{verbatim}
+%   host code
+%   ...
+%   kernel0<<<blockSize, gridSize>>>(...)
+%      kernel code
+%      ...
+%   host code
+%   ...
+%   kernel1<<<blockSize, gridSize>>>(...)
+%      kernel code
+%      ...
+%   host code
+% \end{verbatim}
 
-Nikola itself is able to handle some degree of nested parallelism by exploiting
-the up to three-dimensional grid layout of CUDA threads.
+% Each kernel can employ different memory patterns and perform different
+% kinds of internal synchronization, while performing their work.
 
-We propose a different compromise. Based on viewing nikola programs a sequence
-of parallel actions, that are themselves composed only of sequential parts, we
-propose adding a primitive construct to Nikola that serves as a separator
-between what should be executed sequentially and what should be executed in
-parallel. The innermost potential parallel operation enclosing the expression
-with the marker gets to be executed in parallel. We have chosen to name this
-construct \texttt{sequential}.
+% When we compare this code to code written with sequential, we see that
+% each kernel
 
-Consider how the expression \texttt{map (\bs -> map f bs) as} (ignoring the
-technical details of shape specification for clarity) may be given a parallel
-execution semantics:
+%   - We believe that we can obtain comparable performance to code
+%     written directly in CUDA
 
-\begin{verbatim}
 
-ex1 = map (\bs -> map (sequential . f) bs) as
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ex2 = map (\bs -> sequential $ map f bs) as
+% We are interested in exploiting as much parallelism as possible, but the
+% ability to express nested maps leaves us in a dilemma: Which of the nested maps
+% should be run in parallel?
 
-ex3 = map (\bs -> map f bs) as
+% Various ways exist to treat the problem of nested parallelism, with the
+% extremes being disallowing nested parallelism at all and the vectorisation
+% transformation of NESL \cite{nesl}. While the vectorisation transformation
+% removes issues of both nesting and irregularity, it may also incur a certain
+% amount of overhead that can be prohibitive to its practical application, see
+% \cite{Catanzaro2011}.
 
-\end{verbatim}
 
-In \texttt{ex1}, the outer map happens sequentially, while the inner map, being
-the innermost potentially parallel operation outside \texttt{sequential} is
-executed in parallel, while each application of function \texttt{f} happens
-sequentially.
 
-In \texttt{ex2}, the outer map is the innermost potentially parallel operation
-enclosing \texttt{sequential}, and thus it is executed in parallel, while the
-inner map of \texttt{f} is executed sequentially.
+% Nikola itself is able to handle some degree of nested parallelism by exploiting
+% the up to three-dimensional grid layout of CUDA threads.
 
-In \texttt{ex3}, either the inner map is executed in parallel if \texttt{f}
-contains no potential parallelism. Otherwise some part of \texttt{f} gets to be
-executed in parallel.
+% We propose a different compromise. Based on viewing nikola programs a sequence
+% of parallel actions, that are themselves composed only of sequential parts, we
+% propose adding a primitive construct to Nikola that serves as a separator
+% between what should be executed sequentially and what should be executed in
+% parallel. The innermost potential parallel operation enclosing the expression
+% with the marker gets to be executed in parallel. We have chosen to name this
+% construct \texttt{sequential}.
 
-Which of the above is the more beneficial depends entirely on the precise
-operations denoted by \texttt{f} in conjunction with the capabilities of the
-hardware that is to execute them, and of course the shape of \texttt{as}.
+% Consider how the expression \texttt{map (\bs -> map f bs) as} (ignoring the
+% technical details of shape specification for clarity) may be given a parallel
+% execution semantics:
 
-\section{Implications for fusion}
+% \begin{verbatim}
 
-Directing the parallel execution strategy using \texttt{sequential} interacts
-loop fusion.  In each of the examples \texttt{ex1}-\texttt{ex3} above, some
-parts of \texttt{as} may be computed in parallel, namely the hyperplane slices
-corresponding with a parallel map.
+% ex1 = map (\bs -> map (sequential . f) bs) as
 
-But consider the example:
-\begin{verbatim}
-ex4 = map (\bs -> map f bs) (sequential as)
-\end{verbatim}
+% ex2 = map (\bs -> sequential $ map f bs) as
 
-Here we would require that both maps and \texttt{f} be executed sequentially,
-at least down until an eventual point where \texttt{f} acts only on single
-elements of \texttt{as}.
+% ex3 = map (\bs -> map f bs) as
 
-Obviously, we realise that these examples only give a small hint as to the
-consequences of introducing a construct such as \texttt{sequential}.
-Investigating this would be an obligatory part of further research on the
-viability of \texttt{sequential}.
+% \end{verbatim}
 
-\section{Implementation considerations}
+% In \texttt{ex1}, the outer map happens sequentially, while the inner map, being
+% the innermost potentially parallel operation outside \texttt{sequential} is
+% executed in parallel, while each application of function \texttt{f} happens
+% sequentially.
 
-So far we have only seriously considered making \texttt{sequential} an
-additional primitive, usable as a function of type \texttt{Exp t a -> Exp t a}.
+% In \texttt{ex2}, the outer map is the innermost potentially parallel operation
+% enclosing \texttt{sequential}, and thus it is executed in parallel, while the
+% inner map of \texttt{f} is executed sequentially.
 
-However, inspired by the use of array representation type tags, we have also
-entertained the idea that the execution mode dictated by use of
-\texttt{sequential} could be mirrored in the type of terms. But as the types
-used in Nikola terms are already a complicated, complete with interaction with
-various typeclasses and the value lifting machinery, we have postponed further
-exploration of this.
+% In \texttt{ex3}, either the inner map is executed in parallel if \texttt{f}
+% contains no potential parallelism. Otherwise some part of \texttt{f} gets to be
+% executed in parallel.
 
-\section{Implementation status}
+% Which of the above is the more beneficial depends entirely on the precise
+% operations denoted by \texttt{f} in conjunction with the capabilities of the
+% hardware that is to execute them, and of course the shape of \texttt{as}.
 
-Currently our effort concerning the addition of \texttt{sequential} to Nikola
-has been mostly hypothetical. The idea arose as a simple and versatile
-alternative to full program vectorisation, and we think it holds some promising
-in that respect. At least it appears worthy of further study.  While we have
-made some effort at implementing it in Nikola, this is far from complete.
+% \section{Implications for fusion}
+
+% Directing the parallel execution strategy using \texttt{sequential} interacts
+% loop fusion.  In each of the examples \texttt{ex1}-\texttt{ex3} above, some
+% parts of \texttt{as} may be computed in parallel, namely the hyperplane slices
+% corresponding with a parallel map.
+
+% But consider the example:
+% \begin{verbatim}
+% ex4 = map (\bs -> map f bs) (sequential as)
+% \end{verbatim}
+
+% Here we would require that both maps and \texttt{f} be executed sequentially,
+% at least down until an eventual point where \texttt{f} acts only on single
+% elements of \texttt{as}.
+
+% Obviously, we realise that these examples only give a small hint as to the
+% consequences of introducing a construct such as \texttt{sequential}.
+% Investigating this would be an obligatory part of further research on the
+% viability of \texttt{sequential}.
+
+% \section{Implementation considerations}
+
+% So far we have only seriously considered making \texttt{sequential} an
+% additional primitive, usable as a function of type \texttt{Exp t a -> Exp t a}.
+
+% However, inspired by the use of array representation type tags, we have also
+% entertained the idea that the execution mode dictated by use of
+% \texttt{sequential} could be mirrored in the type of terms. But as the types
+% used in Nikola terms are already a complicated, complete with interaction with
+% various typeclasses and the value lifting machinery, we have postponed further
+% exploration of this.
+
+% \section{Implementation status}
+
+% Currently our effort concerning the addition of \texttt{sequential} to Nikola
+% has been mostly hypothetical. The idea arose as a simple and versatile
+% alternative to full program vectorisation, and we think it holds some promising
+% in that respect. At least it appears worthy of further study.  While we have
+% made some effort at implementing it in Nikola, this is far from complete.
 
 %%% Local Variables: 
 %%% mode: latex
