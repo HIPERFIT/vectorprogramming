@@ -110,6 +110,12 @@ The output of all our benchmarks has been verified manually, through
 comparison of results with our reference $R$ implementations of the
 algorithms.
 
+Each of the Haskell benchmarks we have run were compiled with the same set of
+parameters, mandating the use of the llvm code generation backend and level-3
+optimizations (via \verb|-optlo-O3|.  Each of the CUDA benchmarks have been
+compiled with no extra flags. Our C benchmarks have been compiled using level-3
+(\verb|-O3|) optimizations.
+
 \subsection{Hardware}
 All benchmarks have been performed on a computer provided by the
 HIPERFIT research center running Ubuntu 12.04 LTS and CUDA 5.0.
