@@ -114,8 +114,8 @@ When executing a grid of CUDA blocks on a Kepler architecture GPU,
 each block is assigned to a single SM (each SM can process several
 blocks). Each block is partitioned into \textit{warps} which are
 groups of 32 threads, which are scheduled on the 192 CUDA cores of the
-streaming multiprocessor. \todo{explain warp schedulers and why there
-  are 4 rather than 6 schedulers}
+streaming multiprocessor. % \todo{explain warp schedulers and why there
+  % are 4 rather than 6 schedulers}
 
 All threads in a \textit{warp} always executes exactly the same
 instruction, this is called \textit{SIMD}, single instruction,

@@ -171,12 +171,33 @@ structure of the computation is completely static, and it is possible
 to assign a parallel execution semantics, given that the unfolded
 function is executed sequentially.
 
-As such it fits quite well with the other array operations in Accelerate. If it
-were to be implemented in Accelerate, it would enable us to express the
-optimised version of Sobol sequences, Algorithm \ref{alg:sobol-parallel-2},
-which is currently inexpressible.
+As such it fits quite well with the other array operations in
+Accelerate. If it were to be implemented in Accelerate or Nikola, it
+would enable us to express the optimised version of Sobol sequences,
+Algorithm \ref{alg:sobol-parallel-2}, which is currently
+inexpressible. 
 
-\todo{explain}
+An implementation using the \lstinline{unfold}-operator can be seen in
+Algorithm \ref{alg:sobol-unfold}. As $xs$ is a 1D-array, the returned
+array, but in memory the values are in the order of the Sobol
+sequence. Thus, we just has to tell Nikola or Accelerate to interpret
+it differently, which can be done using the built-in
+\lstinline{reshape}-function found in both languages.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{SobolSkipping-Unfold}{$v$, $n$, $p$, $b$}
+    \State $xs \gets$ \textbf{parmap} ($\lambda i$. -> \textsc{SobolInductive}($v$, \textsc{GrayCode} $i$)) $[0..2^{p+b}-1]$
+    \State $ys \gets$ \textbf{unfold} $n$ ($\lambda i. \lambda x_i$. \textsc{SkipAhead}($p$, $b$, $i$, $x_i$)) $xs$
+    \State \Return $ys$
+    \EndFunction
+  \end{algorithmic}
+  \caption{Parallel Sobol sequence generator. $v$ is the direction
+    vector, $n \cdot 2^{p+b}$ is the length of the sequence, $2^p$ is the block size
+    and $2^b$ is the number of blocks.}
+  \label{alg:sobol-unfold}
+\end{algorithm}
+
 
 \section{Discussion}
 Which of the two possible implementations to select depends on ones

@@ -166,7 +166,8 @@ mapping \textsc{SobolInductive} over the indices.
 
 The \textsc{SobolInductive} algorithm as well as the remaining
 algorithms produces integer values in the range $[0, 2^l]$ and we thus
-has to normalize this to $(0,1]$ to get a uniform distribution. In
+has to normalize this to $(0,1]$ to get a uniform distribution. This
+normalization is not included in the algorithms of this section. In
 addition, we have to convert this uniform distribution to a normal
 distribution. This will be discussed in Section
 \ref{sec:sampling_normaldist}.
@@ -294,15 +295,15 @@ On a GPU this can done by letting a group of $2^b$ blocks of size
 $2^p$ threads cooperate on filling a block of size $2^{p+b}$ before
 continuing work on the next block.
 
-This also illustrates that optimized GPU algorithms in some cases
-needs to instruct kernel scheduling should be, as we need to make sure
-that the size of a block and the number of blocks is a power of two,
-and the algorithm needs information about these parameters.
+% This also illustrates that optimized GPU algorithms in some cases
+% needs to instruct kernel scheduling should be, as we need to make sure
+% that the size of a block and the number of blocks is a power of two,
+% and the algorithm needs information about these parameters.
 
-\todo{The survey should be aware of this: How much control do we have
-  over kernel execution in Nikola and Accelerate? Is it possible to
-  drop down to a lower layer (without writing CUDA C) for such
-  implementations?}
+% \todo{The survey should be aware of this: How much control do we have
+%   over kernel execution in Nikola and Accelerate? Is it possible to
+%   drop down to a lower layer (without writing CUDA C) for such
+%   implementations?}
 
 
 % \begin{align}
@@ -334,8 +335,8 @@ and the algorithm needs information about these parameters.
 
 In the same book chapter they present skip-ahead strategies for two
 PRNGs, the Mersenne Twister (the MT19937 variant) and L'Ecuyer's
-Multiple Recursive Generator (MRG32k3a). \todo{Write some more about
-  how they parallelise}
+Multiple Recursive Generator (MRG32k3a). % \todo{Write some more about
+  % how they parallelise}
 
 \subsection{Sampling the standard normal distribution}
 \label{sec:sampling_normaldist}
@@ -429,8 +430,8 @@ $\mathbf{A}^T\mathbf{A}\mathbf{x} = \mathbf{A}^T\mathbf{b}$ in
 There are several ways to solve linear systems, for instance
 LU-decomposition, QR-decomposition or Cholesky-decomposition. We have
 chosen to implement Cholesky-decomposition.
-\todo{perhaps reference that Cholesky-decompositions are used other
-  places in Finance, see Paul Glasserman book}
+% \todo{perhaps reference that Cholesky-decompositions are used other
+%   places in Finance, see Paul Glasserman book}
 
 With Cholesky decomposition we find a lower triangular matrix
 $\mathbf{L}$ such that $\mathbf{A} = \mathbf{LL}^T$. And now forward
