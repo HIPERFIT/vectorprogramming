@@ -178,6 +178,17 @@ which is currently inexpressible.
 
 \todo{explain}
 
+\section{Discussion}
+Which of the two possible implementations to select depends on ones
+point of view. From one point of view, all programs that type checks
+should be correct and come with guarantees of good performance. As we
+have seen this style does in some cases break program composability,
+but the other aspects are certainly also worth pursuing.
+
+In this case, we find that the one invariant a developer has to
+manually enforce when applying our \lstinline{mapNest} is worth the
+extra cost in man hours, when compared to reading and writing programs
+in the style we have seen in Section \todo{ref}.
 
 %%% Local Variables:
 %%% mode: latex
