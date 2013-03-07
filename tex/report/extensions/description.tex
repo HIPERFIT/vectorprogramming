@@ -4,36 +4,36 @@ In this section we describe the part of Nikola that serves as the language
 programming interface, as well as the middle layer which is still backend
 agnostic.
 
-The Nikola language is made up of three data types: \texttt{Exp t a},
-\texttt{Array r sh a} and the program monad \texttt{P a}. These parts are all
-backend agnostic. It also provides a type class directed \texttt{compile}
+The Nikola language is made up of three data types: \lstinline{Exp t a},
+\lstinline{Array r sh a} and the program monad \lstinline{P a}. These parts are all
+backend agnostic. It also provides a type class directed \lstinline{compile}
 function for compiling Nikola functions to CUDA code which is subsequently
-wrapped as regular haskell functions. \texttt{Exp t a} expressions are first
+wrapped as regular haskell functions. \lstinline{Exp t a} expressions are first
 translated to another first-order untyped abstract syntax before CUDA code
 generation.
 
-\paragraph{Nikola scalar expressions} are represented by the \texttt{Exp t a} type, with
-the phantom type variable \texttt{t} representing the target architecture for
-the expression, eg.  \texttt{CUDA}. Thus, it is possible to have Nikola terms
+\paragraph{Nikola scalar expressions} are represented by the \lstinline{Exp t a} type, with
+the phantom type variable \lstinline{t} representing the target architecture for
+the expression, eg.  \lstinline{CUDA}. Thus, it is possible to have Nikola terms
 specialised for different backends. This is unusual, as programming languages
 are typically assumed universal in the sense that every well-typed expression
 is executable on every supported machine architecture. Nikola is the first
 programming language we have witnessed to explicitly encode term portability in
 the type system. However, the ability to specialise expressions to targets
-doesn't extend into the lower layers of Nikola, so as such the \texttt{t} type
+doesn't extend into the lower layers of Nikola, so as such the \lstinline{t} type
 variable only clutters up type signatures currently.
 
-\paragraph{Arrays in Nikola} are modeled by the type \texttt{Array r sh a}, an associated
-type of the typeclass \texttt{IsArray r a}. Arrays are parametrised on their
-representation and shape by the type variables \texttt{r} and \texttt{sh},
+\paragraph{Arrays in Nikola} are modeled by the type \lstinline{Array r sh a}, an associated
+type of the typeclass \lstinline{IsArray r a}. Arrays are parametrised on their
+representation and shape by the type variables \lstinline{r} and \lstinline{sh},
 following in the tradition of Repa. The only common operation for all arrays is
-that of extracting their shape through the function \texttt{extent}. Array
+that of extracting their shape through the function \lstinline{extent}. Array
 shapes are similar to those of Repa and Accelerate, denoted as instances of
-typeclass \texttt{Shape sh}.
+typeclass \lstinline{Shape sh}.
 
 Three principal array representations are provided by Nikola: The global array,
 the delayed array, and the push array, denoted respectably by the types
-\texttt{G}, \texttt{PSH} and \texttt{D}. This is a source of both control and
+\lstinline{G}, \lstinline{PSH} and \lstinline{D}. This is a source of both control and
 complexity, as each representation gives rise to different features and
 restrictions. The global array represents a certain manifest range of memory
 cells, from which it is only referentially safe to read. Push arrays and
@@ -47,45 +47,45 @@ arrays they represent. A delayed array is simply a function from indices to
 values, while a push array may be viewed as a stream of index/value pairs, that
 may appear in potentially any ordering.
 
-\paragraph{The type of the low-level abstract syntax} is \texttt{S.Exp},
-qualified to avoid confusion with \texttt{Exp t a}. This is elaborated in the
-nikola reference in section \ref{section:nikola-reference}.  \texttt{S.Exp}
+\paragraph{The type of the low-level abstract syntax} is \lstinline{S.Exp},
+qualified to avoid confusion with \lstinline{Exp t a}. This is elaborated in the
+nikola reference in section \ref{section:nikola-reference}.  \lstinline{S.Exp}
 defines primitive constructs for annonymous functions, delayed arrays,
-accessing and manipulation of mutable arrays, and a \texttt{for}-loop
+accessing and manipulation of mutable arrays, and a \lstinline{for}-loop
 construct. Many of these constructs map directly to corresponding C constructs.
 
-\paragraph{The monad \texttt{P a}} serves some of the same roles as the
-\texttt{IO} monad does in plain Haskell. One must for example only manipulate
-mutable arrays from within the \texttt{P} monad.  It is a type alias for the
-slightly more elaborate monad type \texttt{type P a = R S.Exp a}. The monad
-\texttt{R r a} is the reification monad, used to convert the various
-frontend datatypes such as \texttt{Exp t a} and \texttt{Array r sh a} into the
-low-level abstract syntax \texttt{S.Exp}.
+\paragraph{The monad \lstinline{P a}} serves some of the same roles as the
+\lstinline{IO} monad does in plain Haskell. One must for example only manipulate
+mutable arrays from within the \lstinline{P} monad.  It is a type alias for the
+slightly more elaborate monad type \lstinline{type P a = R S.Exp a}. The monad
+\lstinline{R r a} is the reification monad, used to convert the various
+frontend datatypes such as \lstinline{Exp t a} and \lstinline{Array r sh a} into the
+low-level abstract syntax \lstinline{S.Exp}.
 
-To enable this, monad \texttt{R r a} is a continuation monad.  \todo{for
+To enable this, monad \lstinline{R r a} is a continuation monad.  \todo{for
 now just assume knowledge of continuation passing monads :-(} But instead of
 direct access to the underlying continuation, Nikola uses delimited
 continuations, described in \cite{wadler1994monads} and introduced first in
 \cite{filinski1996controlling}.
 The interface to using delimited continuations consists of two special operations:
 
-\begin{verbatim}
+\begin{lstlisting}
 shift :: ((a -> R r r) -> R r r) -> R r a
 reset :: R r a -> R r r
-\end{verbatim}
+\end{lstlisting}
 
-Which when specialised to the \texttt{P} monad becomes:
+Which when specialised to the \lstinline{P} monad becomes:
 
-\begin{verbatim}
+\begin{lstlisting}
 shift :: ((a -> P S.Exp) -> P S.Exp) -> P a
 reset :: P a -> P S.Exp
-\end{verbatim}
+\end{lstlisting}
 
-\texttt{shift} and \texttt{reset} work in tandem. A full account of the use and
+\lstinline{shift} and \lstinline{reset} work in tandem. A full account of the use and
 details of delimited continuations is out of scope for this thesis, but
 consider this short typical usage pattern:
 
-\begin{verbatim}
+\begin{lstlisting}
 reset $ do
   ...
   y <- shift $ \k -> do
@@ -94,25 +94,25 @@ reset $ do
     ...
   ...
 
-\end{verbatim}
+\end{lstlisting}
 
-In this \texttt{shift} expression, \texttt{k} is a continuation representing
-all that is going to happen up until the enclosing \texttt{reset}.  Upon
-invoking \texttt{k ""}, control shifts outside of \texttt{shift}, and \texttt{y}
-is bound to the empty string \texttt{""}. Upon reaching the end of the monadic
-action inside \texttt{reset}, control is shifted back into \texttt{shift}, and
-\texttt{x} is bound to the result of the enclosing action. The eventual result
-of the action inside \texttt{shift} then becomes the result of the enclosing
-\texttt{reset}. Informally, \texttt{shift} and \texttt{reset} turn the code
+In this \lstinline{shift} expression, \lstinline{k} is a continuation representing
+all that is going to happen up until the enclosing \lstinline{reset}.  Upon
+invoking \lstinline{k ""}, control shifts outside of \lstinline{shift}, and \lstinline{y}
+is bound to the empty string \lstinline{""}. Upon reaching the end of the monadic
+action inside \lstinline{reset}, control is shifted back into \lstinline{shift}, and
+\lstinline{x} is bound to the result of the enclosing action. The eventual result
+of the action inside \lstinline{shift} then becomes the result of the enclosing
+\lstinline{reset}. Informally, \lstinline{shift} and \lstinline{reset} turn the code
 inside-out.
 
 \section{Nikola Backend Architecture}
 
-Compiling a Nikola function relies on both reification to \texttt{S.Exp}, a
+Compiling a Nikola function relies on both reification to \lstinline{S.Exp}, a
 mechanism to determine the type of the resulting Haskell function, and the
-translation from \texttt{S.Exp} abstract syntax to C abstract syntax.
-Reification is handled by the typeclass \texttt{Reifiable a b}, and the
-Haskell-interfacing parts of compilation by \texttt{Compilable a b}.  The
+translation from \lstinline{S.Exp} abstract syntax to C abstract syntax.
+Reification is handled by the typeclass \lstinline{Reifiable a b}, and the
+Haskell-interfacing parts of compilation by \lstinline{Compilable a b}.  The
 details of how Nikola manages to interface Haskell with the compiled Nikola
 code is documented in \cite{mainland2010nikola}.
 
@@ -124,3 +124,8 @@ expressing his additions in terms of the low-level abstract syntax.
 Once a term has undergone reification, it is translated into C abstract syntax.
 This is a somewhat straightforward translation, as many of the components
 correspond directly to C.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End: 

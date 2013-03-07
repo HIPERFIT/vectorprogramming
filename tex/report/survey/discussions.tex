@@ -52,7 +52,7 @@ of statistics and data analysis.
 R is a very dynamic language, complete with anonymous functions, general
 recursion and an immense library of high level operations. Standard R programs
 execute on the CPU in their entirety. There is however an effort to utilise
-GPUs in R to some extent through the \texttt{gputools}
+GPUs in R to some extent through the \lstinline{gputools}
 package\cite{crangputools}.
 
 R has become popular in scientific fields that are not primarily centered on
@@ -65,7 +65,7 @@ linear algebra routines.
 
 \section{Data.Vector}
 
-The \texttt{Data.Vector} library augment Haskell with a high performance
+The \lstinline{Data.Vector} library augment Haskell with a high performance
 implementation of one-dimensional vectors. Vectors come in various flavours
 that reside in different module namespaces. There are mutable vectors, which
 are only usable from inside the IO or ST monads and must be allocated
@@ -85,7 +85,7 @@ features does not impose more limits on the expressivity of Haskell in general.
 
 The main contribution of Repa towards this end is that arrays in Repa are
 parametrised by their internal representation and shape in the type:
-\texttt{Array r sh a}.  This enables using different algorithms for processing
+\lstinline{Array r sh a}.  This enables using different algorithms for processing
 different array representations, and restricting certain operations for certain
 representations. For example we have delayed arrays, which are simply
 represented by an index domain and a function that maps indices to values.
@@ -93,18 +93,18 @@ These arrays support indexing, but each index operation will pay the cost of
 computing the function.
 
 Repa provides two main operations for manifesting arrays to memory:
-\texttt{computeS} for sequential and \texttt{computeP} for parallel array
+\lstinline{computeS} for sequential and \lstinline{computeP} for parallel array
 manifestation. While this division of execution modes is simple, it opens the
 potential for expressing nested parallelism. In Repa, nested calls to
-\texttt{computeP} is considered an error. A warning is issued on the terminal,
+\lstinline{computeP} is considered an error. A warning is issued on the terminal,
 and the documentation says to expect reduced performance.
 
 A consequence of this is that a library of Repa functions that require the use
 of array manifestation must provide separate parallel and sequential versions
 of each function, as a client program cannot use only the parallel version if
 it intends to parallise on a another level of the program.  A remedy for this
-would be to adopt the policy that nested occurences of \texttt{computeP} just
-revert silently to \texttt{computeS}. In Chapter
+would be to adopt the policy that nested occurences of \lstinline{computeP} just
+revert silently to \lstinline{computeS}. In Chapter
 \ref{chap:directing-parallelism} we present another similar solution to the
 problem of nested parallelism.
 
@@ -123,15 +123,14 @@ array, and scans are only defined on one-dimensional arrays.
 
 Accelerate is characterised by a clean division between the frontend and the
 various backends that exist. The Accelerate language is thus completely backend
-agnostic, and backends simply export a function such as \hbox{\texttt{run :: Acc a ->
-a}.}
+agnostic, and backends simply export a function such as \hbox{\lstinline{run :: Acc a -> a}.}
 
 Accelerate employs a meticulus partitioning of functions on arrays and functions
-on scalar values. Array functions are all embedded in the \texttt{Acc a} type,
-while scalars are embedded in the \texttt{Exp a} type. So, everything that is
+on scalar values. Array functions are all embedded in the \lstinline{Acc a} type,
+while scalars are embedded in the \lstinline{Exp a} type. So, everything that is
 capable of reducing an array or producing an array is carefully placed inside
-\texttt{Acc}, and the functions usable for elementwise computation must
-reside in \texttt{Exp}. Thus, the lack of nested parallelism is directly
+\lstinline{Acc}, and the functions usable for elementwise computation must
+reside in \lstinline{Exp}. Thus, the lack of nested parallelism is directly
 encoded in the type system.
 
 While this restriction probably makes it easy to ensure efficient execution of
@@ -146,8 +145,8 @@ the Sobol sequence generation case, depicted in Algorithm
 \ref{alg:sobol-inductive}. The actual code is included in Appendix
 \ref{appendix:accelerate-sobol}.
 
-Suppose we have a function \texttt{f}, defined for normal Haskell lists for notational clarity,
-using the functions \texttt{k} and \texttt{h}:
+Suppose we have a function \lstinline{f}, defined for normal Haskell lists for notational clarity,
+using the functions \lstinline{k} and \lstinline{h}:
 
 \begin{verbatim}
 f :: [Int] -> Int -> [Int]
@@ -157,7 +156,7 @@ f xs i = zipWith k xs (h i)
     h :: Int -> [Int]
 \end{verbatim}
 
-Now, if we want to apply \texttt{f} to a range of different \texttt{i}'s, what
+Now, if we want to apply \lstinline{f} to a range of different \lstinline{i}'s, what
 we would reasonably do in Haskell would be just:
 
 \begin{verbatim}
@@ -165,8 +164,8 @@ g :: [Int] -> [Int] -> [[Int]]
 g xs ns = map (f xs) ns
 \end{verbatim}
 
-And for illustration, depictions of \texttt{f} and \texttt{g} as mathematical
-expressions. Each application of \texttt{f} yields a row of the matrix:
+And for illustration, depictions of \lstinline{f} and \lstinline{g} as mathematical
+expressions. Each application of \lstinline{f} yields a row of the matrix:
 
 \[
 xs =
@@ -199,8 +198,8 @@ f\ \left[xs_0 \ldots xs_n\right]\ ns_m \\
 \end{bmatrix}
 \]
 
-Now we want to port \texttt{f} and \texttt{g} to Accelerate.
-For \texttt{f} there seems to be an obvious translation:
+Now we want to port \lstinline{f} and \lstinline{g} to Accelerate.
+For \lstinline{f} there seems to be an obvious translation:
 
 \begin{verbatim}
 f :: Acc (Vector Int) -> Exp Int -> Acc (Vector Int)
@@ -210,14 +209,14 @@ f xs i = zipWith k xs (h i)
     h :: Exp Int -> Acc (Vector Int)
 \end{verbatim}
 
-But due to the lack of nested vectors, for \texttt{g} we must resort to a two-dimensional
+But due to the lack of nested vectors, for \lstinline{g} we must resort to a two-dimensional
 array. And due to the restriction that mapped functions must reside in
-\texttt{Exp}, we cannot simply do with just: \verb|map f (xs) ns|.
+\lstinline{Exp}, we cannot simply do with just: \verb|map f (xs) ns|.
 
-Instead we must distribute the map into the definition of \texttt{f} and
-replicate \texttt{xs} to fit. But then we are left with an identical problem
-relating to function \texttt{h}!. Now, assuming we succeed and denominate the
-vectorised \texttt{h} function as
+Instead we must distribute the map into the definition of \lstinline{f} and
+replicate \lstinline{xs} to fit. But then we are left with an identical problem
+relating to function \lstinline{h}!. Now, assuming we succeed and denominate the
+vectorised \lstinline{h} function as
 \verb|h' :: Acc (Vector Int) -> Acc (Array DIM2 Int)|,
 here is what we arrived at for \verb|g'|:
 
@@ -255,8 +254,8 @@ g'\ \ xs\ \ ns =
 \end{bmatrix}
 \]
 
-Using the above notation it is relatively easy to verify that \texttt{g} for
-lists and \texttt{g'} for arrays should be equivalent.  The transformation of
+Using the above notation it is relatively easy to verify that \lstinline{g} for
+lists and \lstinline{g'} for arrays should be equivalent.  The transformation of
 the code however is quite drastic.  This transformation is similar to the
 vectorisation transformation of NESL\cite{nesl}.  But since Accelerate provides
 no way to automate it, the programmer needs to give up composability of
@@ -265,15 +264,15 @@ Accelerate terms.
 This sharp division between scalar and array operations is easily the biggest
 hindrance to the expressiveness of Accelerate. However, as this is a pervasive
 part of the architecture of Accelerate, removing the distinction of
-\texttt{Acc} and \texttt{Exp} would result in an entirely different language,
+\lstinline{Acc} and \lstinline{Exp} would result in an entirely different language,
 and every single backend would have to be rewritten.
 
 The embedding of Accelerate leaves some things to be desired. It is for
 instance not easily possible to pattern match on tuples and shapes, as these
-need to be properly lifted and unlifted to be used (see above in function \texttt{g'}).
+need to be properly lifted and unlifted to be used (see above in function \lstinline{g'}).
 
-Also, lifting using \texttt{lift :: Lift c e => e -> c (Plain e)} uses the
-\texttt{Plain} associated type, the definition of which is not shown in the
+Also, lifting using \lstinline{lift :: Lift c e => e -> c (Plain e)} uses the
+\lstinline{Plain} associated type, the definition of which is not shown in the
 auto-generated documentation of instances. Although the documentation
 generation system is arguably to blame for this, it does nonetheless make it
 more difficult to easily use value lifting confidently.
@@ -291,21 +290,21 @@ implementations and shape are represented in the array type, and the programmer
 has access to mutable arrays in addition to the common pure array operations.
 
 To exploit the ability to differentiate according to array representations,
-operations such as \texttt{map} and \texttt{zipWith} are implemented using
+operations such as \lstinline{map} and \lstinline{zipWith} are implemented using
 typeclasses.  While this architecture allows for specialisation of operations
 to different array representations, actually using the operations results in quite
 elaborate types. These are often too complicated for type inference to resolve
 and require a human programmer to supply a type signature.
 
 Compared to Accelerate, Nikola is embedded more naturally inside Haskell,
-leveraging the \texttt{RebindableSyntax} GHC-extension. Also, in our programming
+leveraging the \lstinline{RebindableSyntax} GHC-extension. Also, in our programming
 experience we were less required to interact with the value lifting machinery
 than we were in Accelerate. Value lifting in Nikola is subject to the same
 documentation inadequacies as we encountered with Accelerate.
 
 While Nikola does not present any means for expressing nested parallelism, it
 does not explicitly ban it either in the style of Accelerate's
-\texttt{Acc}/\texttt{Exp} division. Thus, extending the expressive power of
+\lstinline{Acc}/\lstinline{Exp} division. Thus, extending the expressive power of
 Nikola in this aspect appears at first to be a less elaborate endeavour than in
 Accelerate.
 
@@ -315,13 +314,13 @@ will result in compilation not terminating.
 Nikola functions are compiled to CUDA code and then linked dynamically into
 the running Haskell program. Then they are wrapped Haskell functions of
 the corresponding type.  Exactly which types are possible is derived
-from a menu of instances of the typeclass \texttt{Compilable a b}.
+from a menu of instances of the typeclass \lstinline{Compilable a b}.
 
-An instance of this typeclass denotes that a Nikola value of type \texttt{a}
-may be compiled and wrapped into a regular Haskell value of type \texttt{b}.
+An instance of this typeclass denotes that a Nikola value of type \lstinline{a}
+may be compiled and wrapped into a regular Haskell value of type \lstinline{b}.
 There are instances for all the various Nikola values, and it is possible to
 wrap Nikola arrays in many different vector implementations. Therefore it is
-not in general the case that \texttt{a} determines \texttt{b}, and often one is
+not in general the case that \lstinline{a} determines \lstinline{b}, and often one is
 best served by just supplying a type signature.
 
 However, this typeclass is not yet implemented for a lot of the

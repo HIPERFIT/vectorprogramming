@@ -2,58 +2,58 @@
 
 In this section we provide a small overview of central modules and namespaces
 in Nikola for reference. These modules all reside in the
-\texttt{Data.Array.Nikola} namespace.
+\lstinline{Data.Array.Nikola} namespace.
 
 \subsection{Exposed frontend modules}
 \begin{description}
 
-  \item[\texttt{Exp}] Exports the type \texttt{Exp t a} and typeclass
-    \texttt{IfThenElse} for use with rebindable syntax. The type \texttt{Exp t
-    a} will sometimes appear as qualified name \texttt{E.Exp} in case of
-    ambiguity.
+\item[\texttt{Exp}] Exports the type \lstinline{Exp t a} and typeclass
+  \lstinline{IfThenElse} for use with rebindable syntax. The type
+  \lstinline{Exp t a} will sometimes appear as qualified name
+  \lstinline{E.Exp} in case of ambiguity.
 
-  \item[\texttt{Array}] Defines \texttt{IsArray r e} typeclass with
-    associated type \texttt{Array r sh e}. It also defines the
-    \texttt{Source r e} typeclass for arrays that support indexing.
+  \item[\texttt{Array}] Defines \lstinline{IsArray r e} typeclass with
+    associated type \lstinline{Array r sh e}. It also defines the
+    \lstinline{Source r e} typeclass for arrays that support indexing.
 
-  \item[\texttt{Shape}] Defines types \texttt{Z}, \texttt{sh :. a}
-    and the typeclass \texttt{Shape sh}, with instances for \texttt{Z} and
-    \texttt{sh :. a}.
+  \item[\texttt{Shape}] Defines types \lstinline{Z}, \lstinline{sh :. a}
+    and the typeclass \lstinline{Shape sh}, with instances for \lstinline{Z} and
+    \lstinline{sh :. a}.
 
   \item[\texttt{Repr.*}] Contains modules definining the array
     representations for Push, Delayed and Global arrays through
-    \texttt{IsArray} instances.
+    \lstinline{IsArray} instances.
 
 \end{description}
 
 \subsection*{Low-level frontend modules}
 \begin{description}
 
-  \item[\texttt{Language.Syntax}] Exports the \texttt{Exp} datatype,
+  \item[\texttt{Language.Syntax}] Exports the \lstinline{Exp} datatype,
     which is a first-order abstract syntax for primitive Nikola expressions.
     The abstract syntax contains constructs for manipulating memory arrays,
     looping and annonymous functions. It also exports the datatypes
-    \texttt{Type} and \texttt{ScalarType} used as church style type annotations
-    for \texttt{Exp} values. In the case of ambiguity we quailfy \texttt{Exp}
-    as \texttt{S.Exp}.
+    \lstinline{Type} and \lstinline{ScalarType} used as church style type annotations
+    for \lstinline{Exp} values. In the case of ambiguity we quailfy \lstinline{Exp}
+    as \lstinline{S.Exp}.
 
   \item[\texttt{Language.Check}] Contains a type checker and simple type
-    inference for \texttt{Exp} values. Also defines the typeclass
-    \texttt{MonadCheck m}, to allow type checking to be performed in any monad
+    inference for \lstinline{Exp} values. Also defines the typeclass
+    \lstinline{MonadCheck m}, to allow type checking to be performed in any monad
     that defines how to access to the typing environment
 
   \item[\texttt{Language.Monad}] Defines the continuation passing
-    \texttt{R r a} monad, and the type alias \texttt{type P a = R Exp a}.
-    Also defines the combinators \texttt{shift} and \texttt{reset} for
+    \lstinline{R r a} monad, and the type alias \lstinline{type P a = R Exp a}.
+    Also defines the combinators \lstinline{shift} and \lstinline{reset} for
     delimited continuations \cite{wadler1994monads}.
 
-  \item[\texttt{Language.Reify}] Exports the \texttt{Reifiable a b}
-    typeclass. It provides the operation \texttt{reify :: a -> R b b},
+  \item[\texttt{Language.Reify}] Exports the \lstinline{Reifiable a b}
+    typeclass. It provides the operation \lstinline{reify :: a -> R b b},
     which is the central piece in converting frontend data types
-    \texttt{Exp t a} and \texttt{Array r sh e} to primitive \texttt{Exp}.
+    \lstinline{Exp t a} and \lstinline{Array r sh e} to primitive \lstinline{Exp}.
 
   \item[\texttt{Language.Optimize.*}] Provides various
-    optimizations on Nikola \texttt{S.Exp} values exclusively. Most notable is
+    optimizations on Nikola \lstinline{S.Exp} values exclusively. Most notable is
     the detection of let-sharing, see \cite{mainland2010nikola}. Marking
     parallel for-loops at the top level to be translated to CUDA kernels is
     also treated as an optimisation in Nikola.
@@ -65,54 +65,56 @@ in Nikola for reference. These modules all reside in the
 \begin{description}
 
   \item[\texttt{Backend.CUDA.\{Haskell,TH\}}]
-    Define the \texttt{compile} function for runtime and compiletime usage
+    Define the \lstinline{compile} function for runtime and compiletime usage
     respectively. This is the exposed part of the backend.
 
   \item[\texttt{Backend.C.Codegen}] Generates C code from
-    \texttt{S.Exp} values, represented as C abstract syntax.
+    \lstinline{S.Exp} values, represented as C abstract syntax.
 
 \end{description}
 
 Apart from these modules Nikola also provides various implementations of
-vectors in the \texttt{Data.Vector.CUDA} namespace. These vectors are
-stored in device memory and integrate with \texttt{compile} to allow
+vectors in the \lstinline{Data.Vector.CUDA} namespace. These vectors are
+stored in device memory and integrate with \lstinline{compile} to allow
 control of the timing of host-device data transfers.
 
 Furthermore these vector implementations are integrated with Repa as additional
-array representation types in modules in the \texttt{Data.Array.Repa.Repr.CUDA}
+array representation types in modules in the \lstinline{Data.Array.Repa.Repr.CUDA}
 namespace.
 
 \subsection{Array representation capabilities.}
-
 The operations that arrays may be used with is modeled with the use of type
 classes.
 
 \begin{itemize}
-
-  \item The \texttt{Source r e} type class specifies an \texttt{index}
-    function that allow a consumer to extract values of type \texttt{e} from an
-    array with representation \texttt{r} and contents \texttt{e}.
-
-    Instances:
-    \begin{itemize}
-      \item \texttt{Source D e}
-      \item \texttt{IsElem e => Source G e}
-    \end{itemize}
-
-  \item The \texttt{Target r e} type class enables mutable access of
-    \texttt{r}-arrays in the \texttt{P} monad.
+  \item The \lstinline{Source r e} type class specifies an \lstinline{index}
+    function that allow a consumer to extract values of type \lstinline{e} from an
+    array with representation \lstinline{r} and contents \lstinline{e}.
 
     Instances:
-    \begin{itemize}
-      \item \texttt{IsElem e => Target G e}
-    \end{itemize}
-
-  \item The \texttt{Load r sh e} type class enables manifestation of
-    \texttt{r}-arrays into \texttt{Target r' e} arrays in the \texttt{P} monad.
+\begin{lstlisting}
+Source D e
+IsElem e => Source G e
+\end{lstlisting}
+  \item The \lstinline{Target r e} type class enables mutable access of
+    \lstinline{r}-arrays in the \lstinline{P} monad.
 
     Instances:
-    \begin{itemize}
-      \item \texttt{Shape sh => Load sh D}
-      \item \texttt{Shape sh => Load sh PSH}
-    \end{itemize}
+\begin{lstlisting}
+IsElem e => Target G e
+\end{lstlisting}
+  \item The \lstinline{Load r sh e} type class enables manifestation of
+    \lstinline{r}-arrays into \lstinline{Target r' e} arrays in the \lstinline{P} monad.
+
+    Instances:
+\begin{lstlisting}
+Shape sh => Load sh D 
+Shape sh => Load sh PSH
+\end{lstlisting}
+
 \end{itemize}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End: 

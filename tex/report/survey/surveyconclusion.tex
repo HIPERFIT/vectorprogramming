@@ -8,12 +8,12 @@ the survey, is presented in Chapter \ref{chap:Conclusion}.
 
 \section{Language selection}
 We have compared the libraries Accelerate, Nikola, Repa and
-\texttt{Data.Vector} and our conclusion is that Nikola is the most
+\lstinline{Data.Vector} and our conclusion is that Nikola is the most
 suitable for further extensions when the scope is GPU programming. The
-Repa and \texttt{Data.Vector} architectures are not really compatible
+Repa and \lstinline{Data.Vector} architectures are not really compatible
 with code-generation, as would be necessary if they had to be modified
 to run on GPUs. Studying them was not entirely without results, as for
-instance the \texttt{computeS} of Repa can be viewed as the originator
+instance the \lstinline{computeS} of Repa can be viewed as the originator
 for the idea we will present in Chapter
 \ref{chap:directing-parallelism}.
 
@@ -28,7 +28,7 @@ having to get the data roundtrip to the CPU and back again (see
 Section \ref{sec:language-discussion-nikola}).
 
 Another choice is which languages would be suitable for application
-development. Currently \texttt{Data.Vector} with more than 150 reverse
+development. Currently \lstinline{Data.Vector} with more than 150 reverse
 dependencies seems the most stable and practically useful. Repa seems
 stable, though hard to get to scale, though our problems might not
 have been the best fit for Repa.
@@ -49,8 +49,8 @@ several of our cases requires a way of building up an array from repeated
 application of a non-associative operator. Neither Accelerate nor Nikola
 provides built-in functionality that can be combined to do perform such
 operation. They can only construct new GPU arrays where there are no
-dependencies between elements (through \texttt{generate} and
-\texttt{fromFunction} respectively) or from existing CPU-arrays.
+dependencies between elements (through \lstinline{generate} and
+\lstinline{fromFunction} respectively) or from existing CPU-arrays.
 
 Chapter \ref{chap:unfold} will present our work on an implementation of such
 an idea in Nikola.
@@ -62,7 +62,7 @@ and \ref{sec:language-discussion-nikola} shown how in certain cases, both
 Accelerate and Nikola breaks down in cumbersome notation, where algorithms
 could be written clearly if nested layers of array operations were allowed. We
 can in certain cases get out of this by relying on fusion of a surrounding
-\texttt{generate} function that indexes into the nested call. This will not
+\lstinline{generate} function that indexes into the nested call. This will not
 work in the general case though, as it breaks down if we for instance raise the
 dimensionality of the involved arrays by one.
 
@@ -81,7 +81,7 @@ necessary to synchronize on the CPU to guarentee syncronization across
 all blocks. If we were to map this option pricer over a portfolio of
 different options, we would instead want something different. We would
 want each option to reside in their own block, and use CUDAs
-\texttt{\_\_syncthreads} function to syncronize all threads in the
+\lstinline{__syncthreads} function to syncronize all threads in the
 block.
 
 Thus, in algorithms that requires such synchronization, an analysis

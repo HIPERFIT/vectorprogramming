@@ -366,9 +366,9 @@ even have to be exposed to the programmer.
 % between what should be executed sequentially and what should be executed in
 % parallel. The innermost potential parallel operation enclosing the expression
 % with the marker gets to be executed in parallel. We have chosen to name this
-% construct \texttt{sequential}.
+% construct \lstinline{sequential}.
 
-% Consider how the expression \texttt{map (\bs -> map f bs) as} (ignoring the
+% Consider how the expression \lstinline{map (\bs -> map f bs) as} (ignoring the
 % technical details of shape specification for clarity) may be given a parallel
 % execution semantics:
 
@@ -382,28 +382,28 @@ even have to be exposed to the programmer.
 
 % \end{verbatim}
 
-% In \texttt{ex1}, the outer map happens sequentially, while the inner map, being
-% the innermost potentially parallel operation outside \texttt{sequential} is
-% executed in parallel, while each application of function \texttt{f} happens
+% In \lstinline{ex1}, the outer map happens sequentially, while the inner map, being
+% the innermost potentially parallel operation outside \lstinline{sequential} is
+% executed in parallel, while each application of function \lstinline{f} happens
 % sequentially.
 
-% In \texttt{ex2}, the outer map is the innermost potentially parallel operation
-% enclosing \texttt{sequential}, and thus it is executed in parallel, while the
-% inner map of \texttt{f} is executed sequentially.
+% In \lstinline{ex2}, the outer map is the innermost potentially parallel operation
+% enclosing \lstinline{sequential}, and thus it is executed in parallel, while the
+% inner map of \lstinline{f} is executed sequentially.
 
-% In \texttt{ex3}, either the inner map is executed in parallel if \texttt{f}
-% contains no potential parallelism. Otherwise some part of \texttt{f} gets to be
+% In \lstinline{ex3}, either the inner map is executed in parallel if \lstinline{f}
+% contains no potential parallelism. Otherwise some part of \lstinline{f} gets to be
 % executed in parallel.
 
 % Which of the above is the more beneficial depends entirely on the precise
-% operations denoted by \texttt{f} in conjunction with the capabilities of the
-% hardware that is to execute them, and of course the shape of \texttt{as}.
+% operations denoted by \lstinline{f} in conjunction with the capabilities of the
+% hardware that is to execute them, and of course the shape of \lstinline{as}.
 
 % \section{Implications for fusion}
 
-% Directing the parallel execution strategy using \texttt{sequential} interacts
-% loop fusion.  In each of the examples \texttt{ex1}-\texttt{ex3} above, some
-% parts of \texttt{as} may be computed in parallel, namely the hyperplane slices
+% Directing the parallel execution strategy using \lstinline{sequential} interacts
+% loop fusion.  In each of the examples \lstinline{ex1}-\lstinline{ex3} above, some
+% parts of \lstinline{as} may be computed in parallel, namely the hyperplane slices
 % corresponding with a parallel map.
 
 % But consider the example:
@@ -411,30 +411,30 @@ even have to be exposed to the programmer.
 % ex4 = map (\bs -> map f bs) (sequential as)
 % \end{verbatim}
 
-% Here we would require that both maps and \texttt{f} be executed sequentially,
-% at least down until an eventual point where \texttt{f} acts only on single
-% elements of \texttt{as}.
+% Here we would require that both maps and \lstinline{f} be executed sequentially,
+% at least down until an eventual point where \lstinline{f} acts only on single
+% elements of \lstinline{as}.
 
 % Obviously, we realise that these examples only give a small hint as to the
-% consequences of introducing a construct such as \texttt{sequential}.
+% consequences of introducing a construct such as \lstinline{sequential}.
 % Investigating this would be an obligatory part of further research on the
-% viability of \texttt{sequential}.
+% viability of \lstinline{sequential}.
 
 % \section{Implementation considerations}
 
-% So far we have only seriously considered making \texttt{sequential} an
-% additional primitive, usable as a function of type \texttt{Exp t a -> Exp t a}.
+% So far we have only seriously considered making \lstinline{sequential} an
+% additional primitive, usable as a function of type \lstinline{Exp t a -> Exp t a}.
 
 % However, inspired by the use of array representation type tags, we have also
 % entertained the idea that the execution mode dictated by use of
-% \texttt{sequential} could be mirrored in the type of terms. But as the types
+% \lstinline{sequential} could be mirrored in the type of terms. But as the types
 % used in Nikola terms are already a complicated, complete with interaction with
 % various typeclasses and the value lifting machinery, we have postponed further
 % exploration of this.
 
 % \section{Implementation status}
 
-% Currently our effort concerning the addition of \texttt{sequential} to Nikola
+% Currently our effort concerning the addition of \lstinline{sequential} to Nikola
 % has been mostly hypothetical. The idea arose as a simple and versatile
 % alternative to full program vectorisation, and we think it holds some promising
 % in that respect. At least it appears worthy of further study.  While we have

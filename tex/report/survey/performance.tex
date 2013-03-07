@@ -179,7 +179,7 @@ performance is also important, but we find that to be less of priority
 now and it thus out of our current scope.
 
 The benchmarking tool was developed using the Haskell
-\texttt{criterion}\footnote{\url{http://hackage.haskell.org/package/criterion}}
+\lstinline{criterion}\footnote{\url{http://hackage.haskell.org/package/criterion}}
 package. Each experiment was been executed 100 times and the mean and
 standard deviations was logged. To eliminate the possibility of errors
 in our approach, we have measured the overhead involved in issuing a
@@ -210,20 +210,19 @@ logarithmic.
 \end{figure}
 
 In our first benchmark we compare the performance of R and C languages
-to the Repa and the \texttt{Data.Vector} Haskell libraries, on the
+to the Repa and the \lstinline{Data.Vector} Haskell libraries, on the
 binomial option pricing case. All algorithms have been implemented
 following Algorithm \ref{alg:binomial-algorithm}, in Section
 \ref{sec:binomial-model}. The R and C implementations are equivalently
 and are written by Rolf Poulsen, Professor of Financial Mathematics at
 the Department of Mathematical Sciences, University of
 Copenhagen\footnote{Obtained from
-  \url{http://www.math.ku.dk/~rolf/FAMOES/}}. The \texttt{Data.Vector}
+  \url{http://www.math.ku.dk/~rolf/FAMOES/}}. The \lstinline{Data.Vector}
 version and Repa implementations differ from these by not reusing
 memory, and are thus not completely fair to Algorithm
 \ref{alg:binomial-algorithm}, but using mutable arrays would not be
 idiomatic in these library. The Repa version has been executed with
-both one and two operating system threads (by setting the \texttt{+RTS
-  -N} option).
+both one and two operating system threads (by setting the \lstinline{+RTS -N} option).
 
 The results are shown in Figure \ref{fig:binomial-cpu}. We see that
 using an additional processor in Repa gives us a speed down. We have
@@ -234,7 +233,7 @@ we were to execute it as a binomial pricer, but we have not had the
 time to do that experiment.
 
 We also see that the overhead incurred by reallocating arrays in each
-iteration by the \texttt{Data.Vector} implementation is not that huge,
+iteration by the \lstinline{Data.Vector} implementation is not that huge,
 we could suspect that the garbage collectors liveness analysis detects
 that we can reuse the just deallocated memory region.
 
@@ -288,12 +287,12 @@ implementation is identical to the Nikola implementation.
 
 We now look at the performance of the Sobol sequence generators we
 have implemented, and in this section we will concentrate on the CPU
-versions implemented in R, Repa and \texttt{Data.Vector}. 
+versions implemented in R, Repa and \lstinline{Data.Vector}. 
 
-The R implementation is from the R-package \texttt{randtoolbox} which
+The R implementation is from the R-package \lstinline{randtoolbox} which
 interfaces with a Fortran implementation that uses the recursive
 Algorithm \ref{alg:sobol-recursive}, Section \ref{sec:sobol}. This is
-also the algorithm we have implemented in \texttt{Data.Vector}, but in
+also the algorithm we have implemented in \lstinline{Data.Vector}, but in
 Repa we have used \todo{Arg! Latest results are from the wrong
   Repa-version! And we don't know the number of cores used in previous
   executions.}

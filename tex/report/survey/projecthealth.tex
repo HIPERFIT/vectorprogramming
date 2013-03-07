@@ -24,7 +24,7 @@ subject for research.
 
 In the following section we will look closer at the portability,
 documentation quality, installation process and stability of Repa,
-\texttt{Data.Vector}, Accelerate and Nikola.
+\lstinline{Data.Vector}, Accelerate and Nikola.
 
 \section{Portability}
 % * Portability 
@@ -67,19 +67,19 @@ interpret as he wishes.
 \caption{Status on language dependencies. Reverse dependencies were counted on Hackage in October 2012. 
   Nikola does not yet have a Hackage-release yet, why we could not count any reverse dependencies.
   When counting dependencies for Accelerate, there is one number for 
-  the \texttt{accelerate} package, the frontend, and an additional number for the CUDA backend.}
+  the \lstinline{accelerate} package, the frontend, and an additional number for the CUDA backend.}
   \label{tab:dependency-status}
 \end{adjustbox}
 \end{table}
 
 
 \section{Documentation}
-Repa, Accelerate and \texttt{Data.Vector} all have excellent
+Repa, Accelerate and \lstinline{Data.Vector} all have excellent
 documentation available on Hackage and both Repa and Accelerate's
 internals are documented in research papers
 \cite{chakravarty2011accelerating}\todo[noinline]{cite repa papers}. We have not
 been able to find information much documentation about
-\texttt{Data.Vector} internals, which would have been helpful in
+\lstinline{Data.Vector} internals, which would have been helpful in
 analysing its performance behavior.
 
 Nikola does not provides almost no documentation, the most helpful
@@ -107,7 +107,7 @@ were unable to get both working at the same time, and thus had to work out
 something else.
 
 In the end we managed to install every language package in separate package
-databases using the \texttt{hsenv}\footnote{Our fork is accessible at
+databases using the \lstinline{hsenv}\footnote{Our fork is accessible at
 \url{https://github.com/dybber/hsenv}} tool.  Using this method we also managed
 to install Feldspar, but using it was unstable, and we had to discontinue
 trying to get it working in order to make progress in the survey.

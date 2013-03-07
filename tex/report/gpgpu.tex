@@ -135,9 +135,9 @@ cooperating to solve a problem. In these cases synchronization
 primitives are necessary to avoid race-conditions. In CUDA there are
 two levels of inter-thread synchronization. A kernel can synchronize
 with the rest of the threads in its block by calling the
-\texttt{\_\_syncthreads} CUDA function. To synchronize across blocks,
+\lstinline{__syncthreads} CUDA function. To synchronize across blocks,
 the programmer has to split program into two independent kernels and
-call them sequentially with a call to \texttt{cudaDeviceSynchronize}
+call them sequentially with a call to \lstinline{cudaDeviceSynchronize}
 in between.
 
 \subsection{Optimization considerations}
