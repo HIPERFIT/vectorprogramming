@@ -44,10 +44,12 @@ to go about this: a nested parallel version and a flat parallel version.
 Since it is not possible to use recursion in Nikola, we must implement a
 primitive iterative operator to incrementally construct arrays.
 
-In Haskell, \texttt{unfoldr} has the type \texttt{(b -> Maybe (a,b)) -> b ->
-[a]}.  \texttt{unfoldr f a} recursively populates the element of a list with
-\texttt{f}, as long as it evaluates to \texttt{Just (a,b)}. It is a well known
-way to construct a list, so we pursue that as an extension.
+In Haskell, \texttt{unfoldr} has the type \texttt{(b -> Maybe (a,b))
+  -> b -> [a]}.  \texttt{unfoldr f a} recursively populates the
+element of a list with \texttt{f}, as long as it evaluates to
+\texttt{Just (a,b)}\todo[noinline]{det er lidt at blande typer og
+  værdier, kan vi ikke bare nøjes med ``\texttt{Just}-value''}. It is a
+well known way to construct a list, so we pursue that as an extension.
 
 In Nikola the length of an array is the only intrinsic property shared across
 all array representations. Therefore we must know the length of the result array a
@@ -68,9 +70,9 @@ unfold ::
 
 In order to be useful however, \texttt{unfoldr} by itself is not enough.
 Iteratively producing entire rows or columns of a matrix as required in
-algorithm \ref{alg:lsm-algorithm} would require the function to be unfolded to produce
+Algorithm \ref{alg:lsm-algorithm} would require the function to be unfolded to produce
 arrays, which is impermissable.
-
+\todo{ovenstående er meget uklart}
 To remedy this, we set out to explore nested maps. Again, lacking nested arrays
 we must use array shapes to express the structure of our computation.  Like in
 the case of \texttt{unfoldr} we thus must express the resulting shape beforehand.
@@ -98,10 +100,13 @@ memory will leave some cells uninitialized. Similarly, if the resulting array
 is not bounded by \texttt{sh'}, manifesting it will result in writing out of
 bounds.
 
-For now we have chosen to accept the existence of these fallacies, partly
-because we are concerned with implementing a prototype, and partly because we
-don't see any acceptable resoultion of the problem beyond placing the actual
-array extent rather than just the shape into the type of the array.
+For now we have chosen to accept the existence of these fallacies,
+partly because we are concerned with implementing a prototype, and
+partly because we don't see any acceptable resoultion of the problem
+beyond placing the actual array extent rather than just the shape into
+the type of the array. \todo{explain how that would be outside our
+  scope. Eventually reference AGDA-Accelerate paper. Isn't it sort of
+  what they do?}
 
 Another issue with this definition is the \texttt{Source r a} restriction on
 \texttt{xs}. If the mapped function does not need to index into the array, it
@@ -122,7 +127,7 @@ parallel hardware. Treating this issue is the subject of Chapter
 
 \subsection{The inadequacies of our implementation}
 
-All our efforts on iterative array construction draw on Nikolas implementation
+All our efforts on iterative array construction draw on Nikola's implementation
 of 'push' arrays. As mentioned earlier, delayed arrays and push arrays are each
 others opposites. Delayed arrays are \texttt{Source} arrays, and their
 manifestation is at the mercy of the consumer of the array -- Therefore it is
@@ -180,3 +185,8 @@ As such it fits quite well with the other array operations in Accelerate. If it
 were to be implemented in Accelerate, it would enable us to express the
 optimised version of Sobol sequences, Algorithm \ref{alg:sobol-parallel-2},
 which is currently inexpressible.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../master"
+%%% End: 
