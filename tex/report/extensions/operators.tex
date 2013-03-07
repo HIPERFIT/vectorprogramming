@@ -26,70 +26,63 @@ extensions completely ready for use and possible inclusion into Nikola.  We
 will however give an analysis of what is lacking for a more complete
 implementation.
 
-Our need to iteratively define arrays is motivated directly from our case work
-on the variants of the recursive Sobol-sequence generator, depicted in
-Algorithms \ref{alg:sobol-recursive}, \ref{alg:sobol-parallel-2} and
-\ref{alg:lsm-pathgeneration}. While in general the needs for a specific example
-does not always warrant language extensions, the case of incremental
-construction of output data is arguably a common one, and thus well motivated.
+Our need to iteratively define arrays is motivated directly from our
+case work on the variants of the recursive Sobol-sequence generator
+and the LSM path generator, depicted in Algorithms
+\ref{alg:lsm-pathgeneration}, \ref{alg:sobol-recursive} and
+\ref{alg:sobol-parallel-2}.  While in general the needs for a specific
+example does not always warrant language extensions, the case of
+incremental construction of output data is arguably a common one, and
+thus well motivated.
 
-But in isolation, the ability to construct a single array iteratively is
-insufficient. It must also be possible to produce multiple iteratively
-constructed arrays in parallel. This is due to both the desire for performance and
-the desire for expressivity. To meet this end we will analyse two possible ways
-to go about this: a nested parallel version and a flat parallel version.
+But in isolation, the ability to construct a single array iteratively
+is insufficient. It must also be possible to produce multiple
+iteratively constructed arrays in parallel. This is due to both the
+desire for performance and the desire for expressivity. To meet this
+end we will analyse two possible ways to go about this: a version
+using nested array operators and a flat parallel version.
 
-\section{Nested data parallel version}
+\section{Nested array operators}
 
-Since it is not possible to use recursion in Nikola, we must implement a
-primitive iterative operator to incrementally construct arrays.
-
-In Haskell, the function \lstinline{unfoldr} of the
-\lstinline{Data.List}-module has the type
-\lstinline{(b -> Maybe (a,b)) -> b -> [a]}.
-
-\lstinline{unfoldr f a} recursively populates the element of a list with
-\lstinline{f}, as long as it evaluates to a \lstinline{Just}-value. It is a well known
-way to construct a list, so we pursue that as an extension.
-
-In Nikola the length of an array is the only intrinsic property shared across
-all array representations. Therefore we must know the length of the result array a
-priori to evaluating a Nikola \lstinline{unfoldr}.
-
-For a prototype that only uses the last generated element as state, we settle
-for the type signature:
+Since it is not possible to use recursion in Nikola, we must implement
+a primitive iterative operator to incrementally construct arrays. In
+Haskell, a function with a similar effect is \lstinline{unfoldr} of
+the \lstinline{Data.List}-module:
 \begin{lstlisting}
-unfold ::
-  Shape sh =>
-  IsElem a =>
-  Typeable a =>
-    sh ->
-    (sh -> a -> a) ->
-    a ->
-    Array PSH sh a
+unfoldr :: (b -> Maybe (a,b)) -> b -> [a]
 \end{lstlisting}
+It recursively populates the element of a list with \lstinline{f}, as
+long as it evaluates to a \lstinline{Just}-value. It is a well known
+way to construct a list, which further motivates it as an addition to
+Nikola.
 
-In order to be useful however, \lstinline{unfoldr} by itself is not enough.  We
-need to be able to iteratively produce entire rows or columns of a matrix as
-required in Algorithm \ref{alg:lsm-algorithm}.
-
-To remedy this, we set out to explore nested maps. Again, lacking nested arrays
-we must use array shapes to express the structure of our computation.  Like in
-the case of \lstinline{unfoldr} we thus must express the resulting shape beforehand.
+In Nikola the length of an array is the only intrinsic property shared
+across all array representations. Therefore we must know the length of
+the result array a priori to evaluating a Nikola
+\lstinline{unfoldr}. For a prototype that only uses the last generated
+element as state, we settle for the type signature:
+\begin{lstlisting}
+unfold :: (Shape sh, IsElem a, Typeable a) 
+       => sh -> (sh -> a -> a) -> a -> Array PSH sh a
+\end{lstlisting}
+In order to be useful however, \lstinline{unfoldr} by itself is not
+enough. We need to be able to iteratively produce entire rows or
+columns of a matrix as required in Algorithm
+\ref{alg:lsm-algorithm}. To remedy this, we set out to explore nested
+maps. Again, lacking nested arrays we must use array shapes to express
+the structure of our computation.  Like in the case of
+\lstinline{unfoldr} we thus must express the resulting shape
+beforehand.
 
 The type we eventually arrived at for our maps capable of nesting is depicted
 here:
 \begin{lstlisting}
-mapNest ::
-  Shape sh =>
-  Shape sh' =>
-  IsElem a =>
-  IsElem (Exp t Ix) =>
-  IsElem b =>
-  Source r a =>
-      sh' -> (Exp t Ix -> Array D sh a -> Array PSH sh' b)
-          -> Array r  (sh :. Exp t Ix) a
-          -> Array PSH (sh' :. Exp t Ix) b
+mapNest :: (Shape sh, Shape sh', IsElem a, 
+            IsElem (Exp t Ix), IsElem b, Source r a)
+        => sh'
+        -> (Exp t Ix -> Array D sh a -> Array PSH sh' b)
+        -> Array r   (sh :. Exp t Ix) a
+        -> Array PSH (sh' :. Exp t Ix) b
 \end{lstlisting}
 
 While we require the shape \lstinline{sh'} to be specified, there is no guarantee
@@ -102,27 +95,25 @@ bounds.
 
 For now we have chosen to accept the existence of these fallacies,
 partly because we are concerned with implementing a prototype, and
-partly because we don't see any acceptable resoultion of the problem
+partly because we do not see any acceptable resolution of the problem
 beyond placing the actual array extent rather than just the shape into
-the type of the array, as done in \cite{thiemannagda}.
-\todo{explain how that would be outside our
-  scope. Eventually reference AGDA-Accelerate paper. Isn't it sort of
-  what they do?}
+the type of the array, as done in \cite{thiemannagda}, but such a
+change to Nikola is outside the scope of our project.
 
 Another issue with this definition is the \lstinline{Source r a} restriction on
 \lstinline{xs}. If the mapped function does not need to index into the array, it
 is an unnecessary restriction to impose.  Similarly, if the mapped function
-performs only elementwise operations, preserving the porperty of being
+performs only elementwise operations, preserving the property of being
 indexable would be valuable to retain for possible further processing of the
 result array.
 
 Risking to further complicate the types, the situation is somewhat remediable
 by defining \lstinline{mapNest} as a function in a typeclass parametrised over the
 involved array representations, as is already the case for typeclass
-\lstinline{Map} in module \lstinline{Data.Array.Nikola.Operators.Mapping}.
+\lstinline{Map}.
 
 The most important issue about this definition however, is that it permits
-expressing nested parallelism, which is not directly executable on the flat
+expressing nested array operations, which is not directly executable on the flat
 parallel hardware. Treating this issue is the subject of Chapter
 \ref{chap:directing-parallelism}.
 
@@ -131,17 +122,17 @@ parallel hardware. Treating this issue is the subject of Chapter
 All our efforts on iterative array construction draw on Nikola's implementation
 of 'push' arrays. As mentioned earlier, delayed arrays and push arrays are each
 others opposites. Delayed arrays are \lstinline{Source} arrays, and their
-manifestation is at the mercy of the consumer of the array -- Therefore it is
+manifestation is at the mercy of the consumer of the array. Therefore it is
 required that the elements of a delayed array are completely independent from
-each other.  Push arrays on the other hand are defined as a stream of
+each other. Push arrays on the other hand are defined as a stream of
 index-value pairs, and thus need not obey the same restriction on element
 dependence.
 
-Push arrays in Nikola are defined by means of the for-loop constructor
+Push arrays in Nikola are defined by means of the loop constructor
 \lstinline{ForE} of \lstinline{S.Exp}. This loop constructor however, is very
 low-level in the sense that it includes as arguments a list of variables to be
 looped over and a list of loop bounds corresponding to each of the variables,
-and corresponds directly to a for-loop in C.
+and corresponds directly to a \lstinline{for}-loop in C.
 
 % The \lstinline{Shape} typeclass defines an accessible interface for constructing
 % for-loops that visit each index of given shape to loop over.  The operation
@@ -162,30 +153,31 @@ be for now. If however we disregard this problem, we are not aware of any more
 obstacles for implementing our extensions properly.
 
 \section{Flat data parallel version}
-
 Our first attempt at defining an unfolding operation was inspired by the
 collective operators of Accelerate.
 
 \begin{lstlisting}
-unfold ::
-  IsElem a =>
-  IsElem (Exp t Ix) =>
-  Shape sh =>
-  Source r a =>
-    Exp t Ix -> (Exp t Ix -> a -> a)
-    -> Array r sh a -> Array PSH (sh :. Exp t Ix) a
+unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
+       => Exp t Ix
+       -> (Exp t Ix -> a -> a)
+       -> Array r sh a
+       -> Array PSH (sh :. Exp t Ix) a
 \end{lstlisting}
 
-By avoiding the need for a nested map, it is guaranteed that the resulting
-unfolded arrays all have the same size. Furthermore, since the operation is a
-mapped version of \lstinline{unfold}, the outer structure of the computation is
-completely static, and it is possible to assign a parallel execution semantics,
-given that the unfolded function is executed sequentially.
+By avoiding the need for a nested array operations, it is guaranteed
+that the resulting unfolded arrays are regular. Furthermore, since the
+operation is a mapped version of \lstinline{unfold}, the outer
+structure of the computation is completely static, and it is possible
+to assign a parallel execution semantics, given that the unfolded
+function is executed sequentially.
 
 As such it fits quite well with the other array operations in Accelerate. If it
 were to be implemented in Accelerate, it would enable us to express the
 optimised version of Sobol sequences, Algorithm \ref{alg:sobol-parallel-2},
 which is currently inexpressible.
+
+\todo{explain}
+
 
 %%% Local Variables:
 %%% mode: latex
