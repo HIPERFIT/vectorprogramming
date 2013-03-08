@@ -283,8 +283,8 @@ implementation is identical to the Nikola implementation.
 \begin{figure}
 	\centering
   \begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
-	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph.pdf}\label{fig:sobol-cpu-speedup}}
-	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph.pdf}\label{fig:sobol-cpu-time}}
+	\subbottom[Speed-up relative to R implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/speedup-graph-final.pdf}\label{fig:sobol-cpu-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu/time-graph-final.pdf}\label{fig:sobol-cpu-time}}
 \end{adjustbox}
   \caption{Sobol sequence generation (CPU).}
 \label{fig:sobol-cpu}
@@ -320,13 +320,36 @@ elements.
 	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/speedup-graph-final.pdf}\label{fig:sobol-gpu-speedup}}
 	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu/time-graph-final.pdf}\label{fig:sobol-gpu-time}}
 \end{adjustbox}
-  \caption{Sobol sequence generation (GPU).}
+  \caption{Sobol sequence generation (GPU), including device to host memory transfer.}
 \label{fig:sobol-gpu}
 \end{figure}
 
 For GPUs, we have Sobol sequence generation implementations in
 Accelerate, CUDA in addition to two Nikola variants. The results are
 presented in Figure \ref{fig:sobol-gpu}. 
+
+* Forklar forskellen på 2 Nikola implementationer og Accelerate nD
+
+* Undren over at Nikola pludselig bliver hurtigere end CUDA
+
+* Vi forsøger at kigge på køretid uden hukommelsesoverførsel, da vi
+finder ud af at det dominerer over selve beregningsdelen
+
+* Vi får det omvendte resultat, hvilket er meget forvirrende
+
+* Vi noterer hvad nvprof giver af køretider for de fire kørsler
+
+
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu-noDtoH/speedup-graph-final.pdf}\label{fig:sobol-gpu-noDtoH-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-gpu-noDtoH/time-graph-final.pdf}\label{fig:sobol-gpu-noDtoH-time}}
+\end{adjustbox}
+  \caption{Sobol sequence generation (GPU), excluding device to host memory transfer.}
+\label{fig:sobol-gpu-noDtoH}
+\end{figure}
+
 
 \subsection{Benchmark 5: Longstaff and Schwartz option pricing on the CPU}
 \begin{figure}
@@ -339,28 +362,43 @@ presented in Figure \ref{fig:sobol-gpu}.
 \label{fig:lsm-cpu}
 \end{figure}
 
-We did only have time to implement Longstaff and Schwartz on the
-CPU. \todo{why not Accelerate and Nikola}
+ * We did only have time to implement Longstaff and Schwartz on the
+   CPU. \todo{why not Accelerate and Nikola}
+  
+   - Because of lack of time
 
+   - Some components are not obviouos how to implement properly,
+   e.g. Cholesky factorization in these languages
 
-% Speed up graph. In the graph we use the sequential version written
-% with Data.Vector as a baseline for the comparison.
+ * Introduce the plot.
 
-% Accelerate is not included, because of problems in their stream fusion
-% algorithm leading to running times that evolve
-% exponentially. Disabling fusion lead to CUDA exceptions.
+ * Again Repa is slower and for $10^5$ paths it was so slow, that we
+   did not let it run to completion.
 
-% We see that the overhead incurred by using Nikola makes both
-% sequential implementations (R and Data.Vector) faster for the smallest
-% cases, and only when we reach the largest example (128 years expiry
-% time) Nikola catches up.
+   * Vektors forspring ved at være kompileret svinder med
+   problemstørrelsen, formentlig fordi en større relativ del af R's
+   eksekveringstid sker inde i eksterne optimerede lineær algebra
+   routiner.
 
-% Repa is the best performing, even though it does not perform any GPU
-% computations. We are not sure why Repa gives so varied speed-ups for
-% different input sizes, but it might be because of our somewhat
-% arbitrary threshold for which problem sizes should be executed in
-% parallel and which should be executed sequentially.
+\section{Sources of error}
 
+* That the test machine is shared, and other intensive tasks has
+sometimes been running simultaneous with our benchmarks
+
+* When pricing an option, we have let most of the option
+configuration, except option duration been compiled into our programs,
+and thus compiler optimizations might have reduced the complexity of
+the resulting code, and thus our benchmarks might not map directly to
+a real world scenario.
+
+* The same holds for Sobol-sequences, where the direction vectors have
+been similarly hardcoded.
+
+* As mentioned all our Haskell programs have been executed with the
+llvm backend, with -O3 given to the underlying llvm assembler. Certain
+GHC optimizitations has thus not been made, such as the rewrite rules
+that forms the basis for fusion in \lstinline{Data.Vector}, and we
+should probably have used the GHC flag -O3 in addition.
 
 %%% Local Variables:
 %%% mode: latex
