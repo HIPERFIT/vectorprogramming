@@ -6,37 +6,62 @@
 \label{chap:Conclusion}
 \section{Future Work}
 
-\todo{Expand all these points to a section}
-\begin{itemize}
-\item Explain how nested parallelism can be handled in newer versions
-  of CUDA running on the Kepler architecture:
-  \url{http://developer.download.nvidia.com/assets/cuda/docs/TechBrief_Dynamic_Parallelism_in_CUDA_v2.pdf}
-  Suggest using this in a new nested data-parallel language.
 
-\item Our idea of 'sequential' should have been introduced in previous
-  sections, but we should suggest implementing it more fully than we
-  have had time to
+\subsection{Nested data-parallelism on NVIDIA Kepler GPUs}
+On newer GPUs supporting CUDA 5.0, such as the one we have had access
+to, allows for 20 levels of nested calls, such that a kernel can spawn
+other parallel kernels directly on the GPU, without returning to the
+CPU. NVIDIA uses the term \emph{dynamic parallelism}\footnote{A short
+  example is provided in
+  \url{http://developer.download.nvidia.com/assets/cuda/docs/TechBrief_Dynamic_Parallelism_in_CUDA_v2.pdf}}
 
-\item Implementing 'sequential' as a replacement for computeS and
-  computeP in Repa
+We only discovered this late in the project, and we have thus not
+contemplated much on the idea of employing them for our
+\lstinline{mapNest}-function. It should definitely be consider to use
+new hardware capabilities for the problem, and it thus a thing that
+would be worth looking closer at in the future.
 
-\item Extending our survey to cover other languages. Specifically
-  Theano, Bohrium and Copperhead.
+\subsection{Prototype implementation of \texttt{sequential}}
+Our idea of 'sequential' should have been introduced in previous
+sections, but we should suggest implementing it more fully than we
+have had time to and investigate which complications will arise, which
+further extensions that are possible. All in all, we believe there is
+a great potential in a \texttt{sequential}-construct, although we can
+not do much more than speculate on the implementability and
+practicality.
 
-\item Change our survey to cover portfolio pricing. Longstaff and
-  Schwartz pricer on a single option is not worthwhile on GPUs, with
-  our current approach. But implementing it as a portfolio pricer
-  might give us benefits.
+For further ideas for future work on \lstinline{sequential}, see
+Chapter \ref{chap:directing-parallelism}.
 
-\item This community really needs a way of comparing their work, to
-  make it more competitive. We should look at doing a Computer
-  Languages Benchmark Game for data parallel languages, with both a
-  GPU and CPU category (W. \url{http://benchmarksgame.alioth.debian.org/}
+\subsection{Broader scope of survey}
+Many languages was left out in our survey, and only few parallization
+patterns have been tested. It would thus be worth extending our survey
+to cover other languages such as Theano, Feldspar, Obsidian, Bohrium
+and Copperhead.
 
-\item Cite SPL and the PJ/LexiFi paper and suggest using Longstaff and
-  Schwartz for pricing their contracts.
-\item Loop constructors for Nikola's \lstinline{P} monad (e.g. fold, see binomial example).
-\end{itemize}
+When it comes to algorithms implemented, we would like to implement
+portfolio option pricers for both the binomial model and the LSM
+algorithm, as they might giver better idea about the performance of
+the languages for embarassingly parallel tasks.
+
+On a final note about the future of our survey, we have during the
+project found that this community of data-parallel languages, really
+need a way of comparing their work, to make it more competitive. We
+suggest that the community takes inspiration from the Computer
+Languages Benchmark
+Game\footnote{\url{http://benchmarksgame.alioth.debian.org/}}, and
+creates a similar comparison between data-parallel languages where
+results are updated regularly. There could be both a CPU and a GPU
+category.
+
+For further ideas for future work on \lstinline{sequential}, see
+Chapter \ref{chap:directing-parallelism}.
+
+
+% \item Cite SPL and the PJ/LexiFi paper and suggest using Longstaff and
+%   Schwartz for pricing their contracts.
+% \item Loop constructors for Nikola's \lstinline{P} monad (e.g. fold, see binomial example).
+% \end{itemize}
 
 \section{Conclusion}
 \label{sec:conclusion}
