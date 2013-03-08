@@ -103,8 +103,17 @@ increase in size or not.
 
 \section{Haskell infrastructure}
 \label{sec:haskell_infrastructure}
-In setting up our test environment we found that \todo{}
 
+In setting up our test environment we found that the package management
+infrastructure of Haskell, the Cabal system, very brittle when installing
+different packages with common dependencies. This problem is infamously known
+by the name \emph{cabal dependency hell}, and a lot of our alotted project time
+was spent to work around this problem.
+
+Had the Haskell community adopted a package policy similar to that of the
+Comprehensive R Archive Network\footnote{\url{http://cran.r-project.org/}} of
+more agressive demands to maintainability, we would probably have been spared a
+lot of our trouble.
 
 %%% Local Variables:
 %%% mode: latex
