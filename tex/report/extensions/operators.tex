@@ -220,14 +220,41 @@ but the other aspects are certainly also worth pursuing.
 In this case, we find that the one invariant a developer has to
 manually enforce when applying our \lstinline{mapNest} is worth the
 extra cost in man hours, when compared to reading and writing programs
-in the style we have seen in Section \todo{ref}.
+in the style we have seen in Section
+\ref{sec:language-discussion-accelerate}.
 
 
 \section{Repa implementation}
-As seen in our survey, we also had problems getting our CPU version to
-perform and deliver a speed up, especially Repa did not perform that
-well, and only degraded in performance when we added processors.
+As seen in our survey, we also had problems getting our parallel CPU
+version in Repa to deliver a speed up. Actually, it only degraded in
+performance when we split the problem over several processors.
 
+We have implemented a function for Repa similar \lstinline{unfold}
+described above, which allows us to implement Algorithm
+\ref{alg:sobol-parallel-1} (we do not need the \textsc{SobolSkipping}
+algorithm, as we do not need to address the problem of memory
+coalescing). The code interface is presented below and the results of
+a benchmark run is presented in Figure \ref{fig:sobol-RepaUnfold}. We
+see that we now perform better for both one and two processors, but
+the difference between 2 and 32 processors is not noticeable. This
+might be an error in our benchmark setup that we have not discovered,
+but at least it all in all it performs significantly better than our
+previous Repa-version.
+
+Another aspect worth recognizing, is that even though we scale better,
+we still does not catch up with the sequential version written in C.
+
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+\begin{lstlisting}
+unfoldFillChunkedP
+ :: Int                 -- ^ Number of elements.
+ -> (Int -> b -> IO ()) -- ^ Update function to write into result buffer.
+ -> (Int -> a -> a)     -- ^ Recursive function to get the value at a given index.
+ -> (Int -> a)          -- ^ Inductive function to get the value at a given index.
+ -> (a -> b)            -- ^ Generate output (useful for fusion)
+ -> IO ()
+\end{lstlisting}
+\end{adjustbox}
 
 \begin{figure}
 	\centering
@@ -238,7 +265,7 @@ well, and only degraded in performance when we added processors.
 \caption{Sobol sequence generation on the CPU. We use RepaU to denote
   benchmarks using our new Repa implementation using the
   \lstinline{unfoldChunkedP}-construct.}
-\label{fig:sobol-gpu}
+\label{fig:sobol-RepaUnfold}
 \end{figure}
 
 
