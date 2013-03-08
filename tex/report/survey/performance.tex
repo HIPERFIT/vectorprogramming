@@ -325,19 +325,48 @@ elements.
 \end{figure}
 
 For GPUs, we have Sobol sequence generation implementations in
-Accelerate, CUDA in addition to two Nikola variants. The results are
-presented in Figure \ref{fig:sobol-gpu}. 
+Accelerate, CUDA in addition to two Nikola variants. The difference
+between the two Nikola implementations is that the one tagged $nD$
+allows for computing multidimensional sobol sequence by providing
+several direction vectors (of the same length), and the $1D$ version
+is specialized to computing a single-dimensional sobol sequence. For
+Accelerate and CUDA we only have a multidimensional implementation.
 
-* Forklar forskellen på 2 Nikola implementationer og Accelerate nD
+% * Forklar forskellen på 2 Nikola implementationer og Accelerate nD
+The results are presented in Figure \ref{fig:sobol-gpu}. First notice
+that both Nikola implementations performs equivalently, which says
+something to the amount of fusion Nikola is capabable of. 
 
-* Undren over at Nikola pludselig bliver hurtigere end CUDA
+Even though the Accelerate and Nikola $nD$ versions are written in
+identically style, Accelerate is slower in all cases. We are not sure
+what is the reason for that, but suspect that Nikola has done a better
+job at fusion. It also seems that we have had an error in this
+experiment, so it might not be valid to make any such conclusions.
 
-* Vi forsøger at kigge på køretid uden hukommelsesoverførsel, da vi
-finder ud af at det dominerer over selve beregningsdelen
+The error can be observed for sequences of length $10^7$, where Nikola
+suddenly perform better than CUDA. We tried profiling and found that
+the experiment was dominated by the memory transfer from device to
+host, and that it was in scheduling this memory transfer that Nikola
+did a better job.
 
-* Vi får det omvendte resultat, hvilket er meget forvirrende
+We attempted to get a better measure of what could be wrong by writing
+programs that only performed the actual computation on the device --
+where we are also most likely use the output of our QRNG -- and
+measure the time used on the computation part, excluding time used on
+memory transfers. The result of this experiment is shown in Figure
+\ref{fig:sobol-gpu-noDtoH}. Here we observe an opposing result, where
+Nikola is faster computation wise in all but the last case.
 
-* Vi noterer hvad nvprof giver af køretider for de fire kørsler
+\todo{Note the results of nvprof in both cases}
+% * Undren over at Nikola pludselig bliver hurtigere end CUDA
+
+% * Vi forsøger at kigge på køretid uden hukommelsesoverførsel, da vi
+% finder ud af at det dominerer over selve beregningsdelen
+
+% * Vi får det omvendte resultat, hvilket er meget forvirrende
+
+% * Vi noterer hvad nvprof giver af køretider for de fire kørsler
+
 
 
 \begin{figure}
@@ -350,7 +379,6 @@ finder ud af at det dominerer over selve beregningsdelen
 \label{fig:sobol-gpu-noDtoH}
 \end{figure}
 
-
 \subsection{Benchmark 5: Longstaff and Schwartz option pricing on the CPU}
 \begin{figure}
 	\centering
@@ -362,43 +390,57 @@ finder ud af at det dominerer over selve beregningsdelen
 \label{fig:lsm-cpu}
 \end{figure}
 
- * We did only have time to implement Longstaff and Schwartz on the
-   CPU. \todo{why not Accelerate and Nikola}
+Our last benchmark experiment is a comparison of CPU implementations
+of the Longstaff and Schwartz algorithm. We did not find time to
+implement Accelerate and Nikola implementations, and they would also
+require a working implementation of the \lstinline{unfold}-operation
+described in Chapter \ref{chap:unfold}. Also, some components, such as
+Cholesky factorization is not obvious how to implement in general in
+these languages, though we could always implement an unrolled version
+operating on a specific matrix size.
+
+ % * We did only have time to implement Longstaff and Schwartz on the
+ %   CPU. \todo{why not Accelerate and Nikola}
   
-   - Because of lack of time
+ %   - Because of lack of time
 
-   - Some components are not obviouos how to implement properly,
-   e.g. Cholesky factorization in these languages
+ %   - Some components are not obviouos how to implement properly,
+ %   e.g. Cholesky factorization in these languages
 
- * Introduce the plot.
+The results of the benchmark are displayed on Figure
+\ref{fig:lsm-cpu}.  Again we observe that Repa is slower than
+\lstinline{Data.Vector} and R.
 
- * Again Repa is slower and for $10^5$ paths it was so slow, that we
-   did not let it run to completion.
-
-   * Vektors forspring ved at være kompileret svinder med
-   problemstørrelsen, formentlig fordi en større relativ del af R's
-   eksekveringstid sker inde i eksterne optimerede lineær algebra
-   routiner.
+We also note that \lstinline{Data.Vector} has an advantage over R for
+small problem sizes. This is probably because \lstinline{Data.Vector}
+is written in a compiled language, whereas R is interpreted. For
+larger problem sizes, R takes the lead, which is probably due to much
+of the computation in R is delegated to external optimized linear
+algebra routines.
 
 \section{Sources of error}
+There are several sources of errors for our benchmarks, so we have
+only been able to make few conclusions based on them.
+\begin{itemize}
+\item The test machine we have used is shared among a large research,
+  and although we have tried to avoid it, some of the benchmarks have
+  been performed while other compute intensive tasks has been running
+  simultaneously.
+\item When pricing an option, we have let most of the option
+  configuration, except option duration, been compiled into our
+  programs, and thus compiler optimizations might have reduced the
+  complexity of the resulting code, and thus our benchmarks might not
+  map directly to a real world scenario.
 
-* That the test machine is shared, and other intensive tasks has
-sometimes been running simultaneous with our benchmarks
-
-* When pricing an option, we have let most of the option
-configuration, except option duration been compiled into our programs,
-and thus compiler optimizations might have reduced the complexity of
-the resulting code, and thus our benchmarks might not map directly to
-a real world scenario.
-
-* The same holds for Sobol-sequences, where the direction vectors have
-been similarly hardcoded.
-
-* As mentioned all our Haskell programs have been executed with the
-llvm backend, with -O3 given to the underlying llvm assembler. Certain
-GHC optimizitations has thus not been made, such as the rewrite rules
-that forms the basis for fusion in \lstinline{Data.Vector}, and we
-should probably have used the GHC flag -O3 in addition.
+  The same holds for our Sobol-sequences generators, where the
+  direction vectors have been similarly hardcoded.
+\item As mentioned all our Haskell programs have been executed with
+  the llvm backend, with \lstinline{-O3} given to the underlying llvm
+  assembler. Certain GHC optimizitations, such as the rewrite rules
+  that forms the basis for fusion in \lstinline{Data.Vector}, has thus
+  not been made and we should probably have used the GHC flag \lstinline{-O3} in
+  addition.
+\end{itemize}
 
 %%% Local Variables:
 %%% mode: latex
