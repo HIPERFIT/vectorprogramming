@@ -43,21 +43,21 @@ benchmark() {
   cd $SURVEYTOOLS_DIR/benchmarkrunner
   for experiment in $BENCHROOT/*
   do
-    if [ ! -d $experiment ]; then
+    if [ ! -d "$experiment" ]; then
       continue
     fi
     for instance in $experiment/*
     do
-      if [ ! -d $instance ]; then
+      if [ ! -d "$instance" ]; then
         continue
       fi
-      $SURVEYTOOLS_DIR/benchmarkrunner/run.sh $(basename $experiment) $(basename $instance) $LOGTAG
+      $SURVEYTOOLS_DIR/benchmarkrunner/run.sh "$(basename "$experiment")" "$(basename "$instance")" $LOGTAG
     done
     #copy the plot settings to summarydir to make the plot generation self contained
-    cp $experiment/plot_baseline $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
-    cp $experiment/xlabel $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
-    cp $experiment/timeunit $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
-    cp -r $SURVEYTOOLS_DIR/plotting/ $BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)
+    cp "$experiment/plot_baseline" "$BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)"
+    cp "$experiment/xlabel"        "$BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)"
+    cp "$experiment/timeunit"      "$BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)"
+    cp -r $SURVEYTOOLS_DIR/plotting/ "$BENCHRESULTS_DIR/$LOGTAG/$(basename $experiment)"
   done
 
 }

@@ -14,7 +14,7 @@ int powInt(int x, int y)
 
 
 unsigned int sobolRec(int i, unsigned int last, unsigned int *v) {
-  printf("i: %d, ffs: %d\n", i, ffs(i)-1);
+  //  printf("i: %d, ffs: %d\n", i, ffs(i)-1);
   return last ^ v[ffs(i)-1];
 }
 

@@ -8,12 +8,12 @@ export PATH="$PATH:/usr/local/cuda-5.0/bin"
 set -e
 
 # fetching arguments
-BENCHMARK=$1
-INSTANCE=$2
-LOGTAG=$3
-
+BENCHMARK="$1"
+INSTANCE="$2"
+LOGTAG="$3"
+echo $INSTANCE
 # Name of benchmark (for naming logs, reports etc.)
-NAME=$INSTANCE
+NAME="$INSTANCE"
 #NAME=$BENCHMARK-$INSTANCE
 
 SCRIPTFILE=`readlink -f $0`
@@ -29,7 +29,7 @@ mkdir -p $LOGDIR/
 LOGFILE=$LOGDIR/$BENCHMARK-$INSTANCE
 
 # The main directory of the test program
-PROGRAMDIR=$BENCHROOT/$BENCHMARK/$INSTANCE
+PROGRAMDIR="$BENCHROOT/$BENCHMARK/$INSTANCE"
 # (note the underscore to avoid variable capture when sourcing!)
 
 SUMMARYDIR=$RESULTROOT/benchmark-summaries/$LOGTAG/$BENCHMARK/data
@@ -38,7 +38,7 @@ REPORTFILE=$SUMMARYDIR/$NAME-report.html
 
 RUNNER=$SCRIPTROOT/dist_*/build/benchmarkunner/benchmarkunner
 
-mkdir -p $SUMMARYDIR
+mkdir -p "$SUMMARYDIR"
 
 # Useful environments:
 source $ROOT/surveytools/bin/loadHSENV
@@ -50,7 +50,8 @@ buildCabal() {
   cabal build
 }
 
-cd $PROGRAMDIR
+echo $PROGRAMDIR
+cd "$PROGRAMDIR"
 
 # Setup the benchmark
 (
@@ -59,12 +60,12 @@ cd $PROGRAMDIR
 
 # Actually run the benchmark
 TIMEOUTMINS=50
-echo running $PROGRAMDIR/run.sh
-#cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER $PROGRAMDIR/run.sh \
-cat $BENCHROOT/$BENCHMARK/inputs | timeout --foreground $(($TIMEOUTMINS*60)) $RUNNER $PROGRAMDIR/run.sh \
-  --summary $SUMMARYFILE \
-  --output $REPORTFILE +RTS -N1 2>&1| tee $LOGFILE-Run
+echo running "$PROGRAMDIR/run.sh"
+#cat $BENCHROOT/$BENCHMARK/inputs | $RUNNER "$PROGRAMDIR/run.sh" \
+cat "$BENCHROOT/$BENCHMARK/inputs" | timeout --foreground $(($TIMEOUTMINS*60)) $RUNNER "$PROGRAMDIR/run.sh" \
+  --summary "$SUMMARYFILE" \
+  --output "$REPORTFILE" +RTS -N1 2>&1| tee $LOGFILE-Run
 
 # In the case of incomplete output (when the benchmark does not
 # complete), this will make R's CSV-parser happy!
-echo $'\n' >> $SUMMARYFILE
+echo $'\n' >> "$SUMMARYFILE"

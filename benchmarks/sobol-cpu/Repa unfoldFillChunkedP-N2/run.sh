@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec ./dist_*/build/sobol-repa/sobol-repa $@ +RTS -N32
+exec ./dist_*/build/sobol-repa/sobol-repa $@ +RTS -N2
