@@ -111,8 +111,8 @@ comparison of results with our reference $R$ implementations of the
 algorithms.
 
 Each of the Haskell benchmarks we have run were compiled with the same set of
-parameters, mandating the use of the llvm code generation backend and level-3
-optimizations (via \verb|-optlo-O3|.  Each of the CUDA benchmarks have been
+parameters. We use the llvm code generation backend and level-3
+optimizations (via \verb|-fllvm -optlo-O3|).  Each of the CUDA benchmarks have been
 compiled with no extra flags. Our C benchmarks have been compiled using level-3
 (\verb|-O3|) optimizations.
 
@@ -120,13 +120,12 @@ compiled with no extra flags. Our C benchmarks have been compiled using level-3
 All benchmarks have been performed on a computer provided by the
 HIPERFIT research center running Ubuntu 12.04 LTS and CUDA 5.0.
 
-The hardware specifications is as follows:
-\begin{itemize}
-\item 2 $\times$ AMD Opteron\texttrademark\ 6274 processors (16 cores each, clocked at 2,2 Ghz)
-\item 132 GB (approx. 126 GiB) main memory
-\item Quad SLI consisting of two GeForce GTX 690 (each a dual-head
-  GPU). See full specifications in Table \ref{tab:hardware}.
-\end{itemize}
+The hardware specifications is as follows: 2 $\times$ AMD
+Opteron\texttrademark\ 6274 processors (16 cores each, clocked at 2,2
+Ghz), 132 GB (approx. 126 GiB) of main memory and a Quad SLI
+consisting of two GeForce GTX 690 (each a dual-head GPU). See full
+specifications in Table \ref{tab:hardware}.
+
 \begin{table}
 \begin{minipage}[b]{0.50\linewidth}
   \centering
@@ -293,17 +292,26 @@ implementation is identical to the Nikola implementation.
 
 We now look at the performance of the Sobol sequence generators we
 have implemented, and in this section we will concentrate on the CPU
-versions implemented in R, Repa and \lstinline{Data.Vector}. 
+versions implemented in C, R, Repa and \lstinline{Data.Vector}. 
 
-The R implementation is from the R-package \lstinline{randtoolbox} which
-interfaces with a Fortran implementation that uses the recursive
+The R implementation is from the R-package \lstinline{randtoolbox}
+which interfaces with a Fortran implementation that uses the recursive
 Algorithm \ref{alg:sobol-recursive}, Section \ref{sec:sobol}. This is
-also the algorithm we have implemented in \lstinline{Data.Vector}, but in
-Repa we have used \todo{Arg! Latest results are from the wrong
-  Repa-version! And we don't know the number of cores used in previous
-  executions.}
+also the algorithm we have implemented in \lstinline{Data.Vector},
+Repa and C.
 
-The results are presented in Figure \ref{fig:sobol-cpu}.
+The results are presented in Figure \ref{fig:sobol-cpu}. We see that
+the \texttt{Data.Vector}-library in this case is competitive with
+R. Nonetheless, C beats all the others by a large margin.
+
+Even though we believe to have followed an idiomatic style for the
+Repa implementation, it does a bad job in the benchmark. This is
+perhaps due to the fact that the problem is not that numerically
+intensive, and thus we observe the overhead incurred by a more
+complicated runtime without realizing the full potential from
+parallelization. The Repa implementation running on 32 processors is
+only $7.2$ times faster than the single-threaded version for $10^6$
+elements.
 
 \subsection{Benchmark 4: Sobol sequence generation on the GPU}
 \begin{figure}

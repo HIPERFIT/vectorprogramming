@@ -64,7 +64,7 @@ create_plot <- function (frame, greyscale, uselineplot, isabsolute, xlabel, time
 
     # Select nice shapes
     # See possibilities here: http://www.cookbook-r.com/Graphs/Shapes_and_line_types/
-    p <- p + scale_shape_manual(values=c(15,16,17,18,4))
+    p <- p + scale_shape_manual(values=c(15,16,17,18,4,2))
     
     return(p)
 }
