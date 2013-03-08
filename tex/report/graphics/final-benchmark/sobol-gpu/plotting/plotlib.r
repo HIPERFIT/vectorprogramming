@@ -1,5 +1,5 @@
 saveplot <- function(plot, filename, size) {
-  pdf(filename, width=1.3*size, height=1*size)
+  pdf(filename, width=1.2*size, height=1*size)
   print(plot)
   notused <- dev.off()
 }
@@ -49,7 +49,7 @@ create_plot <- function (frame, greyscale, uselineplot, isabsolute, xlabel, time
 
     # Configure scales
     p <- p + scale_x_log10(breaks=basis_data[,1], name=xlabel) #, label=comma_format())
-    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,4,8,16,32,100,200,400,1000,2000,4000,8000,16000,32000), name=yaxis_label, label=comma_format())
+    p <- p + scale_y_log10(breaks=c(0, 0.001,0.01,0.05,0.1,0.5,1,2,4,8,16,32,50,100,200,400,600,1000,2000,4000), name=yaxis_label, label=comma_format())
 
     #p <- p + ylab(paste("Speed-up compared to ", file_path_sans_ext(basisfile)))
 
@@ -64,7 +64,7 @@ create_plot <- function (frame, greyscale, uselineplot, isabsolute, xlabel, time
 
     # Select nice shapes
     # See possibilities here: http://www.cookbook-r.com/Graphs/Shapes_and_line_types/
-    p <- p + scale_shape_manual(values=c(15,16,17,18,4,2))
+    p <- p + scale_shape_manual(values=c(15,16,17,18,4))
     
     return(p)
 }
