@@ -196,8 +196,8 @@ have to be aware of. As an example, how does \lstinline{sequential}
 interact with conditionals, as in the following example:
 \begin{lstlisting}
 map ( \b -> if b
-           then sequential (map f ys)
-           else map f ys)
+            then sequential (map f ys)
+            else map f ys)
 \end{lstlisting}
 We have to decide the parallel execution semantics of the outer
 \lstinline{map} before we can launch it. In such cases we have to make
@@ -248,6 +248,18 @@ The only thing that all Nikola terms have in common is instances of typeclass
 for granted that a function of that signature with our intended purpose is
 definable.
 
+We have speculated about various ways to express a code marker such as
+\lstinline{sequential}. Our initial idea was to add yet another type variable
+to Nikola expressions, such that the "sequentiality" of a term would be encoded
+in the type. The types of \lstinline{map}, \lstinline{zipWith} and so on should
+then implement the semantics of switching mode in accordance with their
+arguments.
+
+While this idea appears to hold some merit, in the concrete case of Nikola we
+made the judgement that the type system was already saturated with modelled
+constraints, and thus we settled for an untyped version.
+\todo{We did have a better argument than ``it is complicated''}
+
 %\subsection{Interactions with fusion}
 % - Interactions with fusion
 % - If we employ it as a meta-language construct, fusion can perhaps
@@ -280,26 +292,6 @@ static safety but limited expression.
 %  more targetted domain-specific languages where such problems has
 %  been hidden}
 
-\section{Alternative implementations}
-% * Discussion
-%   - Presentation of alternatives
-%      * Full vectorisation
-%      * CUDA 5.0 nested calls, we should definitely read about how
-%        NVIDIA tackles the problem of mapping nested programs.
-%      * Repa computeS/computeP
-%      * Type tagging
-
-We have speculated about various ways to express a code marker such as
-\lstinline{sequential}. Our initial idea was to add yet another type variable
-to Nikola expressions, such that the "sequentiality" of a term would be encoded
-in the type. The types of \lstinline{map}, \lstinline{zipWith} and so on should
-then implement the semantics of switching mode in accordance with their
-arguments.
-
-While this idea appears to hold some merit, in the concrete case of Nikola we
-made the judgement that the type system was already saturated with modeled
-constraints, and thus we settled for an untyped version.
-\todo{We did have a better argument than ``it is complicated''}
 
 \section{Extensions and future work}
 \label{sec:parallelism-future-work}
@@ -314,6 +306,30 @@ obvious task of making a real implementation, we now look at a further
 set of extensions that might be interesting to look closer at.
 
 \subsection{Heterogeneous computing}
+The idea of a cursor such as \lstinline{sequential} might extend to
+other divisions between different types of parallelism in
+heterogeneous computing. We might have a cursor to mark that something
+should not be attempted to be parallelized on a GPU, but should be
+executed on the CPU. Such a cursor might allow one to break out of our
+language and back into the full Haskell language by exposing the
+\lstinline{IO}-monad or more restricted monad, that would allow more
+general computation than what we can provide on a GPU.
+
+Another cursor might be used to indicate were we divide between block
+level parallelism (where threads can synchronize with its peers
+directly on the GPU) or full parallelism where the threads does not
+have the possibility of synchronization on the the device. Such a
+cursor might make it possible to write a version of the binomial
+portfolio pricer similar to \textsc{GpuBinom} in Algorithm
+\ref{alg:cuda-binom}.
+
+A final idea would be cursors to allow tasks to be partitioned between
+several devices, such as several graphics cards or a cluster.
+
+Again, we have done a lot of speculation on these matters, but as we
+do not have a concrete implementation, we can not conclude further on
+their practicallity.
+
 % cpuEval and more than one graphics card
 % cloudEval
 
@@ -338,7 +354,6 @@ use machine learning to select whether a task is fit for GPU or CPU
 execution, though using program features rather than training runs
 \cite{grewe2011static}.
 
-
 \subsection{Repa}
 Repa also employs a notion of array manifestation in separate parallel and
 sequential markers.
@@ -350,6 +365,12 @@ previously, nested calls to \lstinline{computeP} will result in
 runtime errors. Contrary to Nikola, we have speculated that it might
 be possible to implement a \lstinline{sequential} construct as a type
 parametrised monad, but this remains a speculation.
+
+%\section{Alternatives to \texttt{sequential}}
+%      * Full vectorisation
+%      * CUDA 5.0 nested calls, we should definitely read about how
+%        NVIDIA tackles the problem of mapping nested programs.
+%      * Repa computeS/computeP
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
