@@ -66,8 +66,77 @@ Chapter \ref{chap:directing-parallelism}.
 \section{Conclusion}
 \label{sec:conclusion}
 
-See Section \ref{sec:conclusion}. $\bot$-tsssshhh.
+In this master's thesis we have explored the state of contemporary vector
+languages, with a focus on functional programming languages. We have compared
+the embedded languages Nikola and Accelerate with the Haskell libraries
+\lstinline{Data.Vector} and Repa, and with the programming languages R and
+CUDA.  This we did by selecting and describing a set of algorithms from the
+financial domain, and comparing the merits of the implementation in each of
+these languages.
 
+In our comparison we uncovered great differences among the languages in both
+expressive power and performance. Some of these findings confirm our
+expectations from inspection of the superficial circumstances regarding each
+language, such as the conjecture that Haskell programs in general have an
+advantage to R in being compiled rather than interpreted, though R can make up
+for this with rich, optimised foreign function bindings, as witnessed by Figure
+\ref{fig:lsm-cpu-speedup}.
+
+More interestingly, we have described some of the protruding differences
+between Accelerate and Nikola, both in terms of expressive power and
+performance.
+
+Accelerate adopts the view that only programs with a guaranteed effective
+implementation should be expressible. This view is manifest in the decision
+that Accelerate only exposes flat data parallel constructs, and delegates to
+the compilation process the task of fusing the different components of an
+Accelerate program into a coherent whole.  We found however that this
+limitation of expressivity was not only hindering us from implementing our
+cases at all, but also resulted in inferior performance relative to Nikola.
+While we do not say that it will be impossible to improve the quality of the
+optimisations of Accelerate to make it competitive, we do consider it
+detrimental to the current state of the language, being both difficult to use
+and slow as well.
+
+Nikola we found to have taken an opposite approach, namely to take an offset in
+the capabilities of hardware, and thus exposing language constructs that more
+closely correspond to those capabilities.  While this results in a language
+that tris to give less static guarantees about performance and safety, we also
+found the result to be a more extensible language, with a much smaller
+conceptual gap between the language and the hardware. While this arguably
+reduces the theoretical optimization options, our concrete finding for now was
+that Nikola programs had more expressiveness available to them, and resulted in
+better performance than their corresponding Accelerate implementations.
+
+We thus reasoned that choosing Nikola would yield a path with better chances
+for incremental improvements in both performance and expressivity, perhaps
+eventually towards the theoretical ideal of static guarantees employed by
+Accelerate.
+
+Having selected Nikola for further study, we first sat out to improve the
+expressivity of the language, by implementing an operation for iterative array
+construction, and by bypassing the restriction of nested expression by
+permitting nested maps. Because we do not give up the restriction of only
+allowing regular arrays, some caveats apply to the use of nested maps, as we
+have no way to ascertain statically that the mapped function does not yield
+arrays of different shape depending on the input.
+
+Unfortunately, due to the selecting of Nikola happening relatively late in the
+progression of the project, we have not been able to get our extensions working
+properly. We have however presented speculations of a possible solution to the
+compilation problem of nested vector operations through the
+\lstinline{sequential} construct, inspired by how Repa allows the programmer to
+dictate the parallel or sequential execution mode by means of the
+\lstinline{computeS} and \lstinline{computeP} functions.
+
+We reccommend the notion of dividing execution mode by the means of markers
+such as \lstinline{sequential} as a relevant topic for future research, due to
+its apparent simplicity and versatility.
+
+On a meta-project level, we found out that carrying out a research project with
+a significant amount of unspecified direction can be very challenging,
+especially in combination with an eventual project deadline, and the
+complications of working together.
 
 %%% Local Variables:
 %%% mode: latex
