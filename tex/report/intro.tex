@@ -98,9 +98,9 @@ have taken the strategy of implementing some real world example
 applications from the financial domain, to study the limitations of
 current approaches.
 
-\todo{Add note on mapping nested data-parallelism to flat
-  architectures is still an open problem, as vectorisation is not the
-  holy grail}
+% \todo{Add note on mapping nested data-parallelism to flat
+%   architectures is still an open problem, as vectorisation is not the
+%   holy grail}
 
 \section{Contributions}
 
@@ -111,36 +111,45 @@ health of their supporting projects infrastructure.
 Taking an outset in two common financial algorithms for option pricing
 and a quasi-random number generator, we have found that the lack of
 nesting in a language such as Accelerate and Nikola is too limiting to
-implement concise and performing solutions.
+implement concise solutions and that the specification of some
+algorithms would lead to incomposable contructs.
 
-As this lack of nesting is due to excessive and concious limitation, we suggest
-taking a step back and give the programmer more control. Of our surveyed
-languages, Nikola fits this view the best, and is selected as the subject for
+As this lack of nesting is due to excessive and concious limitation,
+we suggest taking a step back and give the programmer more control,
+though giving away some of the guarantees made by a strict type system
+of performance and absolute correctness. Of our surveyed languages,
+Nikola fits this view the best, and is selected as the subject for
 further study.
 
-This we go about by exploring the implementation of a few but motivated extra
-array operators, and last we present a proposal to deal with the problem posed
-by mapping nested data parallelism to flat parallel hardware.
+This we go about by exploring the implementation of a few but
+motivated extra array operators, and last we present a proposal to
+deal with the problem posed by mapping nested array
+operators\footnote{We avoid the term nested data-parallelism, as that
+  is often connotated with the vectorisation transformation} to flat
+parallel hardware. This proposal uses a cursor to mark the limit
+between sequential and parallel code, and we find at promising
+alternative to vectorisation. There is a large body of future work in
+deducing the consequences of such an addition.
 
-\begin{itemize}
+% \begin{itemize}
 
-\item A survey comparing of the vector languages CUDA, R, Repa, Accelerate and
-  Nikola. The comparison is based on how well they performed with our cases,
-  both in terms of expressivity and performance, and the surrounding community
-  of developers and users.
+% \item A survey comparing of the vector languages CUDA, R, Repa, Accelerate and
+%   Nikola. The comparison is based on how well they performed with our cases,
+%   both in terms of expressivity and performance, and the surrounding community
+%   of developers and users.
 
-\item We found Nikola to be the most promising candidate for useful extensions.
+% \item We found Nikola to be the most promising candidate for useful extensions.
 
-\item We have implemented prototypes of folding, unfolding and nested maps in
-  Nikola. While there is yet some way to an acceptable implementation, we
-  outline a way to it.
+% \item We have implemented prototypes of folding, unfolding and nested maps in
+%   Nikola. While there is yet some way to an acceptable implementation, we
+%   outline a way to it.
 
-\item We present an alternative way of expressing nested data parallelism, that
-  doesn't involve an elaborate code transformation like \cite{nesl}, and
-  doesn't impair the compositionality of the language. Like above, we have yet
-  to actually test the method in practise.
+% \item We present an alternative way of expressing nested data parallelism, that
+%   doesn't involve an elaborate code transformation like \cite{nesl}, and
+%   doesn't impair the compositionality of the language. Like above, we have yet
+%   to actually test the method in practise.
 
-\end{itemize}
+% \end{itemize}
 
 %
 %* Example where the Accelerate breaks down, and code does not seem to
@@ -155,15 +164,18 @@ The extensions developed for Nikola are to be found at \url{https://github.com/H
 \section{Report outline}
 The remainder of the report is structured as follows. This
 introductory chapter is supplemented with two chapters introducing
-terminology, one on hardware platforms such as GPUs and one on the
+terminology: one on hardware platforms such as GPUs and one on the
 financial example problems we are going to use throughout the
-report. The rest of the report after these introductory chapters is
-divided into two more or less independent parts. The first part
-contains a survey of currently used data-parallel languages. The
-second part describes our own efforts into extending the GPU language
-Nikola with functionality we found lacking when performing our survey.
+report. 
 
-\todo{Use refs to chapters and parts in outline}
+The rest of the report after these introductory chapters is divided
+into two more or less independent parts. The first part contains a
+survey of currently used data-parallel languages. The second part
+describes our own efforts into extending the GPU language Nikola with
+functionality we found lacking in the experiments conducted throughout
+the survey.
+
+% \todo{Use refs to chapters and parts in outline}
 
 %%% Local Variables:
 %%% mode: latex

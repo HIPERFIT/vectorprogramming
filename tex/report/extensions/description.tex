@@ -62,12 +62,13 @@ slightly more elaborate monad type \lstinline{type P a = R S.Exp a}. The monad
 frontend datatypes such as \lstinline{Exp t a} and \lstinline{Array r sh a} into the
 low-level abstract syntax \lstinline{S.Exp}.
 
-To enable this, monad \lstinline{R r a} is a continuation monad.  \todo{for
-now just assume knowledge of continuation passing monads :-(} But instead of
-direct access to the underlying continuation, Nikola uses delimited
-continuations, described in \cite{wadler1994monads} and introduced first in
-\cite{filinski1996controlling}.
-The interface to using delimited continuations consists of two special operations:
+To enable this, monad \lstinline{R r a} is a continuation monad.  % \todo{for
+% now just assume knowledge of continuation passing monads :-(}
+  But instead of direct access to the underlying continuation, Nikola
+  uses delimited continuations, described in \cite{wadler1994monads}
+  and introduced first in \cite{filinski1996controlling}.  The
+  interface to using delimited continuations consists of two special
+  operations:
 
 \begin{lstlisting}
 shift :: ((a -> R r r) -> R r r) -> R r a

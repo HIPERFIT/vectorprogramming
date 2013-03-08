@@ -258,7 +258,7 @@ arguments.
 While this idea appears to hold some merit, in the concrete case of Nikola we
 made the judgement that the type system was already saturated with modelled
 constraints, and thus we settled for an untyped version.
-\todo{We did have a better argument than ``it is complicated''}
+%\todo{We did have a better argument than ``it is complicated''}
 
 %\subsection{Interactions with fusion}
 % - Interactions with fusion
@@ -300,10 +300,10 @@ We of course have a lot of future work, as the suggestions in this
 chapter are highly hypothetical, in that we have not found time to
 finish an actual implementation. There might (and we are almost sure
 that there will) be more corner cases that we have not thought about,
-than those mentioned in Section \label{sec:sequential-complications}
-above \todo{Why does this reference not work!?!}. In addition to the
-obvious task of making a real implementation, we now look at a further
-set of extensions that might be interesting to look closer at.
+than those mentioned in Section \ref{sec:sequential-complications}
+above. In addition to the obvious task of making a real
+implementation, we now look at a further set of extensions that might
+be interesting to look closer at.
 
 \subsection{Heterogeneous computing}
 The idea of a cursor such as \lstinline{sequential} might extend to
@@ -359,7 +359,7 @@ Repa also employs a notion of array manifestation in separate parallel and
 sequential markers.
 
 We find that \lstinline{sequential} might be able to replace both
-\lstinline{computeS} and \lstinline{computeP}, to give Repa a simpler
+\lstinline{computeS} and \lstinline{computeP}to give Repa a simpler
 execution strategy with less space for runtime errors. As mentioned
 previously, nested calls to \lstinline{computeP} will result in
 runtime errors. Contrary to Nikola, we have speculated that it might
