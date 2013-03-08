@@ -116,9 +116,9 @@ and a \lstinline{map}:
 \begin{lstlisting}
 portfolio@$_2$@ = map (sequential binomial)
 \end{lstlisting}
-which should be understood as ``convert binomial'' to a sequential
+which should be understood as ``convert \lstinline{binomial} to a sequential
 function, whereby the outer \lstinline{map} can be executed in
-parallel. Such a conversion is of course possible, as all parallel
+parallel''. Such a conversion is of course possible, as all parallel
 programs can be rewritten as a sequential program.
 
 One should then think about a map as a ``potentially parallel'' operation,
@@ -186,6 +186,7 @@ and we might be able to extend this to a heterogeneous language. See
 Section \ref{sec:parallelism-future-work} below.
 
 \section{Consequences and complications}
+\label{sec:sequential-complications}
 % zipWith f (sequential as) bs
 % map (\b -> if b then sequential $ map f ys else map f ys) xs
 
@@ -291,35 +292,31 @@ static safety but limited expression.
 We have speculated about various ways to express a code marker such as
 \lstinline{sequential}. Our initial idea was to add yet another type variable
 to Nikola expressions, such that the "sequentiality" of a term would be encoded
-in the type. The types of \lstinline{map},\lstinline{zipWith} etc. should
+in the type. The types of \lstinline{map}, \lstinline{zipWith} and so on should
 then implement the semantics of switching mode in accordance with their
 arguments.
 
 While this idea appears to hold some merit, in the concrete case of Nikola we
 made the judgement that the type system was already saturated with modeled
-constraints, and thus we setteled for an untyped version.
+constraints, and thus we settled for an untyped version.
+\todo{We did have a better argument than ``it is complicated''}
 
 \section{Extensions and future work}
 \label{sec:parallelism-future-work}
 
 We of course have a lot of future work, as the suggestions in this
 chapter are highly hypothetical, in that we have not found time to
-finish an actual implementation. There might (and we are almost that
-there will) be more corner cases that we have not thought about, than
-those mentioned in Section \todo{ref}. In addition to the obvious task
-of making a real implementation, we a further set of extensions that
-might be interesting to look closer at.
+finish an actual implementation. There might (and we are almost sure
+that there will) be more corner cases that we have not thought about,
+than those mentioned in Section \label{sec:sequential-complications}
+above \todo{Why does this reference not work!?!}. In addition to the
+obvious task of making a real implementation, we now look at a further
+set of extensions that might be interesting to look closer at.
 
-\subsection{Repa}
+\subsection{Heterogeneous computing}
+% cpuEval and more than one graphics card
+% cloudEval
 
-Repa also employs a notion of array manifestation in separate parallel and
-sequential markers.
-
-With the invention of \lstinline{sequential}, Repa could enjoy a simpler
-execution strategy with less space for runtime errors.  Contrary to Nikola, we
-have speculated that it might be possible to implement a
-\lstinline{sequential} construct as a type parametrised monad. But this
-remains a speculation.
 
 \subsection{Experimentation}
 % - Allows for experimentation with different parallelization
@@ -329,19 +326,31 @@ Another interesting aspect of such a light-weight construct as
 sequential, that only instructs how computation is mapped to the
 hardware, is that we can experiment using different parallelization
 strategies, just be moving it around in the code. This might even
-allow for automatic experimentation of different parallelizations on
-the current hardware or perhaps some strategies based on either
-\emph{machine-learning} (see for instance the the Qilin system or the
-method presented in \\todo{insert references to both Qilin and
-  heterogeneous opencl paper}) or a developed set of rules can be used
-to insert \lstinline{sequential} automatically, such that it will not
+allow for automatic experimentation of different parallelization
+strategies on the current hardware, where \lstinline{sequential} automatically, such that it will not
 even have to be exposed to the programmer.
 
-\subsection{Heterogeneous computing}
-% cpuEval and more than one graphics card
+One approach is to employ \emph{machine learning} on smaller training
+runs to select between host or GPU execution as in the Qilin system
+\cite{luk2009qilin}. Alternatively, an approach based on static
+program analysis could be employed. Here it has also been suggested to
+use machine learning to select whether a task is fit for GPU or CPU
+execution, though using program features rather than training runs
+\cite{grewe2011static}.
 
-\subsection{Cluster computing}
-% cloudEval
+
+\subsection{Repa}
+Repa also employs a notion of array manifestation in separate parallel and
+sequential markers.
+
+We find that \lstinline{sequential} might be able to replace both
+\lstinline{computeS} and \lstinline{computeP}, to give Repa a simpler
+execution strategy with less space for runtime errors. As mentioned
+previously, nested calls to \lstinline{computeP} will result in
+runtime errors. Contrary to Nikola, we have speculated that it might
+be possible to implement a \lstinline{sequential} construct as a type
+parametrised monad, but this remains a speculation.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
