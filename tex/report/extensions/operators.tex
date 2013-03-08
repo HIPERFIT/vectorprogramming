@@ -222,6 +222,26 @@ manually enforce when applying our \lstinline{mapNest} is worth the
 extra cost in man hours, when compared to reading and writing programs
 in the style we have seen in Section \todo{ref}.
 
+
+\section{Repa implementation}
+As seen in our survey, we also had problems getting our CPU version to
+perform and deliver a speed up, especially Repa did not perform that
+well, and only degraded in performance when we added processors.
+
+
+\begin{figure}
+	\centering
+\begin{adjustbox}{minipage=1.3\textwidth,margin=0pt \smallskipamount,center}
+	\subbottom[Speed-up relative to CUDA implementation.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu-RepaUnfold/speedup-graph-final.pdf}\label{fig:sobol-cpu-repaunfold-speedup}}
+	\subbottom[Absolute time usage.]{\includegraphics[width=0.5\textwidth]{graphics/final-benchmark/sobol-cpu-RepaUnfold/time-graph-final.pdf}\label{fig:sobol-cpu-repaunfold-time}}
+\end{adjustbox}
+\caption{Sobol sequence generation on the CPU. We use RepaU to denote
+  benchmarks using our new Repa implementation using the
+  \lstinline{unfoldChunkedP}-construct.}
+\label{fig:sobol-gpu}
+\end{figure}
+
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../master"
