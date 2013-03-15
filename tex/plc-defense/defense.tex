@@ -1,0 +1,116 @@
+% vim: set ft=tex :
+\documentclass[a4paper]{beamer}
+\title{Thesis defense}
+\author{Philip Lykke Carlsen}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{xunicode}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\usepackage{xltxtra}
+\setmainfont{TeX Gyre Pagella}
+\setmathfont{Asana Math}
+% Asana Math's mathcal is horrible. use Latin Modern's.
+\setmathfont[range=\mathcal]{Latin Modern Math}
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Introduction}
+  \begin{itemize}
+    \item We have surveyed current vectorprogramming languages
+    \item We found each lacking in expressivity
+    \item We have identified a possible remedy for nested parallelism
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Motivation -- Why?}
+  \begin{itemize}
+    \item Various disciplines have ceaseless needs for computational performance
+    \item No more expected sequential speed improvements from moores law
+    \item Need to parallelise instead
+    \item Contemporary solution is heterogeneous, but expressionally unwieldly
+    \item Thus, we need better programming languages.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Option pricing}
+  \begin{itemize}
+    \item To have a concrete frame of reference, we take our offset in option pricing algorithms
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{GPUs}
+  \begin{itemize}
+    \item Most readily available hardware for SIMD parallelism
+    \item Software is programmed with CUDA or OpenCL.
+    \item (something about gpu architecture?)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel programming}
+  \begin{itemize}
+    \item SIMD - data parallel languages
+    \item Many problems are naturally expressed using nested vector operations
+    \item Either need to use flattening-transformation or limit expressivity to avoid nested parallelism
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Surveyed languages}
+
+  \begin{itemize}
+    \item Nikola
+    \item Accelerate
+  \end{itemize}
+
+  None of them supported nested operations. Nikola showed best performance, and
+  is less insistent on denying nesting. So we chose to continue working on Nikola.
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Iterative array construction}
+
+  \begin{itemize}
+    \item (Show unfold + mapNest)
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What about nested operations}
+
+  \begin{itemize}
+    \item mapNest opens up for nested operations, hence the name
+    \item To be able to compile this properly, we need a way to allocate parallelism
+  % in separate overlay:
+    \item We devised a 'marker'-based solution
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{sequential}
+
+  % map (sequential f) xs
+
+  \begin{itemize}
+    \item We introduce a new construct to Nikola, called \emph{sequential}
+    \item \emph{sequential} marks the border between parallel and sequential execution
+    \item The expression enclosed by \emph{sequential} is executed completely sequentially
+    \item The innermost potentially parallel operation enclosing \emph{sequential} becomes parallel
+    \item The
+  \end{itemize}
+\end{frame}
+
+\end{document}
