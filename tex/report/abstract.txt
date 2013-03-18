@@ -1,36 +1,40 @@
-Motivation: 
-
 We evaluate the current state of functional data-parallel languages,
-through the implementation of two option pricing algorithms in the
-examined languages. Specifically, we implement a lattice based
-binomial option pricer, the least-squares Monte Carlo algorithm, and
-several versions of Sobol sequence generators, a quasi-random number
-generator applicable for Monte Carlo integration.
+through the implementation of two option pricing
+algorithms. Specifically, we implement a lattice based binomial option
+pricer, the least-squares Monte Carlo algorithm (LSM), and several
+versions of Sobol sequence generators, a quasi-random number generator
+applicable for certain Monte Carlo methods, such as LSM.
 
 Motivated by our attempts at implementing these algorithms, we
 identify that both Nikola, Accelerate and Repa lack support for
-iterative array construction, and suggest the addition of new
-constructs, and give several possible implementation strategies.
+iterative array construction. We suggest the addition of new
+constructs and give several possible implementation strategies.
 
 We demonstrate a lack of composability in the current languages, which
-makes library development somewhat infeasible, as the library user
-would have to restructure the library depending on how it is used, or
-the library writer will have to provide several versions of the same
-exported function.
-
-The problem occurs when ..., ... this is because of limitations
-imposed in these languages, that forbid nested array operations.
+makes library development somewhat infeasible, as the library writer
+will have to provide several versions of the same exported functions,
+for each possible use case of that function. The problem occurs when
+..., ... this is because of limitations imposed in these languages,
+that forbid nested array operations.
 
 We percieve the prohibition of nested array operations, as the largest
 obstacle against ... and programmer adoption and we believe that the
 compilation of nested data-parallel languages should be adressed
 rather than bypass the issue entirely.
 
-We suggest an alternative approach
+The currently most popular approach to compilation of irregular nested
+data-parallel languages is the vectorisation transformation, as
+implemented in NESL and Data Parallel Haskell. We suggest an
+alternative approach for regular nested data-parallelism, which allows
+for experimentation with parallelisation strategies and shows how the
+approach leads to a language for heterogeneous computing.
 
- - mention vectorisation
 
- - At vi har et forslag til at løse det
+
+-- as the library user
+-- would have to restructure the library depending on how it is used, or
+-- the library writer will have to provide several versions of the same
+--exported function.
 
 
 
