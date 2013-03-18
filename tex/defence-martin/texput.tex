@@ -8,6 +8,8 @@
 \usepackage{chronology}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+
+
 % \usepackage{sfmath}
 %\usepackage{lxfonts}
 %\usepackage{mathdesign}
@@ -40,11 +42,43 @@
 
 
 \title{Master's thesis defence}
-\subtitle{Option pricing with functional data-parallel languages}
+\subtitle{Option pricing using functional data-parallel languages}
 \author{Philip Carlsen \and Martin Dybdal}
 \date{22. March 2013}
 \institute{Computer Science\\
 University of Copenhagen}
+
+
+
+
+% ADD "parfor" to algorithmic environment
+  % declaration of the new block
+  \algblock{ParFor}{EndParFor}
+  % customising the new block
+  \algnewcommand\algorithmicparfor{\textbf{parfor}}
+  \algnewcommand\algorithmicpardo{\textbf{do}}
+  \algnewcommand\algorithmicendparfor{\textbf{end\ parfor}}
+  \algrenewtext{ParFor}[1]{\algorithmicparfor\ #1\ \algorithmicpardo}
+  \algrenewtext{EndParFor}{\algorithmicendparfor}
+
+
+% Bitwise and and or operators
+% http://tex.stackexchange.com/questions/39313/double-nested-logical-and-and-logical-or-symbols
+\DeclareFontFamily{U}{matha}{\hyphenchar\font45}
+\DeclareFontShape{U}{matha}{m}{n}{
+      <5> <6> <7> <8> <9> <10> gen * matha
+      <10.95> matha10 <12> <14.4> <17.28> <20.74> <24.88> matha12
+      }{}
+
+\newcommand{\bland}{\mathbin{
+  \raisebox{.1ex}{%
+    \rotatebox[origin=c]{-90}{\usefont{U}{matha}{m}{n}\symbol{\string"CE}}}}}
+\newcommand{\blor}{\mathbin{
+  \raisebox{.1ex}{%
+    \rotatebox[origin=c]{90}{\usefont{U}{matha}{m}{n}\symbol{\string"CE}}}}}
+
+
+
 
 
 \begin{document}
@@ -62,8 +96,8 @@ University of Copenhagen}
   \frametitle{GPU Applications: Finance}
   \begin{figure}
     \centering
-    Some cool finance graphics
-    \caption{Option pricing}
+    \includegraphics[width=0.7\textwidth]{graphics/finance.jpg}
+%    \caption{Option pricing}
 \label{fig:gpufinance}
 \end{figure}
 \end{frame}
@@ -284,20 +318,40 @@ $$
   
 \end{frame}
 
+
 \begin{frame}
-  \frametitle{Option pricing: Least-Squares Monte Carlo}
-  
+  \frametitle{Observation}
+
+  \begin{itemize}
+  \item There is no way to synchronize between threads in a single
+    block.
+  \item We only have the choice of no synchronization or
+    synchronization across all blocks
+  \item We cannot force Accelerate or Nikola to use just a single
+    block.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Sobol sequence generation}
+  \frametitle{Option pricing: Least-Squares Monte Carlo}
+   \begin{figure}
+       \centering
+       \includegraphics[width=\textwidth]{graphics/lsmplot.pdf}
+       \vspace{-5mm}
+       \caption{}
+   \label{fig:2dsobolseq}
+ \end{figure}  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sobol-sequence generation}
    \vspace{-5mm}
    \begin{minipage}[t]{0.48\linewidth}
      \begin{figure}
        \centering
        \includegraphics[width=\textwidth]{graphics/2D-sobol-sequence.pdf}
        \vspace{-5mm}
-       \caption{2D Sobol sequence}
+       \caption{2D Sobol-sequence}
    \label{fig:2dsobolseq}
  \end{figure}
 
@@ -315,16 +369,16 @@ $$
   \pause
   \vspace{6mm}
   \begin{equation*}
-    \mathsf{SobolInductive}~v~i~=~\textbf{fold}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))
+    \mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))
   \end{equation*}
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Sobol sequence generation}
+  \frametitle{Sobol-sequence generation}
 
 What we want:
 
-  \quad$\mathsf{SobolInductive}~v~i~=~\textbf{fold}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  \quad$\mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
   ~\vspace{2mm}\pause
   
   \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
@@ -336,9 +390,9 @@ What we want:
 
 What we have to do:
 \begin{itemize}
-\item Make $m$ replicas of $vs$ to form a 3D matrix
+\item Make $m$ replicas of $vs$ to form a cube
 \item Create a cube of equal size containing all the bit vectors
-\item Then use \textbf{zipWith} and \textbf{fold} as before
+\item Then use \textbf{zipWith} and \textbf{reduce} as before
 \end{itemize}
 \end{frame}
 
@@ -349,25 +403,36 @@ What we have to do:
   \item<1-> Rely on fusion to avoid memory overhead
   \item<2-> Incompositional
   \item<3-> Limited possibilities for abstractions
-  \item<4-> Library writing will not always be feasable
+  \item<4-> Library writing seems infeasible
   \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Solution \#1: Accelerate-style}
-  \begin{itemize}
-  \item We are lucky, that in our case an alternative (an even a
-    more efficient) algorithm
-    exists
-  \item Accelerate-style ``add a dimension'' unfold
-  \end{itemize}
+  \frametitle{Sobol-sequences take \#2}
+  \begin{algorithmic}
+    \Function{SobolSkipping}{$v$, $n$, $p$, $b$}
+%    \State $p \gets$ number of processor cores (e.g. CUDA cores)
+%    \State $r \gets \lfloor n/m \rfloor$
+    \ParFor{$i \gets 1$ \textbf{to} $2^{p+b}$}
+    \State $x_i \gets$ \textsc{SobolInductive} $v$ ~(\textsc{GrayCode} $i$)
+    \While{$i < n$}
+    \State $q \gets lsb(i \blor (2^{p+b} - 1))$
+    \State $x_{i+2^{p+b}} \gets x_i \oplus v_{p+b}~\oplus v_q$
+    \State $i <- i+2^{p+b}$
+    \EndWhile
+    \EndParFor
+    \EndFunction
+  \end{algorithmic}
 
-{\footnotesize
-\begin{verbatim}
-unfold :: (Shape sh, Elem a)
-       => Int -> (Int -> a -> a)
-       -> Array sh a -> Array (sh :. Int) a
-\end{verbatim} }
+  \vspace{1cm}
+  Source: Thomas Bradley, Mike Giles et al. 'Parallelization Techniques for Random Number Generators'
+
+% {\footnotesize
+% \begin{verbatim}
+% unfold :: (Shape sh, Elem a)
+%        => Int -> (Int -> a -> a)
+%        -> Array sh a -> Array (sh :. Int) a
+% \end{verbatim} }
 
 % {\footnotesize
 % \begin{verbatim}
@@ -379,6 +444,35 @@ unfold :: (Shape sh, Elem a)
 % \end{verbatim} }
 \end{frame}
 
+
+\begin{frame}[fragile]
+  \frametitle{Sobol-sequences take \#2}
+
+\textbf{unfold} :: (Shape sh, Elem a) $\Rightarrow$
+                
+\hspace{1.4cm}Int $\rightarrow$ (Int $\rightarrow$ a $\rightarrow$ a) $\rightarrow$ Array sh a $\rightarrow$ Array (sh :. Int) a
+
+\vspace{7mm}
+  \begin{algorithmic}
+    \Function{SobolSkipping-Unfold}{$v$, $n$, $p$, $b$}
+    \State $xs \gets$ \textbf{parmap} (\textsc{SobolInductive} $v$ $\circ$ \textsc{GrayCode}) $[1..2^{p}]$
+    \State $ys \gets$ \textbf{unfold} $n$ ($\lambda i. \lambda x_i$. \textsc{SkipAhead}($v$, $p$, $b$, $i$, $x_i$)) $xs$
+    \State \Return $ys$
+    \EndFunction
+  \end{algorithmic}
+
+
+% {\footnotesize
+% \begin{verbatim}
+% unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
+%        => Exp t Ix
+%        -> (Exp t Ix -> a -> a)
+%        -> Array r sh a
+%        -> Array PSH (sh :. Exp t Ix) a
+% \end{verbatim} }
+\end{frame}
+
+
 % \begin{frame}
 %   \frametitle{How it breaks down}
 %   \begin{itemize}
@@ -388,34 +482,87 @@ unfold :: (Shape sh, Elem a)
 % \end{frame}
 
 \begin{frame}
-  \frametitle{Solution \#2: Nested array operations}
+  \frametitle{Nested array operations}
+
+  The same operations can execute in several ways:
+
   \begin{itemize}
-  \item mapNest and unfold
-  \item Now we have another problem! Where is the parallelism going in (map (foldl (map ..) ..) ..)
+  \item \textbf{mapP} - independent parallel threads
+  \item \textbf{mapS} - sequential loop on the device
+  \item \textbf{mapSeqPar} - execute the kernels in strict sequence
+  \end{itemize}
+  ~\vspace{2mm}\pause
+
+  We can now write:
+  ~\vspace{2mm}
+
+  \hspace{1mm}$\mathsf{SobolInductive}~v~i~=~\textbf{reduceS}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  ~\vspace{2mm}\pause
+  
+  \hspace{1mm}$\mathsf{SobolSequence1D}~m~v~=~\textbf{mapP}~(\textsf{SobolInductive}~v)~[1..m]$
+  ~\vspace{2mm}\pause
+
+  \hspace{1mm}$\mathsf{SobolSequenceND}~m~vs~=~\textbf{mapSeqPar}~(\textsf{SobolSequence-1D}~m)~vs$
+
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Block level synchronization}
+
+  It is also possible to stay in a single block:
+
+  \begin{itemize}
+  \item mapB - independent parallel threads using only in a single block
+  \item mapSeqParB - sequential map with device synchronization between each map.
+  \end{itemize}
+
+
+  BinomialPortfolioPricer = \textbf{map} (\textbf{foldl} (\textbf{map} ...) ...)
+
+  Could be parallized by: \textbf{mapP} (\textbf{foldlSeqParB} (\textbf{mapB} ...)
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ordering}
+  \begin{itemize}
+  \item \textbf{S} can occur within \textbf{P} or \textbf{B} operations
+  \item \textbf{B} can occur within \textbf{SeqPar}, \textbf{P} or \textbf{SeqParB} operations
+  \item \textbf{SeqParB} can occur within \textbf{SeqPar}, \textbf{P} or \textbf{SeqParB} operations
+  \item \textbf{P} can occur within \textbf{SeqPar} operations
+  \item \textbf{SeqPar} can occur within \textbf{SeqPar} 
   \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Solution \#2: Sequential}
+  \frametitle{Sequential}
+
   \begin{itemize}
-  \item Present informal semantics
+  \item This selection should be automated.
+  \item We let parallelism flow inwards
+  \item Stops when a special \textbf{sequential}-cursor is met
   \item We are far from finished implementing it in Nikola
-  \item We used the last two weeks implementing a quick demo
+  \item How should a library designer behave
   \end{itemize}
+
+  Example:  <some code>
+
+  Is assigned the following execution semantics: <some code>
+
 \end{frame}
 
 \begin{frame}
-  \frametitle{Solution \#3: Sequential}
-  \begin{itemize}
-  \item Demo introduction
-  \end{itemize}
+  \frametitle{Sequential}
+  \begin{center}
+    {\Large Demo time! }
+  \end{center}
 \end{frame}
 
+
 \begin{frame}
-  \frametitle{Solution \#2: Sequential}
-  \begin{itemize}
-  \item Fusion
-  \end{itemize}
+  \frametitle{Sequential and fusion}
+  Fusion should happen before execution semantics
 \end{frame}
 
 \begin{frame}
