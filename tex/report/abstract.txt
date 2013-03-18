@@ -1,35 +1,23 @@
 We evaluate the current state of functional data-parallel languages,
-through the implementation of two option pricing
-algorithms. Specifically, we implement a lattice based binomial option
-pricer, the least-squares Monte Carlo algorithm (LSM), and several
-versions of Sobol sequence generators, a quasi-random number generator
-applicable for certain Monte Carlo methods, such as LSM.
+through the implementation of option pricing algorithms. Specifically,
+we implement a lattice-based binomial option pricer, the least-squares
+Monte Carlo algorithm, and a Sobol sequence generator.
 
 Motivated by our attempts at implementing these algorithms, we
-identify that both Nikola, Accelerate and Repa lack support for
-iterative array construction. We suggest the addition of new
-constructs and give several possible implementation strategies.
+identify that both Nikola, Accelerate and the Haskell library Repa
+lack support for iterative array construction. We suggest the addition
+of new constructs and give several possible implementation strategies.
 
-We demonstrate a lack of composability in the current languages, which
-makes library development somewhat infeasible. The problem occurs when
-a library exposes a function which the user needs to invoke inside the
-body of a higher-order function. In such cases the library user would
-have to rewrite the library function for his particular use, by
-performing a vectorisation transformation by hand. This is because of
-limitations imposed in the tested languages, that forbid nested array
-operations.
-
-We percieve the prohibition of nested array operations, as the largest
-obstacle against programmer adoption and we believe that the
-compilation of nested data-parallel languages should be adressed
-rather than bypass the issue entirely.
+We demonstrate a lack of composability in the current languages,
+caused by imposed limitations that forbid nested array operations.
+This suggests that the problem of compiling nested parallel operations
+should be adressed rather than avoided.
 
 The currently most popular approach to compilation of irregular nested
 data-parallel languages is the vectorisation transformation, as
 implemented in NESL and Data Parallel Haskell. We suggest an
 alternative approach for regular nested data-parallelism, which relies
-on a cursor to mark division between parallel and sequential code. The
-approach allows for experimentation with parallelisation strategies
-and we show how the approach leads to a language for heterogeneous
-computing.
-
+on a cursor to mark the division between parallel and sequential code,
+much inspired by similar constructs found in Repa. The approach allows
+for experimentation with parallelisation strategies and we propose
+that this can lead to a language for heterogeneous computing.
