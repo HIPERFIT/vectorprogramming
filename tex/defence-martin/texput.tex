@@ -1,11 +1,13 @@
 \documentclass{beamer}
-\usepackage[utf8]{inputenc}
+\usepackage[utf8x]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
 \usepackage{url}
 \usepackage{listings}
 \usepackage{adjustbox}
 \usepackage{chronology}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 % \usepackage{sfmath}
 %\usepackage{lxfonts}
 %\usepackage{mathdesign}
@@ -22,12 +24,14 @@
 
 % Font
 \usepackage{microtype}
+%\usepackage[scaled]{beramono}
 \usepackage{fontspec,xunicode}
-\usepackage[scaled]{beramono}
 \newfontfamily\sbmyriad{Myriad Pro Semibold}
 \setsansfont{Myriad Pro}
+\setmonofont{Myriad Pro}
 \setbeamerfont{title}{family=\sbmyriad}
 \setbeamerfont{frametitle}{family=\bf}
+
 
 % Beamer theme settings
 \usecolortheme{seagull}
@@ -286,14 +290,67 @@ $$
 \end{frame}
 
 \begin{frame}
-  \frametitle{Sobol sequences generation}
-  
+  \frametitle{Sobol sequence generation}
+   \vspace{-5mm}
+   \begin{minipage}[t]{0.48\linewidth}
+     \begin{figure}
+       \centering
+       \includegraphics[width=\textwidth]{graphics/2D-sobol-sequence.pdf}
+       \vspace{-5mm}
+       \caption{2D Sobol sequence}
+   \label{fig:2dsobolseq}
+ \end{figure}
+
+  \end{minipage}
+  \begin{minipage}[t]{0.48\linewidth}
+    \begin{figure}
+      \centering
+      \includegraphics[width=\textwidth]{graphics/2D-mersenne-sequence.pdf}
+      \vspace{-5mm}
+      \caption{2D Mersenne Twister Sequence}
+  \label{fig:2dmersenne}
+\end{figure}
+
+  \end{minipage}
+  \pause
+  \vspace{6mm}
+  \begin{equation*}
+    \mathsf{SobolInductive}~v~i~=~\textbf{fold}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))
+  \end{equation*}
 \end{frame}
 
-\begin{frame}
-  \frametitle{The case for nested array operations}
-  Present example of a program that gets incomprehensible and
-  incomposable in Nikola and Accelerate.
+\begin{frame}[fragile]
+  \frametitle{Sobol sequence generation}
+
+What we want:
+
+  \quad$\mathsf{SobolInductive}~v~i~=~\textbf{fold}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  ~\vspace{2mm}\pause
+  
+  \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
+  ~\vspace{2mm}\pause
+
+  \quad$\mathsf{SobolSequenceND}~m~vs~=~\textbf{parmap}~(\textsf{SobolSequence-1D}~m)~vs$
+
+~\vspace{5mm}\pause
+
+What we have to do:
+\begin{itemize}
+\item Make $m$ replicas of $vs$ to form a 3D matrix
+\item Create a cube of equal size containing all the bit vectors
+\item Then use \textbf{zipWith} and \textbf{fold} as before
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Observations}
+
+  \begin{itemize}
+  \item<1-> Rely on fusion to avoid memory overhead
+  \item<2-> Incompositional
+  \item<3-> Limited possibilities for abstractions
+  \item<4-> Library writing will not always be feasable
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -322,13 +379,13 @@ unfold :: (Shape sh, Elem a)
 % \end{verbatim} }
 \end{frame}
 
-\begin{frame}
-  \frametitle{How it breaks down}
-  \begin{itemize}
-  \item Composability is lost.
-  \item Will it still break down if we wrap it in another map?
-  \end{itemize}
-\end{frame}
+% \begin{frame}
+%   \frametitle{How it breaks down}
+%   \begin{itemize}
+%   \item Composability is lost.
+%   \item Will it still break down if we wrap it in another map?
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}
   \frametitle{Solution \#2: Nested array operations}
