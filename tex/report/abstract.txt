@@ -11,54 +11,25 @@ iterative array construction. We suggest the addition of new
 constructs and give several possible implementation strategies.
 
 We demonstrate a lack of composability in the current languages, which
-makes library development somewhat infeasible, as the library writer
-will have to provide several versions of the same exported functions,
-for each possible use case of that function. The problem occurs when
-..., ... this is because of limitations imposed in these languages,
-that forbid nested array operations.
+makes library development somewhat infeasible. The problem occurs when
+a library exposes a function which the user needs to invoke inside the
+body of a higher-order function. In such cases the library user would
+have to rewrite the library function for his particular use, by
+performing a vectorisation transformation by hand. This is because of
+limitations imposed in the tested languages, that forbid nested array
+operations.
 
 We percieve the prohibition of nested array operations, as the largest
-obstacle against ... and programmer adoption and we believe that the
+obstacle against programmer adoption and we believe that the
 compilation of nested data-parallel languages should be adressed
 rather than bypass the issue entirely.
 
 The currently most popular approach to compilation of irregular nested
 data-parallel languages is the vectorisation transformation, as
 implemented in NESL and Data Parallel Haskell. We suggest an
-alternative approach for regular nested data-parallelism, which allows
-for experimentation with parallelisation strategies and shows how the
-approach leads to a language for heterogeneous computing.
+alternative approach for regular nested data-parallelism, which relies
+on a cursor to mark division between parallel and sequential code. The
+approach allows for experimentation with parallelisation strategies
+and we show how the approach leads to a language for heterogeneous
+computing.
 
-
-
--- as the library user
--- would have to restructure the library depending on how it is used, or
--- the library writer will have to provide several versions of the same
---exported function.
-
-
-
-Old-abstract
--------------
-
-We explore the state of current functional data-parallel programming
-languages targeting GPUs, by means of evaluating a set of option
-pricing algorithms, namely the binomial option pricing algorithm and
-the least squares Monte Carlo approach introduced by Longstaff and
-Schwartz, as well as related algorithms employed in Monte Carlo
-integration.
-
-Among the surveyed languages we find both Nikola and Accelerate
-constrained by their expressiveness due to restrictions of the target
-platform.
-
-We improve on the limitations we have found and the improvements take
-the form of additional primitive constructs for iterative array
-construction and a new suggested /cursor/ for marking the division
-between sequential and parallel code, much inspired by constructs
-found in Repa.
-
-We believe that there is much promise in continuing work on our
-suggestion, but we were unable to finish implementing and testing the
-extensions due to project time constraints. We give an analysis of
-what practical work remains.
