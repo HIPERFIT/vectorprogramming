@@ -114,7 +114,7 @@ ppExp (App f a) = (parenP (precAppL f) $ ppExp f) <+>(parenP (precAppR a) $ ppEx
 ppExp (Let x a f) = text "let" <+> text x <+> text "=" <+> ppExp a $$ text "in" <+> ppExp (f $ Var x)
 ppExp (SeqParPrim m n _ ) = text n <> ppExec m
 ppExp (If c t e)   = text "if" <+> ppExp c <+> text "then" <+> ppExp t <+> text "else" <+> ppExp e
-ppExp (Sequential e) = text "sequential" <+> ppExp e
+ppExp (Sequential e) = text "sequential" <+> parenP (precAppR e) (ppExp e)
 
 ppExec :: ExecMode -> Doc
 ppExec Par = text "P"
