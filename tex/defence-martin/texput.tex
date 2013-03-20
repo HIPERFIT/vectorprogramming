@@ -378,12 +378,13 @@ $$
 
 What we want:
 
+  ~\vspace{2mm}
   \quad$\mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
-  ~\vspace{2mm}\pause
-  
-  \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
-  ~\vspace{2mm}\pause
 
+  ~\vspace{2mm}\pause  
+  \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
+
+  ~\vspace{2mm}\pause
   \quad$\mathsf{SobolSequenceND}~m~vs~=~\textbf{parmap}~(\textsf{SobolSequence-1D}~m)~vs$
 
 ~\vspace{5mm}\pause
@@ -487,22 +488,22 @@ What we have to do:
   The same operations can execute in several ways:
 
   \begin{itemize}
-  \item \textbf{mapP} - independent parallel threads
   \item \textbf{mapS} - sequential loop on the device
+  \item \textbf{mapP} - independent parallel threads
   \item \textbf{mapSeqPar} - execute the kernels in strict sequence
   \end{itemize}
   ~\vspace{2mm}\pause
 
   We can now write:
+
   ~\vspace{2mm}
-
-  \hspace{1mm}$\mathsf{SobolInductive}~v~i~=~\textbf{reduceS}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
-  ~\vspace{2mm}\pause
+  $\mathsf{SobolInductive}~v~i~=~\textbf{reduceS}~(\oplus)~0~(\textbf{zipWithS}~(\cdot)~v~(\textsf{ToBitVector}~i))$
   
-  \hspace{1mm}$\mathsf{SobolSequence1D}~m~v~=~\textbf{mapP}~(\textsf{SobolInductive}~v)~[1..m]$
   ~\vspace{2mm}\pause
-
-  \hspace{1mm}$\mathsf{SobolSequenceND}~m~vs~=~\textbf{mapSeqPar}~(\textsf{SobolSequence-1D}~m)~vs$
+  $\mathsf{SobolSequence1D}~m~v~=~\textbf{mapP}~(\textsf{SobolInductive}~v)~[1..m]$
+  
+  ~\vspace{2mm}\pause
+  $\mathsf{SobolSequenceND}~m~vs~=~\textbf{mapSeqPar}~(\textsf{SobolSequence-1D}~m)~vs$
 
 \end{frame}
 
@@ -514,8 +515,8 @@ What we have to do:
   It is also possible to stay in a single block:
 
   \begin{itemize}
-  \item mapB - independent parallel threads using only in a single block
-  \item mapSeqParB - sequential map with device synchronization between each map.
+  \item \textbf{mapB} - independent parallel threads using only in a single block
+  \item \textbf{mapSeqParB} - sequential map with device synchronization between each map.
   \end{itemize}
 
 
