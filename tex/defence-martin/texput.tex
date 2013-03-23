@@ -14,6 +14,11 @@
 %\usepackage{lxfonts}
 %\usepackage{mathdesign}
 \usepackage{unicode-math}
+%\setmathfont{lmmath-regular.otf}
+%\setmathfont{lmmath-regular.otf}
+%\setmathfont{Asana-Math.otf}
+%\setmathfont{xits-math.otf}
+
 
 % Graphics
 \usepackage{graphicx}
@@ -93,7 +98,26 @@ University of Copenhagen}
 % \end{frame}
 
 \begin{frame}
-  \frametitle{GPU Applications: Finance}
+  \frametitle{Overview}
+
+  \begin{itemize}
+  % \item<1-> Introduce data-parallelism
+  % \item<1-> Option pricing
+  \item<1-> Data-parallel language survey
+    \begin{itemize}
+    \item Comparison through implementation of option pricing
+      algorithms
+    \item Identification of shortcomings
+    \end{itemize}
+  \item<2-> Proposed extensions
+    \begin{itemize}
+    \item Not completely implemented
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Data-parallel problems: Finance}
   \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{graphics/finance.jpg}
@@ -102,7 +126,7 @@ University of Copenhagen}
 \end{figure}
 \end{frame}
 \begin{frame}
-  \frametitle{GPU Applications: Bioinformatics}
+  \frametitle{Data-parallel problems: Bioinformatics}
   \begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{graphics/fah_clientGeForce9600GT.png}
@@ -119,7 +143,7 @@ University of Copenhagen}
 \end{frame} 
 
 \begin{frame}
-  \frametitle{GPU Applications: Physics simulations}
+  \frametitle{Data-parallel problems: Scientific simulations}
   \begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{graphics/opencl_nbody.jpg}
@@ -128,10 +152,10 @@ University of Copenhagen}
 \end{figure}
 
 \end{frame}
-\begin{frame}
-  \frametitle{GPU Applications: Medical imaging}
+% \begin{frame}
+%   \frametitle{GPU Applications: Medical imaging}
 
-\end{frame}
+% \end{frame}
 
 
 \begin{frame}[t]
@@ -141,28 +165,38 @@ University of Copenhagen}
     NVIDIA GK104 GPU\\
     Multiprocessor\vspace{0.15cm}\\
     \includegraphics[width=0.8\textwidth]{graphics/nvidia_kepler_gk104_sm.pdf}
-    % \begin{itemize}
-    % \item 3540 mio. transistors
-    % \item 1536 cores
-    % \item Small caches
-    % \item Many compute units
-    % \item Optimized for throughput
-    % \end{itemize}
   \end{minipage}
 %  \pause
   \begin{minipage}[t]{0.55\linewidth}
-    Intel Ivy Bridge CPU\vspace{0.15cm}\\
+     Intel Ivy Bridge CPU\vspace{0.15cm}\\
     \includegraphics[width=\textwidth]{graphics/Intel-3rd-Generation-Ivy-Bridge-Processor.jpg}
     \begin{itemize}
-    \item<1|only@1> Computation vs. Caching
-    \item<1|only@1> SIMD vs. SISD
-    \item<1|only@1> Throughput vs. latency
-    \item<2-> Memory access coordination
-    \item<3-> Avoid memory accesses\\ $\Rightarrow$ program fusion
-    \item<4-> Schedule enough work
+    \item Computation vs. caching
+    \item High throughput vs. low latency
+%    \item<1|only@1> SIMD vs. SISD
     \end{itemize}
   \end{minipage}
 \end{frame}
+
+\begin{frame}[t]
+  \frametitle{GPU programming}
+  \vspace{0.5cm}
+   \begin{minipage}[t]{0.40\linewidth}
+    NVIDIA GK104 GPU\\
+    Multiprocessor\vspace{0.15cm}\\
+    \includegraphics[width=0.8\textwidth]{graphics/nvidia_kepler_gk104_sm.pdf}
+  \end{minipage}
+  \begin{minipage}[t]{0.50\linewidth}
+    Things to be aware of:
+    \begin{itemize}
+    \item<1-> Memory access coordination
+    \item<2-> Avoid memory accesses\\ (perform program fusion)
+    \item<3-> Schedule enough work
+    \end{itemize}
+  \end{minipage}
+\end{frame}
+
+
 
 % \begin{frame}
 %   \frametitle{GPU programming concepts}
@@ -188,6 +222,36 @@ What we want:
   \item Hardware independent
   \end{itemize}
 \end{frame}
+
+
+\begin{frame}
+  \frametitle{Data-parallel programming languages}
+
+  \begin{itemize}
+  \item Feldspar
+  \item Obsidian (GPU)
+  \item Data-parallel Haskell
+  \item Copperhead (GPU)
+  \item \alert<2>{Nikola (GPU)}
+  \item \alert<2>{Accelerate (GPU)}
+  \item \alert<2>{Repa}
+  \item \alert<2>{\texttt{Data.Vector}}
+  \end{itemize}
+
+  \vspace{1cm}
+  Later we discovered: Theano, Bohrium, CnC-CUDA and R+GPU
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Options}
+  \begin{center}\Large
+    See blackboard
+  \end{center}
+
+\end{frame}
+
+
 
 \begin{frame}
   \frametitle{Option styles}
@@ -259,6 +323,195 @@ What we want:
   % \item Sobol-sequence for sampling LSM paths
   % \end{itemize}
 
+\begin{frame}
+  \frametitle{Option pricing: Least-Squares Monte Carlo}
+   \begin{figure}
+       \centering
+       \includegraphics[width=\textwidth]{graphics/lsmplot.pdf}
+       \vspace{-5mm}
+       \caption{}
+   \label{fig:2dsobolseq}
+ \end{figure}  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sobol-sequence generation}
+   \vspace{-5mm}
+   \begin{minipage}[t]{0.48\linewidth}
+     \begin{figure}
+       \centering
+       \includegraphics[width=\textwidth]{graphics/2D-sobol-sequence.pdf}
+       \vspace{-5mm}
+       \caption{2D Sobol-sequence}
+   \label{fig:2dsobolseq}
+ \end{figure}
+
+  \end{minipage}
+  \begin{minipage}[t]{0.48\linewidth}
+    \begin{figure}
+      \centering
+      \includegraphics[width=\textwidth]{graphics/2D-mersenne-sequence.pdf}
+      \vspace{-5mm}
+      \caption{2D Mersenne Twister Sequence}
+  \label{fig:2dmersenne}
+\end{figure}
+
+  \end{minipage}
+  % \pause
+  % \vspace{6mm}
+  % \begin{equation*}
+  %   \mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))
+  % \end{equation*}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Sobol-sequence generation}
+
+What we want:
+
+  ~\vspace{2mm}
+  \quad$\mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  \begin{equation*}\small
+    \left(
+  \left(\begin{array}{c}
+    v_1 \\ v_2 \\ \vdots \\ v_{32}
+  \end{array}\right)
+  \cdot
+  \left(\begin{array}{c}
+    1 \\ 1 \\ \vdots \\ 0
+  \end{array}\right) \right)
+  \stackrel{\oplus}{\Large \downarrow}
+  = x_3
+  \end{equation*}
+
+
+  ~\vspace{2mm}\pause  
+  \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
+  \begin{equation*}\small
+    \left(
+  \left(\begin{array}{ccc}
+    v_1 & v_1 & \cdots \\ 
+    v_2 & v_2 & \cdots \\ 
+    \vdots & \vdots &  \\
+    v_{32} & v_{32} &  \\
+  \end{array}\right)
+  \cdot
+  \left(\begin{array}{cccc}
+    1 & 0 & 1 & \cdots \\
+    0  & 1 & 1 & \cdots \\
+    \vdots & \vdots & \vdots &  \\
+    0 & 0 & 0 &  \\
+  \end{array}\right) \right)
+  \stackrel{\oplus}{\Large \downarrow}
+  =   \left(\begin{array}{cccc}
+    x_1 & x_2 & x_3 & \cdots \\
+  \end{array}\right)
+  \end{equation*}
+
+
+  ~\vspace{2mm}\pause
+  \quad$\mathsf{SobolSequenceND}~m~vs~=~\textbf{parmap}~(\textsf{SobolSequence-1D}~m)~vs$
+
+% ~\vspace{5mm}\pause
+
+% What we have to do:
+% \begin{itemize}
+% \item Make $m$ replicas of $vs$ to form a cube
+% \item Create a cube of equal size containing all the bit vectors
+% \item Then use \textbf{zipWith} and \textbf{reduce} as before
+% \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Sobol-sequence generation}
+   \begin{figure}
+       \centering
+       \includegraphics[width=\textwidth]{graphics/whiteboard.jpg}
+       \vspace{-5mm}
+       \caption{}
+   \label{fig:whiteboard}
+ \end{figure}  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Implementation observations}
+
+  \begin{itemize}
+  \item<1-> Rely on fusion to avoid memory overhead
+  \item<2-> Incompositional
+%  \item<3-> Limited possibilities for abstractions
+  \item<3-> Thus, library development seems infeasible
+  \end{itemize}
+\end{frame}
+
+% \begin{frame}[fragile]
+%   \frametitle{Sobol-sequences take \#2}
+%   \begin{algorithmic}
+%     \Function{SobolSkipping}{$v$, $n$, $p$, $b$}
+% %    \State $p \gets$ number of processor cores (e.g. CUDA cores)
+% %    \State $r \gets \lfloor n/m \rfloor$
+%     \ParFor{$i \gets 1$ \textbf{to} $2^{p+b}$}
+%     \State $x_i \gets$ \textsc{SobolInductive} $v$ ~(\textsc{GrayCode} $i$)
+%     \While{$i < n$}
+%     \State $q \gets lsb(i \blor (2^{p+b} - 1))$
+%     \State $x_{i+2^{p+b}} \gets x_i \oplus v_{p+b}~\oplus v_q$
+%     \State $i <- i+2^{p+b}$
+%     \EndWhile
+%     \EndParFor
+%     \EndFunction
+%   \end{algorithmic}
+
+%   \vspace{1cm}
+%   Source: Thomas Bradley, Mike Giles et al. 'Parallelization Techniques for Random Number Generators'
+
+% % {\footnotesize
+% % \begin{verbatim}
+% % unfold :: (Shape sh, Elem a)
+% %        => Int -> (Int -> a -> a)
+% %        -> Array sh a -> Array (sh :. Int) a
+% % \end{verbatim} }
+
+% % {\footnotesize
+% % \begin{verbatim}
+% % unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
+% %        => Exp t Ix
+% %        -> (Exp t Ix -> a -> a)
+% %        -> Array r sh a
+% %        -> Array PSH (sh :. Exp t Ix) a
+% % \end{verbatim} }
+% \end{frame}
+
+
+% \begin{frame}[fragile]
+%   \frametitle{Sobol-sequences take \#2}
+
+% \textbf{unfold} :: (Shape sh, Elem a) $\Rightarrow$
+                
+% \hspace{1.4cm}Int $\rightarrow$ (Int $\rightarrow$ a $\rightarrow$ a) $\rightarrow$ Array sh a $\rightarrow$ Array (sh :. Int) a
+
+% \vspace{7mm}
+%   \begin{algorithmic}
+%     \Function{SobolSkipping-Unfold}{$v$, $n$, $p$, $b$}
+%     \State $xs \gets$ \textbf{parmap} (\textsc{SobolInductive} $v$ $\circ$ \textsc{GrayCode}) $[1..2^{p}]$
+%     \State $ys \gets$ \textbf{unfold} $n$ ($\lambda i. \lambda x_i$. \textsc{SkipAhead}($v$, $p$, $b$, $i$, $x_i$)) $xs$
+%     \State \Return $ys$
+%     \EndFunction
+%   \end{algorithmic}
+
+
+% % {\footnotesize
+% % \begin{verbatim}
+% % unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
+% %        => Exp t Ix
+% %        -> (Exp t Ix -> a -> a)
+% %        -> Array r sh a
+% %        -> Array PSH (sh :. Exp t Ix) a
+% % \end{verbatim} }
+% \end{frame}
+
+
 
 \begin{frame}
   \frametitle{Option pricing: Binomial method}
@@ -320,158 +573,28 @@ $$
 
 
 \begin{frame}
-  \frametitle{Observation}
+  \frametitle{Implementation observations}
 
+  Accelerate and Nikola:
   \begin{itemize}
-  \item There is no way to synchronize between threads in a single
-    block.
-  \item We only have the choice of no synchronization or
-    synchronization across all blocks
-  \item We cannot force Accelerate or Nikola to use just a single
-    block.
+  \item Synchronization has to happen across all blocks.
+  \item We cannot force the use of just a single block.
+  \item We cannot reuse already allocated memory.
+  \item Writing portfolio pricer requires irregular arrays.
+  % \item There is no way to synchronize between threads in a single
+  %   block.
+  % \item We only have the choice of no synchronization or
+  %   synchronization across all blocks
   \end{itemize}
-\end{frame}
 
-\begin{frame}
-  \frametitle{Option pricing: Least-Squares Monte Carlo}
-   \begin{figure}
-       \centering
-       \includegraphics[width=\textwidth]{graphics/lsmplot.pdf}
-       \vspace{-5mm}
-       \caption{}
-   \label{fig:2dsobolseq}
- \end{figure}  
-\end{frame}
-
-\begin{frame}
-  \frametitle{Sobol-sequence generation}
-   \vspace{-5mm}
-   \begin{minipage}[t]{0.48\linewidth}
-     \begin{figure}
-       \centering
-       \includegraphics[width=\textwidth]{graphics/2D-sobol-sequence.pdf}
-       \vspace{-5mm}
-       \caption{2D Sobol-sequence}
-   \label{fig:2dsobolseq}
- \end{figure}
-
-  \end{minipage}
-  \begin{minipage}[t]{0.48\linewidth}
-    \begin{figure}
-      \centering
-      \includegraphics[width=\textwidth]{graphics/2D-mersenne-sequence.pdf}
-      \vspace{-5mm}
-      \caption{2D Mersenne Twister Sequence}
-  \label{fig:2dmersenne}
-\end{figure}
-
-  \end{minipage}
   \pause
-  \vspace{6mm}
-  \begin{equation*}
-    \mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))
-  \end{equation*}
+  \vspace{4mm}
+  \begin{center}
+    BinomialPortfolio = \textbf{parmap} ($\lambda$opt. \textbf{foldl} (prev opt) (final opt) [n..1])
+  \end{center}
+
 \end{frame}
 
-\begin{frame}[fragile]
-  \frametitle{Sobol-sequence generation}
-
-What we want:
-
-  ~\vspace{2mm}
-  \quad$\mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
-
-  ~\vspace{2mm}\pause  
-  \quad$\mathsf{SobolSequence1D}~m~v~=~\textbf{parmap}~(\textsf{SobolInductive}~v)~[1..m]$
-
-  ~\vspace{2mm}\pause
-  \quad$\mathsf{SobolSequenceND}~m~vs~=~\textbf{parmap}~(\textsf{SobolSequence-1D}~m)~vs$
-
-~\vspace{5mm}\pause
-
-What we have to do:
-\begin{itemize}
-\item Make $m$ replicas of $vs$ to form a cube
-\item Create a cube of equal size containing all the bit vectors
-\item Then use \textbf{zipWith} and \textbf{reduce} as before
-\end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Observations}
-
-  \begin{itemize}
-  \item<1-> Rely on fusion to avoid memory overhead
-  \item<2-> Incompositional
-  \item<3-> Limited possibilities for abstractions
-  \item<4-> Library writing seems infeasible
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Sobol-sequences take \#2}
-  \begin{algorithmic}
-    \Function{SobolSkipping}{$v$, $n$, $p$, $b$}
-%    \State $p \gets$ number of processor cores (e.g. CUDA cores)
-%    \State $r \gets \lfloor n/m \rfloor$
-    \ParFor{$i \gets 1$ \textbf{to} $2^{p+b}$}
-    \State $x_i \gets$ \textsc{SobolInductive} $v$ ~(\textsc{GrayCode} $i$)
-    \While{$i < n$}
-    \State $q \gets lsb(i \blor (2^{p+b} - 1))$
-    \State $x_{i+2^{p+b}} \gets x_i \oplus v_{p+b}~\oplus v_q$
-    \State $i <- i+2^{p+b}$
-    \EndWhile
-    \EndParFor
-    \EndFunction
-  \end{algorithmic}
-
-  \vspace{1cm}
-  Source: Thomas Bradley, Mike Giles et al. 'Parallelization Techniques for Random Number Generators'
-
-% {\footnotesize
-% \begin{verbatim}
-% unfold :: (Shape sh, Elem a)
-%        => Int -> (Int -> a -> a)
-%        -> Array sh a -> Array (sh :. Int) a
-% \end{verbatim} }
-
-% {\footnotesize
-% \begin{verbatim}
-% unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
-%        => Exp t Ix
-%        -> (Exp t Ix -> a -> a)
-%        -> Array r sh a
-%        -> Array PSH (sh :. Exp t Ix) a
-% \end{verbatim} }
-\end{frame}
-
-
-\begin{frame}[fragile]
-  \frametitle{Sobol-sequences take \#2}
-
-\textbf{unfold} :: (Shape sh, Elem a) $\Rightarrow$
-                
-\hspace{1.4cm}Int $\rightarrow$ (Int $\rightarrow$ a $\rightarrow$ a) $\rightarrow$ Array sh a $\rightarrow$ Array (sh :. Int) a
-
-\vspace{7mm}
-  \begin{algorithmic}
-    \Function{SobolSkipping-Unfold}{$v$, $n$, $p$, $b$}
-    \State $xs \gets$ \textbf{parmap} (\textsc{SobolInductive} $v$ $\circ$ \textsc{GrayCode}) $[1..2^{p}]$
-    \State $ys \gets$ \textbf{unfold} $n$ ($\lambda i. \lambda x_i$. \textsc{SkipAhead}($v$, $p$, $b$, $i$, $x_i$)) $xs$
-    \State \Return $ys$
-    \EndFunction
-  \end{algorithmic}
-
-
-% {\footnotesize
-% \begin{verbatim}
-% unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
-%        => Exp t Ix
-%        -> (Exp t Ix -> a -> a)
-%        -> Array r sh a
-%        -> Array PSH (sh :. Exp t Ix) a
-% \end{verbatim} }
-\end{frame}
 
 
 % \begin{frame}
@@ -499,30 +622,85 @@ What we have to do:
   ~\vspace{2mm}
   $\mathsf{SobolInductive}~v~i~=~\textbf{reduceS}~(\oplus)~0~(\textbf{zipWithS}~(\cdot)~v~(\textsf{ToBitVector}~i))$
   
-  ~\vspace{2mm}\pause
+  ~\vspace{2mm}
   $\mathsf{SobolSequence1D}~m~v~=~\textbf{mapP}~(\textsf{SobolInductive}~v)~[1..m]$
   
-  ~\vspace{2mm}\pause
+  ~\vspace{2mm}
   $\mathsf{SobolSequenceND}~m~vs~=~\textbf{mapSeqPar}~(\textsf{SobolSequence-1D}~m)~vs$
 
 \end{frame}
 
+\begin{frame}
+  \frametitle{Sequential}
+
+  \begin{itemize}
+  \item This selection should be automated.
+  \item We suggest using a marking construct
+  \end{itemize}
+\vspace{4mm}\pause
+
+  ~\vspace{2mm}
+  $\mathsf{SobolInductive}~v~i~=~\textbf{reduce}~(\oplus)~0~(\textbf{zipWith}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  
+  ~\vspace{2mm}
+  $\mathsf{SobolSequence1D}~m~v~=~\textbf{map}~(\textbf{\underline{sequential}} (\textsf{SobolInductive}~v))~[1..m]$
+  
+  ~\vspace{2mm}
+  $\mathsf{SobolSequenceND}~m~vs~=~\textbf{map}~(\textsf{SobolSequence-1D}~m)~vs$
+  \pause
+  $$\Downarrow$$
+
+  ~\vspace{2mm}
+  $\mathsf{SobolInductive}~v~i~=~\textbf{reduceS}~(\oplus)~0~(\textbf{zipWithS}~(\cdot)~v~(\textsf{ToBitVector}~i))$
+  
+  ~\vspace{2mm}
+  $\mathsf{SobolSequence1D}~m~v~=~\textbf{mapP}~(\textsf{SobolInductive}~v)~[1..m]$
+  
+  ~\vspace{2mm}
+  $\mathsf{SobolSequenceND}~m~vs~=~\textbf{mapSeqPar}~(\textsf{SobolSequence-1D}~m)~vs$
+
+
+  % \begin{itemize}
+  % \item 
+  % \item We let parallelism flow inwards
+  % \item Stops when a special \textbf{sequential}-cursor is met
+  % \item We are far from finished implementing it in Nikola
+  % \item How should a library designer behave
+  % \end{itemize}
+
+  % Example:  <some code>
+
+  % Is assigned the following execution semantics: <some code>
+
+\end{frame}
 
 
 \begin{frame}
   \frametitle{Block level synchronization}
 
-  It is also possible to stay in a single block:
+  Several additional levels, depending on the architecture:
 
   \begin{itemize}
   \item \textbf{mapB} - independent parallel threads using only in a single block
   \item \textbf{mapSeqParB} - sequential map with device synchronization between each map.
   \end{itemize}
 
+% BinomialPortfolio = \textbf{parmap} ($\lambda$opt. \textbf{foldl} (prev opt) (final opt) [n..1])
+% \quad \textbf{where}
+% \qquad prev opt xs i = \textbf{mapB} ...
+% \qquad final opt = \textbf{mapB} ...
 
-  BinomialPortfolioPricer = \textbf{map} (\textbf{foldl} (\textbf{map} ...) ...)
+% BinomialPortfolio = \textbf{parmap} ($\lambda$opt. \textbf{foldl} (prev opt) (final opt) [n..1])
+% \quad \textbf{where}
+% \qquad prev opt xs i = \textbf{mapB} ...
+% \qquad final opt = \textbf{mapB} ...
 
-  Could be parallized by: \textbf{mapP} (\textbf{foldlSeqParB} (\textbf{mapB} ...)
+
+  BinPortfolio = \textbf{map} (\textbf{foldl} (\textbf{map} ...) (\textbf{map} ...) [n..1])
+
+  BinPortfolio = \textbf{mapP} (\textbf{foldlSeqParB} (\textbf{mapB} ...) (\textbf{mapB} ...) [n..1])
+
+%  Could be parallized by: \textbf{mapP} (\textbf{foldlSeqParB} (\textbf{mapB} ...)
 \end{frame}
 
 \begin{frame}
@@ -536,38 +714,88 @@ What we have to do:
   \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Sequential}
+% \begin{frame}
+%   \frametitle{Sequential and fusion}
+%   Fusion should happen before execution semantics
+% \end{frame}
 
-  \begin{itemize}
-  \item This selection should be automated.
-  \item We let parallelism flow inwards
-  \item Stops when a special \textbf{sequential}-cursor is met
-  \item We are far from finished implementing it in Nikola
-  \item How should a library designer behave
-  \end{itemize}
 
-  Example:  <some code>
 
-  Is assigned the following execution semantics: <some code>
+\begin{frame}[fragile]
+  \frametitle{Sobol-sequences take \#2}
 
+% $\mathsf{SobolRecursive}~v~n~y~n=~\verb|[|\verb|]|$\\
+% $\mathsf{SobolRecursive}~v~n~y~i=~x : \mathsf{SobolRecursive}~v~n~x~(i+1)~$\\
+% $\quad\mathbf{where}~x = y \oplus v_{\mathrm{lsb}(i)}$
+
+Recursive formulation:
+$x_{i+1}=~x_i\oplus v_{\mathrm{lsb}(i)}$
+
+% $\mathsf{SobolRecursive}~v~x_i~i=~x_i\oplus v_{\mathrm{lsb}(i-1)}$
+
+  % \begin{algorithmic}
+  %   \Function{SobolRecursive}{$v$,$A$,$i$,$n$}
+  %   \State $end \gets i + n$
+  %   \While{$i < end$}
+  %   \State $c \gets \mathrm{lsb}(i)$
+  %   \State $x_ {i+1} \gets x_i \oplus v_c$
+  %   \State $i \gets i + 1$
+  %   \EndWhile
+  %   \EndFunction
+  % \end{algorithmic}
+
+
+\vspace{5mm}
+
+\textbf{unfold} :: (Int $\rightarrow$ a $\rightarrow$ a) $\rightarrow$ Int $\rightarrow$ a $\rightarrow$ [a]
+
+
+\pause
+\vspace{5mm}
+
+\textbf{unfold} :: (Int $\rightarrow$ a $\rightarrow$ a) $\rightarrow$ Int $\rightarrow$  [a] $\rightarrow$ [[a]]
+
+
+% \vspace{7mm}
+%   \begin{algorithmic}
+%     \Function{SobolUnfold}{$v$, $n$}
+%     \State $xs \gets$ \textbf{parmap} (\textsc{SobolInductive} $v$ $\circ$ \textsc{GrayCode}) $[1..n]$
+%     \State $ys \gets$ \textbf{unfold} $n$ ($\lambda i. \lambda x_i$. \textsc{SkipAhead}($v$, $p$, $b$, $i$, $x_i$)) $xs$
+%     \State \Return $ys$
+%     \EndFunction
+%   \end{algorithmic}
+
+
+% {\footnotesize
+% \begin{verbatim}
+% unfold :: (IsElem a, IsElem (Exp t Ix), Shape sh, Source r a)
+%        => Exp t Ix
+%        -> (Exp t Ix -> a -> a)
+%        -> Array r sh a
+%        -> Array PSH (sh :. Exp t Ix) a
+% \end{verbatim} }
 \end{frame}
 
-\begin{frame}
-  \frametitle{Sequential}
-  \begin{center}
-    {\Large Demo time! }
-  \end{center}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Sequential and fusion}
-  Fusion should happen before execution semantics
-\end{frame}
 
 \begin{frame}
   \frametitle{Future work}
+  \begin{itemize}
+  \item<1-> Implementation and theoretical development
+    \begin{itemize}
+    \item Will this work out in practice?
+    \item How should memory be managed?
+    \item How are irregular arrays handled?
+    \item Can we do this in the type system?
+    \item \textbf{mapP}'s and \textbf{foldlS}'s as a target language in other
+      situations
+    \end{itemize}
+  \item<2-> Extend the survey
+    \begin{itemize}
+    \item Test additional languages
+    \item Implement complete LSM
+    \item Evaluate implementations of additional algorithms
+     \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \end{document}
