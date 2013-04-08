@@ -41,31 +41,35 @@ University of Copenhagen, DIKU}
 ~
 \vspace{3cm}
   \begin{abstract}
-    We explore the state of current functional data-parallel
-    programming languages targeting GPUs, by means of evaluating a set
-    of option pricing algorithms, namely the binomial option pricing
-    algorithm \cite{cox1979option} and the least squares Monte Carlo
-    approach introduced by Longstaff and Schwartz
-    \cite{longstaff2001valuing}, as well as related algorithms
-    employed in Monte Carlo integration.
+    We evaluate the current state of functional data-parallel
+    languages through the implementation of option pricing
+    algorithms. Specifically, we implement a lattice-based binomial
+    option pricer \cite{cox1979option}, the least-squares Monte Carlo
+    algorithm \cite{longstaff2001valuing}, and a Sobol sequence
+    generator \cite{bratley1988algorithm}.
 
-    Among the surveyed languages we find both Nikola
-    \cite{mainland2010nikola} and Accelerate
-    \cite{chakravarty2011accelerating} constrained by their
-    expressiveness due to restrictions of the target platform. 
+    Motivated by our attempts at implementing these algorithms, we
+    identify that both Nikola \cite{mainland2010nikola}, Accelerate
+    \cite{chakravarty2011accelerating} and the Haskell library Repa
+    \cite{keller2010regular} lack support for iterative array
+    construction. We suggest the addition of new constructs and
+    present possible implementation strategies.
 
-    We improve on the limitations we have found and the improvements
-    take the form of additional primitive constructs for iterative
-    array construction and a new suggested \emph{cursor} for marking
-    the division between sequential and parallel code, much inspired
-    by constructs found in Repa \cite{keller2010regular}. 
+    We demonstrate a lack of composability in the current languages,
+    caused by imposed limitations that forbid nested array
+    operations. This suggests that the problem of compiling nested
+    parallel operations should be addressed rather than avoided.
 
-    We believe that there is much promise in continuing work on our
-    suggestion, but we were unable to finish implementing and testing
-    the extensions due to project time constraints. We give an
-    analysis of what practical work remains.
+    The currently most popular approach to compilation of irregular
+    nested data-parallel languages is the vectorisation
+    transformation, as implemented in NESL \cite{nesl} and Data
+    Parallel Haskell \cite{spj2008dph}. We suggest an alternative
+    approach for regular nested data-parallelism, which relies on a
+    cursor to mark the division between parallel and sequential code,
+    much inspired by similar constructs found in Repa. The approach
+    allows for experimentation with parallelisation strategies and our
+    proposal could lead to a language for heterogeneous computing.
   \end{abstract}
-
 
 % \clearpage
 %  ~\thispagestyle{empty}
