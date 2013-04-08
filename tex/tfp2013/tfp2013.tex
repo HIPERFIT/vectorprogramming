@@ -1,0 +1,86 @@
+\documentclass{llncs2e/llncs}
+
+\usepackage{verbatim}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{bibentry}
+\usepackage[numbers]{natbib}
+
+% Perhaps shorten the title of one of the two parts
+\title{Survey of a few functional data-parallel languages}
+\subtitle{The need for nested data-parallelism} \author{Philip L. Carlsen \and Martin Dybdal \and Ken Friis Larsen}
+\institute{University of Copenhagen \\ \email{plcplc@gmail.com,
+    dybber@dybber.dk, kflarsen@diku.dk}}
+
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  TODO
+\end{abstract}
+
+\section{Introduction}
+\begin{itemize}
+\item Motivate the interest in data-parallelism, GPUs etc.
+\item Present the experiments we have performed in short
+\item List of contributions
+\item Overview of remaining paper
+\end{itemize}
+
+\section{Case I: Sobol-sequence generation}
+\begin{itemize}
+\item Introduce the simple inductive algorithm for computing
+  Sobol-sequences. Note that more efficient algorithms exists, but
+  we use this simple algorithm for illustrative purposes. See a more
+  detailed explanation in our master's thesis.
+
+\item Present how the algorithm would be written in a language
+  allowing nesting and compare with the Accelerate version
+  Write that the Nikola version is similar.
+\item We should compare the generated CUDA code by Nikola and
+  Accelerate and make a remark on that
+\item Introduce the concept of "manual vectorisation".
+\end{itemize}
+
+\section{Case II: Binomial option pricing}
+\begin{itemize}
+\item Present binomial option pricing algorithm
+\item Show how that would lead to host synchronization in each iteration
+\item See if we can find some paper about the overhead incurred by
+  extraneous kernel launches
+\item Say that an alternative parallelization scheme prices several
+  options simultaneously: portfolio pricing.
+\item Show that we have a hard time expressing such a portfolio
+  pricer, because of irregularity when performing the manual
+  vectorisation
+\item Present a benchmark showing the benefit of having portfolio
+  pricer rather than pricing each option in their own kernels
+  sequentially.
+\end{itemize}
+
+\section{Related work}
+\begin{itemize}
+\item Mention NESL, Data-parallel Haskell and GPU-NESL
+\item Mention some of the languages we haven't tested. See if can put
+  them in categories where the above problems are present and aren't,
+  even though we haven't tested them as much.
+\end{itemize}
+
+\section{Future work}
+\begin{itemize}
+\item Extend the survey to cover additional languages and problems
+\item Create a larger performance benchmark of the different languages
+\item Look closer at GPU-NESL and whether it performs
+\end{itemize}
+
+\section{Conclusion}
+Summarize.
+
+\section{Acknowledgments}
+
+\bibliographystyle{plainnat} 
+\bibliography{../bibliography/bibliography}
+
+\end{document}
