@@ -332,7 +332,8 @@ calculate the option price at time zero, while taking into account the
 probabilities $q$ and $1-q$.
 \begin{verbatim}
 stepbackward prev i =
-    zipWith3 (\up down st -> max (strike - st) (q*up + (1-q)*down))
+    zipWith3 (\up down st -> max (strike - st) 
+                                 (e^(-r*dt) * (q*up + (1-q)*down)))
              prev
              (tail prev)
              (leafs i)
