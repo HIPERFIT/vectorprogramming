@@ -343,12 +343,38 @@ Everything can then be combined:
 binomial n = head $ foldl stepbackward (finalPut n) [n, n-1 .. 1]
 \end{verbatim}
 
+We now turn to implement this as a parallel program in Accelerate. We
+cannot parallelize the outer \verb|foldl| operation, because of
+dependencies between each iteration. Thus, the parallelisation of
+binomial must be found in the calls to \verb|map| and
+\verb|zipWith3|. Thus our implementation is going to use an ordinary
+Haskell fold running on the CPU and each call to stepbackward will be
+executed on the GPU.
+\begin{verbatim}
+Accelerate implementation of binomial pricer
+\end{verbatim}
+We have the same problem writing the program in CUDA if we want to use
+all the scalar processors, as CUDA does not provide a way to
+synchronize between work groups other than adding a synchronization
+barrier between individual kernel calls.
+
+In Figure \emph{TODO} we present the actual execution times.
+
+An alternative parallisation strategy would be to price several
+options simultaneously, a portfolio pricer. Thus, we will investigate
+the parallisation opportunities for:
+\begin{verbatim}
+binomialPortfolio options = map binomial options
+\end{verbatim}
+
+
 \begin{itemize}
-\item Show how that would lead to host synchronisation in each iteration
-\item See if we can find some paper about the overhead incurred by
-  extraneous kernel launches
-\item Say that an alternative parallelisation scheme prices several
-  options simultaneously: portfolio pricing.
+% \item Introduce binomial option pricing
+% \item Show how that would lead to host synchronisation in each iteration
+% \item See if we can find some paper about the overhead incurred by
+%   extraneous kernel launches
+% \item Say that an alternative parallelisation scheme prices several
+%   options simultaneously: portfolio pricing.
 \item Show that we have a hard time expressing such a portfolio
   pricer, because of irregularity when performing the manual
   vectorisation
