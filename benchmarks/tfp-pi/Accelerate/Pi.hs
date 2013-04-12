@@ -97,4 +97,4 @@ pi nums =
 -}
 
 runPi :: Exp Int -> Exp Double
-runPi n = the $ (((sobolND dirvs).the) >-> (unit . pi2d)) (unit n)
+runPi n = pi2d $ sobolND dirvs n
