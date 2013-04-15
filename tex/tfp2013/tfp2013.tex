@@ -6,9 +6,11 @@
 \usepackage{url}
 \usepackage[numbers]{natbib}
 
-% Perhaps shorten the title of one of the two parts
-\title{Survey of a few data-parallel languages}
-\subtitle{The need for nested data-parallelism} \author{Philip L. Carlsen \and Martin Dybdal \and Ken Friis Larsen}
+
+%\title{Survey of a few data-parallel languages}
+\title{The need for nested data-parallelism} 
+
+\author{Philip L. Carlsen \and Martin Dybdal \and Ken Friis Larsen}
 \institute{University of Copenhagen \\ \email{plcplc@gmail.com,
     dybber@dybber.dk, kflarsen@diku.dk}}
 
@@ -17,17 +19,16 @@
 
 \section{Introduction}
 In recent years \emph{graphics processing units} (GPUs) have become a
-very cost-efficient choice when it comes to raw compute power and the
-problem in question can be solved through a data-parallel
-algorithm. Through their massively data-parallel architecture, GPUs
-deliver much higher throughput than ordinary processors.
+very cost-efficient choice for problems which can be solved with a
+data-parallel algorithm. The massively data-parallel architecture of
+GPUs deliver a much higher throughput than ordinary processors.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
 frameworks in both academia and industry. These two languages are
 extension of C and C++ respectively and they both require manual
 memory management, does not provide any means for automatic
 deforestation, and little abstraction from the underlying
-architecture.
+hardware.
 
 To make GPU programming more accesible, quite a number of new
 data-parallel languages and GPU libraries for existing languages
@@ -37,9 +38,9 @@ data-parallel languages and GPU libraries for existing languages
 got the popularity and attention as programming directly in OpenCL or
 CUDA.
 
-In this paper we present our experience with applying a few functional
-data-parallel languages to some real world problems, mainly from the
-domain of finance. 
+In this paper we present our experience of applying a few functional
+data-parallel languages to a couple of real world problems from the
+domain of computational finance.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
@@ -49,13 +50,13 @@ option-pricing algorithm, \emph{the binomial method}. Both of these
 algorithms have been implemented in Accelerate
 \cite{chakravarty2011accelerating}, Nikola \cite{mainland2010nikola}
 and CUDA.
+\newpage
+% Our main contributions are:
+% \begin{itemize}
+% \item TODO
+% \end{itemize}
 
-Our main contributions are:
-\begin{itemize}
-\item TODO
-\end{itemize}
-
-The rest of the paper is structured as follows. \emph{TODO write outline}
+% The rest of the paper is structured as follows. \emph{TODO write outline}
 
 % Disposition for introduction
 % \begin{itemize}
@@ -97,7 +98,12 @@ in Figure \ref{fig:discrepancyplot}.
 \label{fig:discrepancyplot}
 \end{figure}
 
-\emph{TODO applications of QRNGs in numerical integration and Monte Carlo methods}
+The figure reveals that these quasi-random numbers are generated in a
+very systematic fashion, such that to fill out the sample space
+evenly, without clusters or holes. They are thus a poor choice for
+something like cryptography, but in applications such as numerical
+integration and Monte Carlo methods they can be efficient as fewer
+samples is needed. 
 
 We will only present a simple inductive formulation of the algorithm,
 and it should be noted that more efficient implementations exists
@@ -107,8 +113,8 @@ more efficient implementation strategies into account.
 
 The algorithm is seeded by a so called \emph{direction vector}. To
 generate a Sobol sequence of $32$-bit numbers a direction vector of
-length $32$ is required.  Lists of direction vectors are available
-online \cite{homepage:sobol:directionvectors}. Let $v$ be a direction
+length $32$ is required\footnote{Lists of direction vectors are available
+online \cite{homepage:sobol:directionvectors}}. Let $v$ be a direction
 vector of length $32$, the corresponding Sobol sequence is defined by:
 \begin{equation}
 x_i = v_1i_1 \oplus v_2i_2 \oplus \ldots \oplus v_{32}i_{32}\label{eq:sobol_inductive}
@@ -140,9 +146,8 @@ sobolND m vs = map (sobol1D m) vs
 We now turn to implement the same algorithm in Accelerate. It should
 be noted that the problems we will present are not unique for
 Accelerate. We would have more or less the same troubles doing it in
-Nikola, Repa, ...  TODO. We use Accelerate for the presentation
-because its types are simplified by not including array
-representations. 
+Nikola. We use Accelerate for the presentation because the Array-types
+are simpler, by not including the underlying representations.
 
 The type of Accelerate arrays are indexed by their dimensionality,
 thus \verb|Array DIM2 Int32| is a two dimensional array with
@@ -158,7 +163,7 @@ sobolA v = normalise . foldl xor 0 . zipWith (*) v . toBitVector
 The next step becomes more complicated though, as Accelerate forbids
 nested maps. We will not be able to write \verb|map (sobolA)|.
 Instead we will have to push this map inside the definition of
-\verb|sobolA|, what a manual vectorisation of \verb|sobolA|.
+\verb|sobolA|, a manual vectorisation of \verb|sobolA|.
 \begin{verbatim}
 sobol1DA :: Exp Int32 -> Array DIM1 Int32 -> Acc (Array DIM1 Float)
 sobol1DA m v = normalise $ foldl xor 0 $ zipWith (*) rep bitVectors
@@ -174,23 +179,28 @@ dimension.
 If we wish to generate $n$-dimensional Sobol sequences, we will again
 face the same barrier and we would have to do a vectorisation in the
 direction vector argument of \verb|sobol1DA|. Where we had two
-dimensional arrays we will have to use three dimensional arrays. We
-will not present a \verb|sobolNDA|, but just mention that in all
-parts of the sobol1DAcc above we would have to take the additional
-dimension into account.
-% \begin{verbatim}
-%   sobolAccND :: Exp Int32 -> Array DIM1 Int32 -> Acc (Array DIM2 Float)
-% \end{verbatim}
+dimensional arrays we will have to use three dimensional arrays. % We
+% will not present a \verb|sobolNDA|, but just mention that in all
+% parts of the sobol1DAcc above we would have to take the additional
+% dimension into account.
+
+\begin{verbatim}
+sobolNDA :: Exp Int32 -> Array DIM2 Int32 -> Acc (Array DIM2 Float)
+\end{verbatim}
 
 This example is a small scale illustration of a problem in languages
 that disallow nested array operations. The fact that we could not
 apply \verb|sobolA| in the context that we wanted, but had to change
 its inner workings showcases a lack of composability and abstraction
-in such languages. In a larger setting, such as the one we will
-present in the next section, the function that we want to map could be
-part of a library which we could not modify ourselves, and thus we
-would have to reimplement the complete functionality in our own
-program instead.
+in such languages. 
+
+In a larger setting the transformation function the that we
+\verb|map|, could be arbitrarily complex, making the vectorisation
+hard to do by hand or could be part of an external library where such
+
+In a larger setting the function the that we want to map could be part of
+a library which we could not modify ourselves, and thus we would have
+to reimplement the complete functionality in our own program instead.
 
 \emph{TODO what was the problem with using generate instead of map in the
 above examples?}
@@ -383,23 +393,23 @@ binomialPortfolio options = map binomial options
   sequentially.
 \end{itemize}
 
-\section{Related work}
-\begin{itemize}
-\item Mention NESL, Data-parallel Haskell and GPU-NESL
-\item Mention some of the languages we haven't tested. See if can put
-  them in categories where the above problems are present and aren't,
-  even though we haven't tested them as much.
-\end{itemize}
+% \section{Related work}
+% \begin{itemize}
+% \item Mention NESL, Data-parallel Haskell and GPU-NESL
+% \item Mention some of the languages we haven't tested. See if can put
+%   them in categories where the above problems are present and aren't,
+%   even though we haven't tested them as much.
+% \end{itemize}
 
-\section{Future work}
-\begin{itemize}
-\item Extend the survey to cover additional languages and problems
-\item Create a larger performance benchmark of the different languages
-\item Look closer at GPU-NESL and whether it performs
-\end{itemize}
+% \section{Future work}
+% \begin{itemize}
+% \item Extend the survey to cover additional languages and problems
+% \item Create a larger performance benchmark of the different languages
+% \item Look closer at GPU-NESL and whether it performs
+% \end{itemize}
 
 \section{Conclusion}
-Summarise.
+Summarise, mention GPU-NESL and other languages we haven't tested.
 
 \section{Acknowledgments}
 
