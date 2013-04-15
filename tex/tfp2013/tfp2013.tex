@@ -239,6 +239,18 @@ and may be exercised in a time-interval up until the expiration time
 $T$. A \emph{call option} on asset $A$ grants the right to buy $A$,
 whereas a \emph{put option} grants the right to sell.
 
+\begin{verbatim}
+data OptType = Call | Put
+data AOpt = AOpt
+              { type    :: OptType -- Call or Put option?
+              , s0      :: Float   -- Current price of underlying
+              , strike  :: Float   -- Strike price
+              , dt      :: Float   -- Size of one time period
+              , n       :: Int     -- Number of periods
+              , r       :: Float   -- Riskless interest rate
+              }
+\end{verbatim}
+
 To estimate the price of an American option we have to simulate the
 price development of the underlying, as no closed-form analytic
 solution is currently known. For the simpler case of \emph{European
@@ -322,11 +334,20 @@ expiration time $T$ is $t_3$ and we have assumed that $u\cdot d = 1$.
 \end{figure}
 
 
+We can represent the model parameters as:
+\begin{verbatim}
+data BinParams = BinParams 
+               { u :: Float
+               , d :: Float
+               , q :: Float
+               }
+\end{verbatim}
+
 The leaf nodes represents the possible values of the underlying at
 expiration time. After $n$ time steps, we will have $n+1$ leafs, which
 values we can compute by:
 \begin{verbatim}
-leafs n = map (\i -> s0 * u^i * d^(n-i)) [0..n]
+leafs (BinParams{..}) s0 n = map (\i -> s0 * u^i * d^(n-i)) [0..n]
 \end{verbatim}
 These leafs represents all the possible prices at expiration time, and
 for each possibility we can determine whether it would worthwhile to
@@ -334,14 +355,14 @@ exercise our option right. Depending on whether we are pricing a
 \emph{put} or a \emph{call} option, the option values at expiration
 will be either of:
 \begin{verbatim}
-finalPut  n = map (\v -> max (strike - v) 0) $ leafs n
-finalCall n = map (\v -> max (v - strike) 0) $ leafs n
+finalPut  p (AOpt{..}) = map (\v -> max (strike - v) 0) $ leafs p s0 n
+finalCall p (AOpt{..}) = map (\v -> max (v - strike) 0) $ leafs p s0 n
 \end{verbatim}
 From this point, we can discount backward one time-step at a time to
 calculate the option price at time zero, while taking into account the
 probabilities $q$ and $1-q$.
 \begin{verbatim}
-stepbackward prev i =
+stepbackward p opt prev i =
     zipWith3 (\up down st -> max (strike - st) 
                                  (e^(-r*dt) * (q*up + (1-q)*down)))
              prev
@@ -350,7 +371,8 @@ stepbackward prev i =
 \end{verbatim}
 Everything can then be combined:
 \begin{verbatim}
-binomial n = head $ foldl stepbackward (finalPut n) [n, n-1 .. 1]
+binomial p opt@(AOpt{..}) =
+    head $ foldl (stepbackward p opt) (finalPut opt) [n, n-1 .. 1]
 \end{verbatim}
 
 We now turn to implement this as a parallel program in Accelerate. We
