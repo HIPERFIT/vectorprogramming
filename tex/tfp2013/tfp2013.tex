@@ -44,27 +44,12 @@ domain of computational finance.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
-which is an efficient choice for both numerical integration and Monte
-Carlo simulation. Our second experiment is the implementation of an
-option-pricing algorithm, \emph{the binomial method}. Both of these
-algorithms have been implemented in Accelerate
-\cite{chakravarty2011accelerating}, Nikola \cite{mainland2010nikola}
-and CUDA.
-\newpage
-% Our main contributions are:
-% \begin{itemize}
-% \item TODO
-% \end{itemize}
-
-% The rest of the paper is structured as follows. \emph{TODO write outline}
-
-% Disposition for introduction
-% \begin{itemize}
-% \item Motivate the interest in data-parallel languages
-% \item Present the experiments we have performed in short
-% \item List of contributions
-% \item Overview of remaining paper
-% \end{itemize}
+which is an efficient choice for some applications of numerical
+integration and Monte Carlo simulation. Our second experiment is the
+implementation of an option-pricing algorithm, \emph{the binomial
+  method}. Both of these algorithms have been implemented in
+Accelerate \cite{chakravarty2011accelerating}, Nikola
+\cite{mainland2010nikola} and CUDA.
 
 \section{Case I: Sobol sequence generation}
 The first problem that we have used to evaluate the languages is a
@@ -101,9 +86,8 @@ in Figure \ref{fig:discrepancyplot}.
 The figure reveals that these quasi-random numbers are generated in a
 very systematic fashion, such that to fill out the sample space
 evenly, without clusters or holes. They are thus a poor choice for
-something like cryptography, but in applications such as numerical
-integration and Monte Carlo methods they can be efficient as fewer
-samples is needed. 
+cryptography, but in applications such as numerical integration and
+Monte Carlo methods they can be efficient as fewer samples is needed.
 
 We will only present a simple inductive formulation of the algorithm,
 and it should be noted that more efficient implementations exists
@@ -126,11 +110,14 @@ It is not hard to translate definition (\ref{eq:sobol_inductive}) to a
 Haskell function working on lists:
 \begin{verbatim}
 sobol :: [Int32] -> Int32 -> Float
-sobol v = normalise . foldl xor 0 . zipWith (*) v . toBitVector
+sobol v = normalise . foldl xor 0 . zipWith (*) v . bitVector
+  where
+    bitVector e = map (\i -> signum $ e .&. bit i) [0..31]
+    normalise x = fromIntegral x / 2^32
 \end{verbatim}
-where \verb|toBitVector :: Int32 -> [Int32]| converts the index into
-its binary representation and \verb|normalise :: Int32 -> Float|
-normalises to $(0,1]$ by division with $2^{32}$.
+The \verb|bitVector|-function converts the given index into its binary
+representation and \verb|normalise| maps the values into the $(0,1]$
+range.
 
 To generate a complete sequence we can map over all indices:
 \begin{verbatim}
@@ -147,7 +134,7 @@ We now turn to implement the same algorithm in Accelerate. It should
 be noted that the problems we will present are not unique for
 Accelerate. We would have more or less the same troubles doing it in
 Nikola. We use Accelerate for the presentation because the Array-types
-are simpler, by not including the underlying representations.
+are simpler, as they do not include representation tags.
 
 The type of Accelerate arrays are indexed by their dimensionality,
 thus \verb|Array DIM2 Int32| is a two dimensional array with
@@ -156,17 +143,21 @@ two dimensional array will thus be rectangular.
 
 In the first step, there are only minor changes in the type:
 \begin{verbatim}
-sobolA :: Array DIM1 Int32 -> Exp Int32 -> Acc (Array DIM0 Float)
-sobolA v = normalise . foldl xor 0 . zipWith (*) v . toBitVector
+sobolA :: Acc (Array DIM1 Int32) -> Exp Int32 -> Acc (Array DIM0 Float)
+sobolA v = normalise . fold xor 0 . zipWith (*) v . bitVector
+  where
+    bitVector e = generate (constant $ Z :. 32)
+                           (\i -> fromIntegral . boolToInt $ testBit e (unindex1 i))
+    normalise x = fromIntegral x / 2^32
 \end{verbatim}
 
 The next step becomes more complicated though, as Accelerate forbids
-nested maps. We will not be able to write \verb|map (sobolA)|.
+nested maps. We will not be able to write \verb|map sobolA|.
 Instead we will have to push this map inside the definition of
 \verb|sobolA|, a manual vectorisation of \verb|sobolA|.
 \begin{verbatim}
 sobol1DA :: Exp Int32 -> Array DIM1 Int32 -> Acc (Array DIM1 Float)
-sobol1DA m v = normalise $ foldl xor 0 $ zipWith (*) rep bitVectors
+sobol1DA m v = normalise $ fold xor 0 $ zipWith (*) rep bitVectors
   where
     Z :. i = arrayShape v
     rep = replicate (constant $ Z :. m :. All) (use v)
@@ -185,7 +176,16 @@ dimensional arrays we will have to use three dimensional arrays. % We
 % dimension into account.
 
 \begin{verbatim}
-sobolNDA :: Exp Int32 -> Array DIM2 Int32 -> Acc (Array DIM2 Float)
+sobolNDA :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
+sobolNDA dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
+  where
+    j = fst . unindex2 . shape $ dirvs
+    dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
+    normalise x = fromIntegral x / 2^bitcount
+    bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
+      where
+        helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
+                    in fromIntegral . boolToInt $ testBit e i
 \end{verbatim}
 
 This example is a small scale illustration of a problem in languages
@@ -194,16 +194,12 @@ apply \verb|sobolA| in the context that we wanted, but had to change
 its inner workings showcases a lack of composability and abstraction
 in such languages. 
 
-In a larger setting the transformation function the that we
-\verb|map|, could be arbitrarily complex, making the vectorisation
-hard to do by hand or could be part of an external library where such
+In a larger setting the mapped function, could be arbitrarily complex,
+making the vectorisation hard to do by hand or the function could
+reside in an external library, making the transformation impossible.
 
-In a larger setting the function the that we want to map could be part of
-a library which we could not modify ourselves, and thus we would have
-to reimplement the complete functionality in our own program instead.
-
-\emph{TODO what was the problem with using generate instead of map in the
-above examples?}
+% \emph{TODO what was the problem with using generate instead of map in the
+% above examples?}
 
 \emph{TODO present benchmark of calculating $\pi$ using Sobol-sequences}
 
