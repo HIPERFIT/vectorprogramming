@@ -19,24 +19,24 @@
 
 \section{Introduction}
 In recent years \emph{graphics processing units} (GPUs) have become a
-very cost-efficient choice for problems which can be solved with a
-data-parallel algorithm. The massively data-parallel architecture of
-GPUs deliver a much higher throughput than ordinary processors.
+very cost-efficient choice for problems with data-parallel
+solutions. The massively data-parallel architecture of GPUs deliver a
+much higher throughput than ordinary processors.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
 frameworks in both academia and industry. These two languages are
-extension of C and C++ respectively and they both require manual
+extension of C and C++ respectively, and they both require manual
 memory management, does not provide any means for automatic
 deforestation, and little abstraction from the underlying
 hardware.
 
 To make GPU programming more accesible, quite a number of new
-data-parallel languages and GPU libraries for existing languages
-\cite{Catanzaro2011, chakravarty2011accelerating, mainland2010nikola,
+data-parallel languages as well as GPU libraries for existing
+languages have been announced \cite{Catanzaro2011,
+  chakravarty2011accelerating, mainland2010nikola,
   svensson2011obsidian, bergstra2010theano, homepage:rgpu,
-  bergstrom2012nested} have been announced, though none of them has
-got the popularity and attention as programming directly in OpenCL or
-CUDA.
+  bergstrom2012nested}, though none of them has got the attention and
+popularity as programming directly in OpenCL or CUDA.
 
 In this paper we present our experience of applying a few functional
 data-parallel languages to a couple of real world problems from the
@@ -82,7 +82,6 @@ in Figure \ref{fig:discrepancyplot}.
     numbers generated with Mersenne Twister PRNG}
 \label{fig:discrepancyplot}
 \end{figure}
-
 The figure reveals that these quasi-random numbers are generated in a
 very systematic fashion, such that to fill out the sample space
 evenly, without clusters or holes. They are thus a poor choice for
@@ -112,7 +111,7 @@ Haskell function working on lists:
 sobol :: [Int32] -> Int32 -> Float
 sobol v = normalise . foldl xor 0 . zipWith (*) v . bitVector
   where
-    bitVector e = map (\i -> signum $ e .&. bit i) [0..31]
+    bitVector e = map (\j -> signum $ e .&. bit j) [0..31]
     normalise x = fromIntegral x / 2^32
 \end{verbatim}
 The \verb|bitVector|-function converts the given index into its binary
