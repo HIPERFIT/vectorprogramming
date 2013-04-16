@@ -18,21 +18,21 @@
 \maketitle
 
 \section{Introduction}
-In recent years \emph{graphics processing units} (GPUs) have become a
-cost-efficient choice for problems with data-parallel solutions. The
-massively data-parallel architecture of GPUs deliver a much higher
-throughput than ordinary processors.
+Graphics Processing Units (GPUs) is a cost-efficient choice for
+problems with data-parallel solutions. The massively data-parallel
+architecture of GPUs deliver a much higher throughput than ordinary
+processors.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
 frameworks in both academia and industry. These two languages are
-extension of C and C++ respectively, and they both require manual
+extension of C and C++ respectively. Both OpenCL and CUDA require manual
 memory management, does not provide any means for automatic
-deforestation, and little abstraction from the underlying
+deforestation, and offers little abstraction from the underlying
 hardware.
 
-To make GPU programming more accesible, quite a number of new
+To make GPU programming more accessible, quite a number of new
 data-parallel languages as well as GPU libraries for existing
-languages have been announced \cite{Catanzaro2011,
+languages have been developed \cite{Catanzaro2011,
   chakravarty2011accelerating, mainland2010nikola,
   svensson2011obsidian, bergstra2010theano, homepage:rgpu,
   bergstrom2012nested}, though none of them has got the attention and
@@ -131,7 +131,7 @@ sobolND m vs = map (sobol1D m) vs
 \end{verbatim}
 
 We show how to implement the same algorithm in Accelerate to
-illustrate some problems with the non-nested parallism offered by
+illustrate some problems with the non-nested parallelism offered by
 Accelerate. It should be noted that the problems we will present are
 not unique for Accelerate. We have more or less the same troubles
 doing implementing the algorithm in Nikola. We use Accelerate for the
@@ -249,9 +249,9 @@ data AOpt = AOpt
 \end{verbatim}
 
 To estimate the price of an American option we have to simulate the
-price development of the underlying, as no closed-form analytic
-solution is currently known. For the simpler case of \emph{European
-  style option} pricing, a closed-form solution is available in the
+price development of the underlying, as there is no known closed-form
+analytic solution. For the simpler case of \emph{European style
+  option} pricing, a closed-form solution is available in the
 Black-Scholes formula \cite{black1973pricing}.
 
 A relatively simple discrete time model for computing the price of an
@@ -276,9 +276,10 @@ S(t+\Delta t) = \left\{
 
 Iterating this procedure starting at time $t_0$ (now), where the
 current price of the underlying is known to be $S(t_0)$, we will
-obtain a binomial tree as the one in Figure
-\ref{fig:binomial-tree}. In this case we have used three periods,
-expiration time $T$ is $t_3$ and we have assumed that $u\cdot d = 1$.
+obtain a binomial tree as the one in
+Figure~\ref{fig:binomial-tree}. In this case we have used three
+periods, the expiration time $T$ is $t_3$, and we have assumed that
+$u\cdot d = 1$.
 
 \begin{figure}
   \centering
@@ -372,26 +373,28 @@ binomial p opt@(AOpt{..}) =
     head $ foldl (stepbackward p opt) (finalPut opt) [n, n-1 .. 1]
 \end{verbatim}
 
-We now implement this pricing algorithm as a parallel program in Accelerate. We
-cannot parallelize the outer \verb|foldl| operation, because of
-dependencies between each iteration. Thus, the parallelisation of
-binomial must be found in the calls to \verb|map| and
-\verb|zipWith3|. Thus our implementation is going to use an ordinary
-Haskell fold running on the CPU and each call to stepbackward will be
-executed on the GPU.
+We now implement this pricing algorithm as a parallel program in
+Accelerate. We cannot parallelize the outer \verb|foldl| operation,
+because of the dependencies between each iteration. Thus, the
+parallelisation of \verb|binomial| must be found in the calls to
+\verb|map| and \verb|zipWith3|. Thus our implementation use an
+ordinary Haskell fold running on the CPU and each call to
+\verb|stepbackward| will be executed on the GPU.
 \begin{verbatim}
 Accelerate implementation of binomial pricer
 \end{verbatim}
-We have the same problem writing the program in CUDA if we want to use
-all the scalar processors, as CUDA does not provide a way to
-synchronize between work groups other than adding a synchronization
-barrier between individual kernel calls.
+
+We have the same problem with dependencies between iteration when
+writing the program in CUDA, if we want to use all the scalar
+processors. Becase CUDA does not provide a way to synchronize between
+work-groups other than adding a synchronization barrier between
+individual kernel calls.
 
 In Figure \emph{TODO} we present the actual execution times.
 
-An alternative parallisation strategy would be to price several
+An alternative parallelisation strategy is to price several
 options simultaneously, a portfolio pricer. Thus, we investigate
-the parallisation opportunities for:
+the parallelisation opportunities for:
 \begin{verbatim}
 binomialPortfolio options = map binomial options
 \end{verbatim}
@@ -432,7 +435,12 @@ Summarise, mention GPU-NESL and other languages we haven't tested.
 
 \section{Acknowledgments}
 
+
 \bibliographystyle{plainnat} 
 \bibliography{../bibliography/bibliography}
 
 \end{document}
+
+% LocalWords:  OpenCL CUDA GPU Carlsen Dybdal Sobol Nikola QRNG QRNGs
+% LocalWords:  PRNGs Mersenne PRNG dimensionality composability
+% LocalWords:  vectorisation Scholes
