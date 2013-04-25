@@ -44,6 +44,7 @@ pi2d nums = 4 * ((fromIntegral $ n - sum dists)/ (fromIntegral n))
    n = length nums
    dists = map (\(x,y) -> truncate $ sqrt (x^2 + y^2)) nums
 
+computepi :: Word32 -> Float
 computepi n = pi2d $ zip xs ys
  where
   [xs, ys] = sobolND n dirvs
