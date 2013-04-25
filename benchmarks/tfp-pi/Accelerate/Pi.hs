@@ -33,9 +33,6 @@ dirvs = fromList (Z :. 2 :. bitcount)
                  305826616,3475687836,3113412898,2197780721]
                  ]
 
-fromBool :: (Elt a, IsNum a) => Exp Bool -> Exp a
-fromBool b = b ? (1, 0)
-
 normalise :: Exp Word32 -> Exp Float
 normalise x = fromIntegral x / 2^bitcount
 
@@ -43,10 +40,10 @@ bitVectors :: Exp Int -> Exp Int -> Acc (Array DIM3 Word32)
 bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
   where
     helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
-                in fromBool $ testBit e i
+                in fromIntegral . boolToInt $ testBit e i
 
-sobolN :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
-sobolN dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
+sobolNDA :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
+sobolNDA dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
   where
     j = fst . unindex2 . shape $ dirvs
     dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
@@ -62,4 +59,4 @@ pi2d nums = 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromIntegral
                                          + (nums ! (lift $ Z :. ix' :. (1 :: Exp Int))) ^ 2)
 
 runPi :: Exp Int -> Exp Float
-runPi n = pi2d $ sobolN (use dirvs) n
+runPi n = pi2d $ sobolNDA (use dirvs) n
