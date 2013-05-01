@@ -42,7 +42,7 @@ pi2d :: [(Float, Float)] -> Float
 pi2d nums = 4 * ((fromIntegral $ n - sum dists)/ (fromIntegral n))
  where
    n = length nums
-   dists = map (\(x,y) -> truncate $ sqrt (x^2 + y^2)) nums
+   dists = map (\(x,y) -> truncate $ sqrt (x^(2 :: Int) + y^(2 :: Int))) nums
 
 computepi :: Word32 -> Float
 computepi n = pi2d $ zip xs ys

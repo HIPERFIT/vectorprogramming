@@ -4,19 +4,25 @@ module Binomial where
 import Data.List (foldl')
 import Options
 
-binom :: Int -> EurOpt -> Float
-binom numSteps (EurOpt{..}) = head $ foldl' stepBack vFinal [numSteps, numSteps-1 .. 1]
+binom :: EurOpt -> Float
+binom (EurOpt{..}) = head first
   where
---    leafs = map (\i -> s0 * u^i * d^(numSteps-i)) [0..numSteps]
-    leafs = [s0 * exp(vsdt * fromIntegral (2 * i - numSteps)) | i <- [0..numSteps]]
+    -- Leafs of binomial tree
+    leafs = [s0 * exp(vsdt * fromIntegral (2 * i - numSteps))
+            | i <- [0..numSteps]]
+
+    -- Profits at the final stage
     profit = case opttype of Put  -> map (strike -) leafs
                              Call -> map (flip (-) strike) leafs
     vFinal  = map (max 0) profit
     
+    -- Discounting backwards
     stepBack vPrev _ = zipWith back (tail vPrev) (init vPrev)
       where back x1 x2 = puByr * x1 + pdByr * x2
+    first = foldl' stepBack vFinal [1..numSteps]
 
-    u,d,dt :: Float
+    -- Model and option variables
+    u,d,dt,vsdt,rr,rrInv,pu,pd,puByr,pdByr :: Float
     dt = fromIntegral expiry/fromIntegral numSteps
     vsdt = volatility * sqrt dt
     u = exp(vsdt) 
