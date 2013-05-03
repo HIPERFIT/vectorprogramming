@@ -13,10 +13,15 @@ def CND(X):
     return w
 
 # Black Sholes Function
-def BlackScholes(CallPutFlag,S,X,T,r,v):
+def BlackScholes((IsCall,S,X,T,r,v)):
     d1 = (log(S/X)+(r+v*v/2.)*T)/(v*sqrt(T))
     d2 = d1-v*sqrt(T)
-    if CallPutFlag=='c':
+    if IsCall:
         return S*CND(d1)-X*exp(-r*T)*CND(d2)
     else:
         return X*exp(-r*T)*CND(-d2)-S*CND(-d1)
+
+def BlackScholesPortfolio(options):
+    return map(BlackScholes, options)
+
+print(BlackScholesPortfolio([(True,60.0,65.0,1,0.1,0.2)]))

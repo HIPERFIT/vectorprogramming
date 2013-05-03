@@ -23,3 +23,7 @@ blackScholes (EurOpt{..}) = case opttype of
       k = 1.0 / (1.0 + 0.2316419 * l)
       w = 1.0 - 1.0 / sqrt(2*pi)*exp(-l*l/2.0) * (a1*k + a2*k*k + a3*(k^(3 :: Int))
           + a4*(k^(4 :: Int)) + a5*(k^(5 :: Int)))
+
+
+blackScholesPortfolio :: [EurOpt] -> [Float]
+blackScholesPortfolio = map blackScholes
