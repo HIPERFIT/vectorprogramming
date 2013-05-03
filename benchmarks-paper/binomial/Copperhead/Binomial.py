@@ -1,6 +1,18 @@
 from copperhead import *
 import numpy as np
 
+@cutype("[a] -> [a]")
+@cu
+def tail(xs):
+    n = len(xs)
+    return gather(xs, map(lambda i: i+1, range(n-1)))
+
+@cutype("[a] -> [a]")
+@cu
+def init(xs):
+    n = len(xs)
+    return gather(xs, range(n-1))
+
 @cutype("(Bool,Double,Double,Int,Int) -> [Double]")
 @cu
 def final(isCall,s0,strike,expiry,numSteps):
@@ -22,6 +34,7 @@ def final(isCall,s0,strike,expiry,numSteps):
     else:
         return map(lambda x: maximum(strike - x, 0.0), leafs)
 
+@cutype("([Double], Int, Int) -> [Double]")
 @cu
 def stepBack(vPrev,expiry,numSteps):
     volatility = 0.2
@@ -38,19 +51,14 @@ def stepBack(vPrev,expiry,numSteps):
     puByr = pu * rrInv
     pdByr = pd * rrInv
 
-    def tail(xs):
-        n = len(xs)
-        return gather(xs, map(lambda i: i+1, range(n-1)))
-
     def back(x1,x2):
         return puByr * x1 + pdByr * x2
-    return map(back, tail(vPrev), vPrev)
+    return map(back, tail(vPrev), init(vPrev))
 
 def binom(isCall,s0,strike,expiry,numSteps):
     vFinal = final(isCall,s0,strike,expiry,numSteps)
     def stepBackClosure(vPrev,i):
         return stepBack(vPrev,expiry,numSteps)
     return reduce(stepBackClosure, range(numSteps), vFinal)
-
 
 print(binom(True,60.0,65.0,1,10))
