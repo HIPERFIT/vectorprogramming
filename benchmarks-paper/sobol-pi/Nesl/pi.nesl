@@ -30,7 +30,7 @@ function signum(x) = btoi(x == 0) $
 function bitVector (e) = { signum(e and lshift(1, j)) : j in [0:bitcount] } $
 
 % assumes non-empty argument %
-function xor_reduce(xs) = elt(plus_scan(xs),#xs-1)+elt(xs,#xs-1) $
+function xor_reduce(xs) = elt(xor_scan(xs),#xs-1) xor (elt(xs,#xs-1)) $
 
 % sobol : [int] * int -> float %
 % function sobol (v, x) = normalise(xor({vi*i : (vi,i) in  zip(v, bitVector(x))})) $ %
