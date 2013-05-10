@@ -1,12 +1,7 @@
 module Options where
 
--- ^ Riskless interest rate
-riskless :: Float
-riskless = 0.1
-
--- ^ Volatility
-volatility :: Float
-volatility = 0.2
+numSteps :: Integral a => a
+numSteps = 2048
 
 data OptType = Call | Put
      deriving Eq
@@ -17,16 +12,19 @@ data EurOpt = EurOpt
        , s0         :: Float   -- ^ Current price of underlying
        , strike     :: Float   -- ^ Strike price
        , expiry     :: Int     -- ^ Expiry in years
-       , numSteps   :: Int
+       , riskless   :: Float   -- ^ Riskless interest rate
+       , volatility :: Float
        }
 
 -- ^ A sample option for testing purposes
--- Price: 5.348364
+-- Price: 5.349524 (with 2048 time steps)
 sampleOpt :: EurOpt
 sampleOpt = EurOpt
        { opttype    = Call
        , s0         = 60.0
        , strike     = 65.0
        , expiry     = 1
-       , numSteps   = 1000
+       , riskless   = 0.1
+       , volatility = 0.2
        }
+
