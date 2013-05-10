@@ -42,14 +42,15 @@ bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
     helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
                 in fromIntegral . boolToInt $ testBit e i
 
-sobolNDA :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
-sobolNDA dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
+sobolNDA :: Acc (Array DIM2 Word32) -> Acc (Scalar Int) -> Acc (Array DIM2 Float)
+sobolNDA dirvs n_arr = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
   where
     j = fst . unindex2 . shape $ dirvs
+    n = the n_arr
     dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
 
-pi2d :: Acc (Array DIM2 Float) -> Exp Float
-pi2d nums = 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromIntegral n))
+pi2d :: Acc (Array DIM2 Float) -> Acc (Scalar Float)
+pi2d nums = unit $ 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromIntegral n))
  where
    n = fst . unindex2 . shape $ nums
    dists :: Acc (Array DIM1 Int)
@@ -58,5 +59,5 @@ pi2d nums = 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromIntegral
                       in truncate $ sqrt $ (nums ! (lift $ Z :. ix' :. (0 :: Exp Int))) ^ 2
                                          + (nums ! (lift $ Z :. ix' :. (1 :: Exp Int))) ^ 2)
 
-runPi :: Exp Int -> Exp Float
+runPi :: Acc (Scalar Int) -> Acc (Scalar Float)
 runPi n = pi2d $ sobolNDA (use dirvs) n

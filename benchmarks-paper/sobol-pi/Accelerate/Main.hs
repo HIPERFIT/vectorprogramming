@@ -17,7 +17,7 @@ main = do
   -- Wrap it properly:
   execute $ toList . computepi
 
-computepi = run . unit . runPi . constant
+computepi = run . runPi . unit . constant
 
 execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do
