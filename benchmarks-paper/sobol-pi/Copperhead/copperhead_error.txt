@@ -1,0 +1,214 @@
+recompiling for non-existent cache dir (__pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245).
+#define BOOST_PYTHON_MAX_ARITY 10
+#include <boost/python.hpp>
+#include <prelude/runtime/cunp.hpp>
+#include <prelude/runtime/cuarray.hpp>
+using namespace copperhead;
+#include <cuda.h>
+namespace _sobol1D_17532343462272223447 {
+sp_cuarray _sobol1D(sp_cuarray ary_v, PyObject* arg0);
+}
+using namespace _sobol1D_17532343462272223447;
+
+
+BOOST_PYTHON_MODULE(module)
+{
+  boost::python::def("_sobol1D", &_sobol1D);
+}
+#include <prelude/prelude.h>
+#include <prelude/runtime/cunp.hpp>
+#include <prelude/runtime/make_cuarray.hpp>
+#include <prelude/runtime/make_sequence.hpp>
+#include <prelude/runtime/tuple_utilities.hpp>
+using namespace copperhead;
+
+#include "prelude/primitives/indices.h"
+
+#include "prelude/primitives/map.h"
+
+#include "prelude/primitives/reduce.h"
+
+#include "prelude/primitives/replicate.h"
+
+namespace _sobol1D_17532343462272223447 {
+template<typename a>
+__device__ long _isbitset(a _i, a _K0) {
+    typedef a T_i;
+    typedef a T_K0;
+    typedef a Te10;
+    Te10 e10 = cast_to((long)1, _i);
+    typedef a Te0;
+    Te0 e0 = op_lshift(e10, _i);
+    typedef a Te1;
+    Te1 e1 = op_and(_K0, e0);
+    typedef a Te11;
+    Te11 e11 = cast_to((long)0, e1);
+    if (cmp_gt(e1, e11)) {
+        typedef long Tresult;
+        Tresult result = (long)1;
+        return result;
+    } else {
+        typedef long Tresult;
+        Tresult result = (long)0;
+        return result;
+    }
+
+}
+
+template<typename a>
+struct fn_isbitset {
+    typedef long result_type;
+    __device__ long operator()(a _i, a _K0) {
+        typedef a T_i;
+        typedef a T_K0;
+        return _isbitset(_i, _K0);
+    }
+
+};
+
+template<typename a>
+__device__ sequence<cuda_tag, long> _range(a _n) {
+    typedef a T_n;
+    typedef constant_sequence<cuda_tag, long> Te4;
+    Te4 e4 = replicate(cuda_tag(), (long)0, _n);
+    typedef index_sequence<cuda_tag> Tresult;
+    Tresult result = indices(e4);
+    return result;
+}
+
+template<typename a>
+struct fn_range {
+    typedef sequence<cuda_tag, long> result_type;
+    __device__ sequence<cuda_tag, long> operator()(a _n) {
+        typedef a T_n;
+        return _range(_n);
+    }
+
+};
+
+__device__ float _f(long _i, sequence<cuda_tag, long> _K0) {
+    typedef long T_i;
+    typedef sequence<cuda_tag, long> T_K0;
+    typedef long T_n_directions_1_3_8;
+    T_n_directions_1_3_8 _n_directions_1_3_8 = (long)32;
+    typedef sequence<cuda_tag, long> Te2_4_9;
+    Te2_4_9 e2_4_9 = _range(_n_directions_1_3_8);
+    typedef transformed_sequence<closure<fn_isbitset<long> , thrust::tuple<T_i> >, thrust::tuple<Te2_4_9> > Te5_10;
+    Te5_10 e5_10 = map1(closure<fn_isbitset<long >, thrust::tuple<T_i> >(fn_isbitset<long >(), thrust::make_tuple(_i)), e2_4_9);
+    typedef transformed_sequence<fn_op_mul<long>, thrust::tuple<T_K0, Te5_10> > Te6_11;
+    Te6_11 e6_11 = map2(fn_op_mul<long >(), _K0, e5_10);
+    typedef long Te13_12;
+    Te13_12 e13_12 = cast_to_el((long)0, e6_11);
+    typedef long Te7_13;
+    Te7_13 e7_13 = reduce(fn_op_xor<long >(), e6_11, e13_12);
+    typedef long T_twoPow32_2_5_14;
+    T_twoPow32_2_5_14 _twoPow32_2_5_14 = (long)4294967296;
+    typedef float Te3_6_15;
+    Te3_6_15 e3_6_15 = float32(e7_13);
+    typedef float Te12_7_16;
+    Te12_7_16 e12_7_16 = cast_to(_twoPow32_2_5_14, e3_6_15);
+    typedef float Tresult;
+    Tresult result = op_div(e3_6_15, e12_7_16);
+    return result;
+}
+
+struct fn_f {
+    typedef float result_type;
+    __device__ float operator()(long _i, sequence<cuda_tag, long> _K0) {
+        typedef long T_i;
+        typedef sequence<cuda_tag, long> T_K0;
+        return _f(_i, _K0);
+    }
+
+};
+
+sp_cuarray _sobol1D(sp_cuarray ary_v, PyObject* arg0) {
+    long _m = unpack_scalar_long(arg0);
+    typedef sp_cuarray Tary_v;
+    typedef long T_m;
+    typedef sequence<cuda_tag, long> T_v;
+    T_v _v = make_sequence<sequence<cuda_tag, long> >(ary_v, cuda_tag(), false);
+    typedef long Te14;
+    Te14 e14 = cast_to((long)1, _m);
+    typedef long Te8;
+    Te8 e8 = op_add(_m, e14);
+    typedef constant_sequence<cuda_tag, long> Te4_17;
+    Te4_17 e4_17 = replicate(cuda_tag(), (long)0, e8);
+    typedef index_sequence<cuda_tag> Te9;
+    Te9 e9 = indices(e4_17);
+    typedef transformed_sequence<closure<fn_f, thrust::tuple<T_v> >, thrust::tuple<Te9> > Tresult;
+    Tresult result = map1(closure<fn_f, thrust::tuple<T_v> >(fn_f(), thrust::make_tuple(_v)), e9);
+    typedef sp_cuarray Tarycompresult;
+    Tarycompresult arycompresult = phase_boundary(result);
+    typedef sequence<cuda_tag, float> Tcompresult;
+    return arycompresult;
+}
+
+}
+error invoking 'nvcc -Xcompiler -fPIC -arch=sm_30 -c -DNDEBUG -DCUDA_SUPPORT -DOMP_SUPPORT -U__BLOCKS__ -I/usr/include/python2.7 -I/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/inc -I/home/dybber/lib/ -I/usr/lib/python2.7/dist-packages/numpy/core/include __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu -o __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.o': status 2 invoking 'nvcc -Xcompiler -fPIC -arch=sm_30 -c -DNDEBUG -DCUDA_SUPPORT -DOMP_SUPPORT -U__BLOCKS__ -I/usr/include/python2.7 -I/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/inc -I/home/dybber/lib/ -I/usr/lib/python2.7/dist-packages/numpy/core/include __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu -o __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.o': /home/dybber/lib/thrust/iterator/iterator_facade.h(326): warning: a __host__ function("thrust::experimental::operator==") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(340): warning: a __host__ function("thrust::experimental::operator!=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(354): warning: a __host__ function("thrust::experimental::operator<") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(368): warning: a __host__ function("thrust::experimental::operator>") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(382): warning: a __host__ function("thrust::experimental::operator<=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(396): warning: a __host__ function("thrust::experimental::operator>=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(415): warning: a __host__ function("thrust::experimental::operator-") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/swap.h(66): warning: a __host__ function("thrust::swap") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+__pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu(59): error: no suitable user-defined conversion from "Tresult" to "copperhead::sequence<copperhead::cuda_tag, long, 0>" exists
+
+1 error detected in the compilation of "/tmp/tmpxft_00001c88_00000000-6_gpu.cpp1.ii".
+
+
+ERROR during compilation in make_binary
+    
+
+ERROR during compilation in binarize
+    
+Traceback (most recent call last):
+  File "Sobol.py", line 61, in <module>
+    print(sobol1D(dirvs0,10))
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/runtime/cufunction.py", line 58, in __call__
+    return P.execute(self, args, kwargs)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/runtime/driver.py", line 47, in execute
+    return execute(self.tag(), cufn, *args, **kwargs)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/runtime/driver.py", line 131, in execute
+    **k)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/passes.py", line 292, in compile
+    return run_compilation(target, source, M)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/passes.py", line 270, in run_compilation
+    return target(suite, M)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/passes.py", line 91, in __call__
+    ast = P(ast, M)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/passes.py", line 91, in __call__
+    ast = P(ast, M)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/passes.py", line 232, in make_binary
+    return Binary.make_binary(M)
+  File "/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/compiler/binarygenerator.py", line 135, in make_binary
+    raise e
+pytools.prefork.ExecError: error invoking 'nvcc -Xcompiler -fPIC -arch=sm_30 -c -DNDEBUG -DCUDA_SUPPORT -DOMP_SUPPORT -U__BLOCKS__ -I/usr/include/python2.7 -I/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/inc -I/home/dybber/lib/ -I/usr/lib/python2.7/dist-packages/numpy/core/include __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu -o __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.o': status 2 invoking 'nvcc -Xcompiler -fPIC -arch=sm_30 -c -DNDEBUG -DCUDA_SUPPORT -DOMP_SUPPORT -U__BLOCKS__ -I/usr/include/python2.7 -I/home/dybber/.local/lib/python2.7/site-packages/copperhead-0.2a2-py2.7.egg/copperhead/inc -I/home/dybber/lib/ -I/usr/lib/python2.7/dist-packages/numpy/core/include __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu -o __pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.o': /home/dybber/lib/thrust/iterator/iterator_facade.h(326): warning: a __host__ function("thrust::experimental::operator==") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(340): warning: a __host__ function("thrust::experimental::operator!=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(354): warning: a __host__ function("thrust::experimental::operator<") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(368): warning: a __host__ function("thrust::experimental::operator>") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(382): warning: a __host__ function("thrust::experimental::operator<=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(396): warning: a __host__ function("thrust::experimental::operator>=") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/iterator/iterator_facade.h(415): warning: a __host__ function("thrust::experimental::operator-") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+/home/dybber/lib/thrust/swap.h(66): warning: a __host__ function("thrust::swap") redeclared with __host__ __device__, hence treated as a __host__ __device__ function
+
+__pycache__/Sobol.py/sobol1D/ec13b05f0ab3c2b4705c8ee7a083a245/gpu.cu(59): error: no suitable user-defined conversion from "Tresult" to "copperhead::sequence<copperhead::cuda_tag, long, 0>" exists
+
+1 error detected in the compilation of "/tmp/tmpxft_00001c88_00000000-6_gpu.cpp1.ii".
+
