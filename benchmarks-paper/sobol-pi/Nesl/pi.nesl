@@ -33,6 +33,9 @@ function bitVector (e) = { signum(e and lshift(1, j)) : j in [0:bitcount] } $
 % assumes non-empty argument %
 function xor_reduce(xs) = xor_scan(xs)[#xs-1] xor xs[#xs-1] $
 
+% This version of xor-reduce is three times slower (using the serial
+  interpreter) than the one based on xor_scan.
+%
 function xor_red(xs) = 
    if #xs == 0 then 0 
    else if #xs == 1 then xs[0]
