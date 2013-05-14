@@ -18,20 +18,21 @@ toTuple (EurOpt{..}) = ( opttype == Call
                        , volatility
                        )
 
-binom :: EurOpt -> Float
-binom opt = (A.run $ binomAcc tup) `indexArray` Z
+binom :: EurOpt -> Int -> Float
+binom opt numSteps = (A.run $ binomAcc numSteps (unit (constant numSteps)) tup) `indexArray` Z
   where
     tup :: Acc (Scalar EurOption)
     tup = unit . constant . toTuple $ opt
 
-binomAcc :: Acc (Scalar EurOption) -> Acc (Scalar Float)
-binomAcc opt = unit (first A.! (index1 0))
+binomAcc :: Int -> Acc (Scalar Int) -> Acc (Scalar EurOption) -> Acc (Scalar Float)
+binomAcc numSteps numStepsArr opt = unit (first A.! (index1 0))
   where
+    numStepsExp = the numStepsArr
     -- Leafs of the binomial tree
-    leafs = generate (lift $ Z :. (numSteps+1)) helper
+    leafs = generate (index1 $ numStepsExp + 1) helper
       where
         helper ix = let Z :. i = unlift ix
-                    in s0 * exp(vsdt * A.fromIntegral (2 * i - constant numSteps))
+                    in s0 * exp(vsdt * A.fromIntegral (2 * i - numStepsExp))
 
     -- Profits at exercise time
     profit = A.map (\x -> iscall ? (x - strike, strike -x)) leafs
@@ -47,7 +48,7 @@ binomAcc opt = unit (first A.! (index1 0))
     expiry :: Exp Int; riskless :: Exp Float; volatility :: Exp Float;
     (iscall, s0, strike, expiry,riskless,volatility) = unlift $ opt A.! (constant Z)
 
-    dt = A.fromIntegral expiry/A.fromIntegral (constant numSteps)
+    dt = A.fromIntegral expiry/A.fromIntegral numStepsExp
     vsdt = volatility * sqrt dt
     u = exp(vsdt) 
     d = 1/u

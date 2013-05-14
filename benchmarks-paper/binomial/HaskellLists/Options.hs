@@ -1,8 +1,5 @@
 module Options where
 
-numSteps :: Integral a => a
-numSteps = 2048
-
 data OptType = Call | Put
      deriving Eq
 

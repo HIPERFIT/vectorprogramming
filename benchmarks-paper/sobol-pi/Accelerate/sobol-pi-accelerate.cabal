@@ -1,4 +1,4 @@
-name:                tfp-pi-accelerate
+name:                sobol-pi-accelerate
 version:             0.1.0.0
 license:             BSD3
 author:              Philip Carlsen, Martin Dybdal
@@ -6,7 +6,7 @@ maintainer:          plcplc@gmail.com, dybber@dybber.dk
 build-type:          Simple
 cabal-version:       >=1.8
 
-executable tfp-pi-accelerate
+executable sobol-pi-accelerate
   main-is:       Main.hs
   build-depends: base, accelerate, accelerate-cuda
   ghc-options:   -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -optlo-O3 -fllvm

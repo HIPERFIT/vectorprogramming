@@ -3,8 +3,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/transform.h>
 
-#define numSteps 2048
-
 struct Option {
   bool iscall;
   float s0;
@@ -14,32 +12,16 @@ struct Option {
   float riskless;
 };
 
-// struct computeFinal {
-//   private:
-//     const Option option;
-//   public:
-//     computeFinal(Option opt) : option(opt) {}
-//     __host__ __device__
-//     float operator()(const int& i) const {
-//       float dt = (float)option.expiry/(float)numSteps;
-//       float vsdt = option.volatility / sqrt(dt);
-//       float x = option.s0 * exp(vsdt * (float)(2 * i - numSteps));
-//       if(option.iscall) {
-//         return max(0.0, x - option.strike);
-//       } else {
-//         return max(0.0, option.strike - x);
-//       }
-//     }
-// };
-
 struct computeFinalCall {
 private:
   const float vsdt;
   const float s0;
   const float strike;
+  const int   numSteps;
 
 public:
-  computeFinalCall(float _vsdt, float _s0, float _strike) : vsdt(_vsdt), s0(_s0), strike(_strike) {}
+  computeFinalCall(float _vsdt, float _s0, float _strike, int _numSteps)
+    : vsdt(_vsdt), s0(_s0), strike(_strike), numSteps(_numSteps) {}
 
   __host__ __device__
   float operator()(const int& i) const {
@@ -53,9 +35,11 @@ private:
   const float vsdt;
   const float s0;
   const float strike;
+  const int   numSteps;
 
 public:
-  computeFinalPut(float _vsdt, float _s0, float _strike) : vsdt(_vsdt), s0(_s0), strike(_strike) {}
+  computeFinalPut(float _vsdt, float _s0, float _strike, int _numSteps)
+    : vsdt(_vsdt), s0(_s0), strike(_strike), numSteps(_numSteps) {}
 
   __host__ __device__
   float operator()(const int& i) const {
@@ -79,7 +63,7 @@ public:
 };
 
 // Compute \pi from a two-dimensional Sobol-sequence
-float binom(Option option) {
+float binom(Option option, int numSteps) {
   float dt = (float)option.expiry/(float)numSteps;
   float vsdt = option.volatility * sqrt(dt);
   float u = exp(vsdt);
@@ -98,44 +82,52 @@ float binom(Option option) {
   thrust::counting_iterator<int> last = first + numSteps + 1;
 
   if(option.iscall) {
-    thrust::transform(first, last, stepA.begin(), computeFinalCall(vsdt, option.s0, option.strike));
+    thrust::transform(first, last, stepA.begin(), computeFinalCall(vsdt, option.s0, option.strike, numSteps));
   } else {
-    thrust::transform(first, last, stepA.begin(), computeFinalPut(vsdt, option.s0, option.strike));
+    thrust::transform(first, last, stepA.begin(), computeFinalPut(vsdt, option.s0, option.strike, numSteps));
   }
-
-  // for(int j = 0; j <= numSteps; j++) {
-  //   float x = stepA[j];
-  //   printf("%f, ", x);
-  // }
-  // printf("\n");
 
   for(int i = 0; i < numSteps/2; i++) {
     thrust::transform(stepA.begin() + 1, stepA.begin() + numSteps - i + 1, stepA.begin(), stepB.begin(), discount(puByr, pdByr));
 
-    // for(int j = 0; j < numSteps - 2*i; j++) {
-    //   float x = stepB[j];
-    //   printf("%f, ", x);
-    // }
-    // printf("\n");
-
     thrust::transform(stepB.begin() + 1, stepB.end() + numSteps - i, stepB.begin(), stepA.begin(), discount(puByr, pdByr));
-
-    // for(int j = 0; j < numSteps - 2*i - 1; j++) {
-    //   float x = stepA[j];
-    //   printf("%f, ", x);
-    // }
-    // printf("\n");
-
   }
 
   return stepA[0];
 }
 
+int main(int argc, char *argv[])
+{
+    Option a = {true, 60.0, 65.0, 1, 0.2, 0.1 };
+    // needed to work correctly with piped benchmarkrunner
+    setlinebuf(stdout);
+    setlinebuf(stdin);
 
+    int numSteps;
 
-int main(int argc, char *argv[]) {
-  Option a = {true, 60.0, 65.0, 1, 0.2, 0.1 };
+    char inBuf[200]; // ridiculously large input buffer.
+    printf("OK\n");
 
-  float price = binom(a);
-  printf("%f\n", price);
+    while (true) {
+      fgets(inBuf, 200, stdin);
+
+      if (sscanf(inBuf, "%u", &numSteps) == 0)
+      {
+        // if input is not a number, it has to be "EXIT"
+        if (strncmp("EXIT",inBuf,4)==0)
+        {
+          printf("OK\n");
+          break;
+        }
+        else
+        {
+          printf("ERROR. Bad input: %s\n", inBuf);
+          break;
+        }
+      }
+
+      float price = binom(a, numSteps);
+      printf("RESULT %f\n", price);
+    }
+    exit(EXIT_SUCCESS);
 }

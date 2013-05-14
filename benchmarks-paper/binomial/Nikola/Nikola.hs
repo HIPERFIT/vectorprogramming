@@ -29,23 +29,23 @@ toTuple (EurOpt{..}) = ( opttype == Call
                        , volatility
                        )
 
-vFinal :: EurOption -> Array CUF DIM1 Float
-vFinal (iscall, s0, strike, expiry, riskless, volatility) =
-  let vFinal' :: Bool -> Float -> Float -> Int32 -> Float -> Float -> Array CUF DIM1 Float
-      vFinal' = $(compile (Imp.vFinal numSteps))
-  in vFinal' iscall s0 strike expiry riskless volatility
+vFinal :: Int32 -> EurOption -> Array CUF DIM1 Float
+vFinal numSteps (iscall, s0, strike, expiry, riskless, volatility) =
+  let vFinal' :: Int32 -> Bool -> Float -> Float -> Int32 -> Float -> Float -> Array CUF DIM1 Float
+      vFinal' = $(compile Imp.vFinal)
+  in vFinal' numSteps iscall s0 strike expiry riskless volatility
 
-stepBack :: EurOption -> Array CUF DIM1 Float -> Int32 -> Array CUF DIM1 Float
-stepBack (iscall, s0, strike, expiry, riskless, volatility) vPrev i =
-  let stepBack' :: Bool -> Float -> Float -> Int32 -> Float -> Float
+stepBack :: Int32 -> EurOption -> Array CUF DIM1 Float -> Int32 -> Array CUF DIM1 Float
+stepBack numSteps (iscall, s0, strike, expiry, riskless, volatility) vPrev i =
+  let stepBack' :: Int32 -> Bool -> Float -> Float -> Int32 -> Float -> Float
                 -> Array CUF DIM1 Float -> Int32 -> Array CUF DIM1 Float
-      stepBack' = $(compile (Imp.stepBack numSteps))
-  in stepBack' iscall s0 strike expiry riskless volatility vPrev i
+      stepBack' = $(compile Imp.stepBack)
+  in stepBack' numSteps iscall s0 strike expiry riskless volatility vPrev i
 
-binom :: EurOpt -> Float
-binom opt = first ! (Z :. 0)
+binom :: EurOpt -> Int32 -> Float
+binom opt numSteps = first ! (Z :. 0)
  where
    opt' = (toTuple opt)
    final, first :: Array CUF DIM1 Float
-   final = vFinal opt'
-   first = foldl' (stepBack opt') final [0..numSteps-1]
+   final = vFinal numSteps opt'
+   first = foldl' (stepBack numSteps opt') final [0..numSteps-1]
