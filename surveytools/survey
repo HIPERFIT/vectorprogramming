@@ -7,7 +7,7 @@ SCRIPTROOT=`dirname $SCRIPTFILE`
 ROOT=$(readlink -f ${SCRIPTROOT}/..)
 
 BUILDROOT=$ROOT/build
-BENCHROOT=$ROOT/benchmarks
+BENCHROOT=$ROOT/benchmarks-paper
 RESULTROOT=$ROOT/results
 HSENVROOT=$BUILDROOT/hsenvs
 LOGTAG=$(date +%Y-%m-%d-%H-%M-%S)
@@ -16,7 +16,7 @@ mkdir -p $LOGDIR
 
 SURVEYTOOLS_DIR=$SCRIPTROOT
 BENCHRESULTS_DIR=$RESULTROOT/benchmark-summaries
-BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks
+BENCH_DIR=$SURVEYTOOLS_DIR/../benchmarks-paper
 
 
 source $SURVEYTOOLS_DIR/bin/loadHSENV
@@ -46,10 +46,16 @@ benchmark() {
     if [ ! -d "$experiment" ]; then
       continue
     fi
+    if [ -f "$experiment/disable" ]; then
+      continue
+    fi
     for instance in $experiment/*
     do
       if [ ! -d "$instance" ]; then
         continue
+      fi
+      if [ -f "$instance/disable" ]; then
+          continue
       fi
       $SURVEYTOOLS_DIR/benchmarkrunner/run.sh "$(basename "$experiment")" "$(basename "$instance")" $LOGTAG
     done
