@@ -15,7 +15,7 @@ main = do
   hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   -- Wrap it properly:
-  execute $ toList . computepi
+  execute $ head . toList . computepi
 
 computepi = run . runPi . unit . constant
 
