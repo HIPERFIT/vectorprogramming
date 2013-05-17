@@ -1,3 +1,5 @@
+module Sobol where
+
 import Data.Word
 import Data.Bits
 
