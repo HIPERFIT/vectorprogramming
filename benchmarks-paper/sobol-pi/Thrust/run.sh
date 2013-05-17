@@ -2,4 +2,4 @@
 SCRIPTFILE=`readlink -f $0`
 SCRIPTROOT=`dirname $SCRIPTFILE`
 
-exec $SCRIPTROOT/pi
+exec $SCRIPTROOT/computepi
