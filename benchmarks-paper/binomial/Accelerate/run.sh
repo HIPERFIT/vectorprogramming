@@ -1,3 +1,6 @@
 #!/bin/bash
 
-exec ./dist_*/build/binomial-accelerate/binomial-accelerate $@
+SCRIPTFILE=`readlink -f $0`
+SCRIPTROOT=`dirname $SCRIPTFILE`
+
+exec $SCRIPTROOT/dist_*/build/binomial-accelerate/binomial-accelerate $@
