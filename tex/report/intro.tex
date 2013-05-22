@@ -23,16 +23,16 @@ algorithms. Programmer productivity, on the other hand, correlates
 with the features of the used programming language and programming
 environment (IDEs, debuggers, etc.). A language providing high
 programmer efficiency should make it easy to implement and reason
-about algorithms, make mistakes easily avoidable and when a mistake
-happens, make it easy to uncover its cause.
+about algorithms, make mistakes easily avoidable and when a problem
+occurs, make it easy to uncover its cause.
 
 For a handful of decades, we have been able to increase performance
 through hardware improvements of sequential processors and we have
 thus been able to stick with more or less the same model of
 computation. Recently, hardware developers have faced physical
 barriers, making further performance improvements of sequential
-processors impractical, and they have had to go new ways to obtain the
-desired speed-up \cite{sutter2006freelunchisover}. These new
+processors impractical \cite{sutter2006freelunchisover}, and they have
+had to go new ways to obtain the desired speed-up. These new
 architectures call for new algorithms and models of computation, as
 well as new languages and programming tools to keep the complexity of
 software development at a tolerable level.
@@ -46,10 +46,9 @@ relational databases, computational finance and simulation in both
 engineering and the sciences \cite{hwy2011emerald, hwu2011jade,
   owens2007survey}. Solutions to many problems in these domains can be
 expressed naturally as \emph{data-parallel} algorithms, where each
-data item can be processed independently (often from a linear algebra
-specification of the problem). This is thus where GPUs popularity
-arise; executing such data-parallel tasks is the core capability of
-GPUs.
+data item can be processed independently. This is thus where GPUs
+popularity arise; executing such data-parallel tasks is the core
+capability of GPUs.
 
 % Should we include this somewhere?
 % GPUs have gained so much popularity that they are a main ingredient in
@@ -63,40 +62,40 @@ programming them are far from modern. CUDA
 two main languages for programming GPUs are low-level languages with
 manual memory management, limited abstractions, and tedious hand
 optimization are often required. It is, for instance, important to
-streamline memory accesses to get decent performance. The low-level
-nature of these languages makes automated code analysis difficult. The
-NVIDIA CUDA compiler thus cannot make an optimization such as stream
-fusion (deforestation), that removes intermediate data structures and
-thus removes the need for very costly memory transactions. The
-programmer thus has to fuse programs by hand, sacrificing clarity as
-abstractions between individual parts has to be broken down and fused
-together. Also, the programmer has to be well aware of the exact
-hardware his program is to be executed on, thus making a tight
-coupling between program and hardware.
+streamline memory accesses to get decent performance. 
+
+The low-level nature of these languages makes automated code analysis
+difficult. The NVIDIA CUDA compiler can thus not make optimizations
+such as stream fusion (deforestation), that removes intermediate data
+structures and thus removes the need for very costly memory
+transactions. Instead, the programmer has to fuse programs by hand,
+and while doing so sacrifice clarity, as abstractions between
+individual parts has to be broken down and fused together. Also, the
+programmer has to be well aware of the exact hardware his program is
+to be executed on, making a tight coupling between program and
+hardware.
 
 High-level languages for GPU programming have been developed and
 employed, but none of them have found as widespread use as programming
-directly in CUDA or OpenCL. These newer languages include
-Theano\cite{bergstra2010theano},
-Accelerate\cite{chakravarty2011accelerating},
-Nikola\cite{mainland2010nikola}, Obsidian\cite{svensson2011obsidian},
-Intel Array Building Blocks \cite{newburn2011intel}, Bohrium
-\cite{homepage:bohrium} and Copperhead \cite{Catanzaro2011}. Their
-common aim is to abstract away the underlying hardware platform and
-let data-parallel problems be easily specified.
+directly in CUDA or OpenCL. These newer languages include Theano
+\cite{bergstra2010theano}, Accelerate
+\cite{chakravarty2011accelerating}, Nikola \cite{mainland2010nikola},
+Obsidian \cite{svensson2011obsidian}, Intel Array Building Blocks
+\cite{newburn2011intel}, Bohrium \cite{homepage:bohrium} and
+Copperhead \cite{Catanzaro2011}. Their common aim is to abstract away
+the underlying hardware platform and make it easier to implement
+and reason about data-parallel algorithms.
 
 These languages share the characteristica of lifting operations to
 work collectively on vectors rather than individually on primitive
-values (such as integers and floating point number).
-
-We want to join in and contribute to these languages, and we believe
-that such an endeavour should start with evaluating current state of
-the art, such that we can make sure our contributions will be relevant
-and beneficial. Thus, the first part of this report is a survey of
-some of the existing parallel functional programming languages. We
-have taken the strategy of implementing some real world example
-applications from the financial domain, to study the limitations of
-current approaches.
+values. We want to join in and contribute to these languages, and we
+believe that such an endeavour should start with evaluating current
+state of the art, such that we can make sure our contributions will be
+relevant and beneficial. Thus, the first part of this report is a
+survey of some of the existing parallel functional programming
+languages. We have taken the strategy of implementing some real world
+example applications from the financial domain, to study the
+limitations of current approaches.
 
 % \todo{Add note on mapping nested data-parallelism to flat
 %   architectures is still an open problem, as vectorisation is not the
@@ -157,9 +156,15 @@ deducing the consequences of such a language addition.
 %
 %* An alternative approach to specifying
 
-All the source code associated with the practical execution of the survey, as well as this report is hosted at
-\url{https://github.com/HIPERFIT/vectorprogramming/}.
-The extensions developed for Nikola are to be found at \url{https://github.com/HIPERFIT/nikola/}.
+\vspace{5mm}\noindent
+All the source code associated with the practical execution of the survey, as well as this report is hosted at:
+
+\url{https://github.com/HIPERFIT/vectorprogramming/}
+
+\vspace{2mm}\noindent
+The extensions developed for Nikola are to be found at: 
+
+\url{https://github.com/HIPERFIT/nikola/}
 
 \section{Report outline}
 The remainder of the report is structured as follows. This
@@ -175,7 +180,7 @@ describes our own efforts into extending the GPU language Nikola with
 functionality we found lacking in the experiments conducted throughout
 the survey.
 
-% \todo{Use refs to chapters and parts in outline}
+\todo{Use refs to chapters and parts in outline}
 
 %%% Local Variables:
 %%% mode: latex

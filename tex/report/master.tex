@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper,final,openright,twoside]{memoir}
+\documentclass[10pt,a4paper,final,oneside,openany]{memoir}
 
 \input{defaultprelude.tex}
 
@@ -63,12 +63,13 @@ University of Copenhagen, DIKU}
     The currently most popular approach to compilation of irregular
     nested data-parallel languages is the vectorisation
     transformation, as implemented in NESL \cite{nesl} and Data
-    Parallel Haskell \cite{spj2008dph}. We suggest an alternative
-    approach for regular nested data-parallelism, which relies on a
-    cursor to mark the division between parallel and sequential code,
-    much inspired by similar constructs found in Repa. The approach
-    allows for experimentation with parallelisation strategies and our
-    proposal could lead to a language for heterogeneous computing.
+    Parallel Haskell \cite{spj2008dph}. \todo{mention Copperhead} We
+    suggest an alternative approach for regular nested
+    data-parallelism, which relies on a cursor to mark the division
+    between parallel and sequential code, much inspired by similar
+    constructs found in Repa. The approach allows for experimentation
+    with parallelisation strategies and our proposal could lead to a
+    language for heterogeneous computing.
   \end{abstract}
 
 % \clearpage

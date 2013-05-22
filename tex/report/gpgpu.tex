@@ -1,15 +1,10 @@
 \chapter{General-purpose programming of GPUs}
 \label{chap:gpgpu}
-Graphics processing units (GPUs) where originally produced for
-computer graphics applications, such as computer games or CGI. In the
-first decade of the 21st century they were found useful outside this field,
-as the problems in computer graphics had many similarities to problems
-in both science and engineering, as well as several other fields.
-
-GPUs show a high degree of data parallelism, originating from their
-\textit{single instruction, multiple data}-architecture (SIMD), where
-a set of computation units executes the same program on each their own
-data item. Many tasks in scientific computing and engineering, such as
+Graphics processing units (GPUs) show a high degree of data
+parallelism, originating from their \textit{single instruction,
+  multiple data}-architecture (SIMD), where a set of processor cores
+executes the same program in lock-step on each their own data
+item. Many tasks in scientific computing and engineering, such as
 simulation or genome pattern matching, are data-parallel in
 nature. For instance, when simulating physical systems, there are
 often many millions of interacting agents (e.g. reacting atoms in
@@ -27,11 +22,10 @@ use GPUs for research projects, several programming frameworks have
 been developed. The two most prominent and widely used today are
 OpenCL and CUDA.
 
-In this chapter we will look at
-the architecture of a modern NVIDIA GPU and the programming model of
-NVIDIA's CUDA framework. The chapter is an edited version of a text on
-GPUs previously produced by one of the authors (see
-\cite{dybdal2011opencl}).
+In this chapter we will look at the architecture of a modern NVIDIA
+GPU and the programming model of NVIDIA's CUDA framework. The chapter
+is an edited version of a text on GPUs previously produced by one of
+the authors (see \cite{dybdal2011opencl}).
 
 \section{GPU hardware}
 \label{sec:gpu_hardware}
@@ -108,7 +102,7 @@ of kernel program itself to find the subset of the data that it has
 to work on. That is, all executions of the kernel receives exactly the
 same arguments, but the kernel can query where it is located in its
 block and where that block is located in the grid, to determine which
-part of the input arrays to work on. 
+part of the input arrays to work on.
 
 When executing a grid of CUDA blocks on a Kepler architecture GPU,
 each block is assigned to a single SM (each SM can process several

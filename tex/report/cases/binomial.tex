@@ -173,7 +173,7 @@ at expiration date.
 
 As defined by Blelloch \cite{blelloch1996programming}, the above code
 may be reasonably assumed to have time complexities $Work(T^2/2)$ and
-$Depth(T)$, and memory complexity $O(2T)$.
+$Depth(T)$, and memory usage $2T + O(1)$.
 
 While the above code is both short and simple in structure, the main motive for
 pursuing parallelism is in gaining performance rather than expressivity.  To
@@ -218,7 +218,7 @@ This algorithm explicitly divides the pricing problem into packages that fit
 exactly into the amount of shared memory availabe for a Streaming
 Multiprocessor. This includes a configurable amount of duplicated computation
 for each iteration, because it is faster to recompute some part of the solution
-if doing so brings down the number of accesses to global devce memory. Thus,
+if doing so brings down the number of accesses to global device memory. Thus,
 the optimal value of $\Delta_{mem}$ is hardware specific.  Algorithm
 \ref{alg:cuda-binom} is only capable of employing $mem$ threads at a time.
 Therefore, to scale it must be applied to an entire portforlio of options.  In
