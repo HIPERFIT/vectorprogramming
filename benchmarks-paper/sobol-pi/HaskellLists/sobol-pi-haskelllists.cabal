@@ -1,0 +1,12 @@
+name:                sobol-pi-haskelllists
+version:             0.1.0.0
+license:             BSD3
+author:              Martin Dybdal
+maintainer:          plcplc@gmail.com, dybber@dybber.dk
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable sobol-pi-haskelllists
+  main-is:       Main.hs
+  build-depends: base
+

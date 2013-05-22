@@ -59,6 +59,5 @@ def binom(isCall,s0,strike,expiry,numSteps):
     vFinal = final(isCall,s0,strike,expiry,numSteps)
     def stepBackClosure(vPrev,i):
         return stepBack(vPrev,expiry,numSteps)
-    return reduce(stepBackClosure, range(numSteps), vFinal)
-
-print(binom(True,60.0,65.0,1,10))
+    price = reduce(stepBackClosure, range(numSteps), vFinal)
+    return price[0]

@@ -3,10 +3,8 @@ module Main where
 import Control.Monad (when, forever)
 import System.Exit (exitSuccess)
 
-import Data.Array.Accelerate.CUDA (run)
-import Data.Array.Accelerate (constant, unit, toList)
-
-import Pi(runPi)
+import Binom (binom)
+import Options
 import System.IO
 
 main = do
@@ -15,9 +13,7 @@ main = do
   hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   -- Wrap it properly:
-  execute $ head . toList . computepi
-
-computepi = run . runPi . unit . constant
+  execute $ binom sampleOpt
 
 execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do

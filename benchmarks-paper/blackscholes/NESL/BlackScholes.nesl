@@ -1,0 +1,73 @@
+%
+ Black-scholes option pricing
+
+ Modified from an O'Caml sample.
+%
+
+function pow (x, n) = exp((float)n) * ln(x) $
+
+function cnd (x) = let
+   a1 = 0.31938153;
+   a2= -0.356563782;
+   a3=1.781477937;
+   a4= -1.821255978;
+   a5=1.330274429;
+   pi = 4.0 * (atan (1.0));
+   l  = abs(x);
+   k  = 1.0 / (1.0 + 0.2316419 * l);
+   w = 1.0-1.0/sqrt(2.0*pi)*exp(-l*l/2.0)*(a1*k+a2*k*k+a3*(pow (k, 3))+a4*(pow (k, 4))+a5*(pow (k, 5)))
+in
+   if (x < 0.0) then (1.0 - w) else w $
+
+%
+ s = stock price
+ x = strike price
+ r = risk-free rate
+ tm = time to expiration
+ v = volatility
+%
+
+function black_scholes_call (s, x, tm, r, v) = let
+   d1=(ln(s / x) + (r+v*v/2.0)*tm)/(v*sqrt(tm));
+   d2=d1-v*sqrt(tm);
+in   
+  s*cnd(d1)-x*exp(-r*tm)*cnd(d2) $
+
+function black_scholes_put (s, x, tm, r, v) = let
+   d1=(ln(s / x) + (r+v*v/2.0)*tm)/(v*sqrt(tm));
+   d2=d1-v*sqrt(tm);
+in
+  x*exp(-r*tm)*cnd(-d2)-s*cnd(-d1) $
+
+%function test x = let
+  a = black_scholes_call (42.0, 42.0, 0.5, 0.1, 0.2) ;
+  b = black_scholes_put (42.0, 42.0, 0.5, 0.1, 0.2);
+  c = black_scholes_call (100.0, 100.0, 1.0, 0.05, 0.15);
+  d = black_scholes_put (100.0, 100.0, 1.0, 0.05, 0.15);
+in
+  (a, b, c, d) $
+%
+
+function bench(i) = let
+  stocks = {rand(i) : i in dist(100.0, i)};
+  strikes = {rand(i) : i in dist(100.0, i)};
+  times = {rand(i) : i in dist(1.0, i)};
+  risks = {rand(i) : i in dist(0.05, i)};
+  vols = {rand(i) : i in dist(0.4, i)};
+  (res, tm) = time({black_scholes_call(s,x,tm,r,v) :
+    s in stocks;
+    x in strikes;
+    tm in times;
+    r in risks;
+    v in vols});
+in (res[0], tm) $
+
+  
+
+%
+spot strike int div_rate vol time type div_vals derivagem
+42.00 40.00 0.1000 0.00 0.20 0.50 C 0.00 4.759423036851750055
+42.00 40.00 0.1000 0.00 0.20 0.50 P 0.00 0.808600016880314021
+100.00 100.00 0.0500 0.00 0.15 1.00 P 0.00 3.714602051381290071
+100.00 100.00 0.0500 0.00 0.15 1.00 C 0.00 8.591659601309890704
+%

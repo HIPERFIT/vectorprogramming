@@ -11,7 +11,7 @@ set -e
 BENCHMARK="$1"
 INSTANCE="$2"
 LOGTAG="$3"
-echo $INSTANCE
+#echo $INSTANCE
 # Name of benchmark (for naming logs, reports etc.)
 NAME="$INSTANCE"
 #NAME=$BENCHMARK-$INSTANCE
@@ -21,7 +21,7 @@ SCRIPTROOT=`dirname $SCRIPTFILE`
 ROOT=$(readlink -f ${SCRIPTROOT}/../..)
 
 BUILDROOT=$ROOT/build
-BENCHROOT=$ROOT/benchmarks
+BENCHROOT=$ROOT/benchmarks-paper
 RESULTROOT=$ROOT/results
 HSENVROOT=$BUILDROOT/hsenvs
 LOGDIR=$BUILDROOT/logs/$LOGTAG
@@ -50,7 +50,7 @@ buildCabal() {
   cabal build
 }
 
-echo $PROGRAMDIR
+#echo $PROGRAMDIR
 cd "$PROGRAMDIR"
 
 # Setup the benchmark
