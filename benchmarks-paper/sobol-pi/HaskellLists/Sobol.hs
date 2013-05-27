@@ -25,14 +25,14 @@ dirvs = [[2147483648,1073741824,2684354560,1342177280,
           1610779008,4026976576,2016733344,605713840,
           305826616,3475687836,3113412898,2197780721]]
 
-normalise :: Word32 -> Float
-normalise x = fromIntegral x / 2^bitcount
-
-bitVector :: Word32 -> [Word32]
-bitVector e = map (\j -> signum $ e .&. bit j) [0..bitcount - 1]
-
 sobol :: [Word32] -> Word32 -> Float
-sobol v = normalise . foldl xor 0 . zipWith (*) v . bitVector
+sobol v i = normalise xi
+ where
+  testBit j = signum $ i .&. bit j
+  ivec = map testBit [0..bitcount - 1]
+  xi = foldl xor 0 $ zipWith (*) v ivec -- (Def. 1)
+  normalise x = fromIntegral x / 2^bitcount
+
 
 sobol1D :: Word32 -> [Word32] -> [Float]
 sobol1D m v = map (sobol v) [1..m]

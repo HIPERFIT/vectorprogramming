@@ -2,14 +2,10 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{amsmath}
+\usepackage{todonotes}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{url}
-\usepackage[numbers]{natbib}
-
-
-%\title{Survey of a few data-parallel languages}
-\title{The need for nested data-parallelism} 
 
 \begin{document}
 \conferenceinfo{FHCP '13}{23 September 2013, City.} 
@@ -19,8 +15,8 @@
 \titlebanner{Preprint, version 1.0}        % These are ignored unless
 %\preprintfooter{short description of paper}   % 'preprint' option specified.
 
-\title{Title Text}
-\subtitle{Subtitle Text, if any}
+\title{The need for nested data-parallelism}
+%\subtitle{Subtitle Text, if any}
 
 \authorinfo{Philip L. Carlsen}
            {DIKU, University of Copenhagen}
@@ -48,37 +44,46 @@ This is the text of the abstract.
 
 \section{Introduction}
 Graphics Processing Units (GPUs) is a cost-efficient choice for
-problems with data-parallel solutions. The massively data-parallel
-architecture of GPUs deliver a much higher throughput than ordinary
-processors.
+problems with data-parallel solutions. Their massively data-parallel
+architecture can deliver a high-throughput for many problems in the
+sciences, engineering and finance, where problems often involve
+\todo{...}.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
 frameworks in both academia and industry. These two languages are
-extension of C and C++ respectively. Both OpenCL and CUDA require manual
-memory management, does not provide any means for automatic
+extension of C and C++ respectively. Both OpenCL and CUDA require
+manual memory management, does not provide any means for automatic
 deforestation, and offers little abstraction from the underlying
-hardware.
+hardware, such that, for example memory coalescing must be on your
+mind during implementation.
 
 To make GPU programming more accessible, quite a number of new
 data-parallel languages as well as GPU libraries for existing
 languages have been developed \cite{Catanzaro2011,
   chakravarty2011accelerating, mainland2010nikola,
   svensson2011obsidian, bergstra2010theano, homepage:rgpu,
-  bergstrom2012nested}, though none of them has got the attention and
-popularity as programming directly in OpenCL or CUDA.
+  bergstrom2012nested}, \todo{add Bohrium, Thrust, CUB, ModernGPU} though none of them has gotten the attention
+and popularity as programming directly in OpenCL or CUDA.
 
 In this paper we present our experience of applying a few functional
 data-parallel languages to a couple of real world problems from the
-domain of computational finance.
+domain of computational finance. We report on the current state of GPU
+languages.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
 which is an efficient choice for some applications of numerical
-integration and Monte Carlo simulation. Our second experiment is the
+integration and Monte Carlo simulation \todo{cite paper on evaluation
+  of quasi-random number generators}. Our second experiment is the
 implementation of an option-pricing algorithm, \emph{the binomial
   method}. Both of these algorithms have been implemented in
 Accelerate \cite{chakravarty2011accelerating}, Nikola
-\cite{mainland2010nikola} and directly in CUDA.
+\cite{mainland2010nikola}, Copperhead, NESL/GPU and are compared with
+efficient CUDA implementations.
+
+\todo{contributions section? 1) Demonstrate lack of composability and
+  abstraction 2) Performance comparison of languages that have not
+  been previously been compared}
 
 \section{Case I: Sobol sequence generation}
 The first problem that we have used to evaluate the languages is a
@@ -115,17 +120,19 @@ Figure~\ref{fig:discrepancyplot} illustrates that quasi-random numbers
 are generated in a systematic fashion to fill out the sample space
 evenly, without clusters nor holes. They are thus a poor choice for
 cryptography, but in applications such as numerical integration and
-Monte Carlo methods they can be efficient as fewer samples are needed.
+Monte Carlo methods they can be efficient as fewer samples are
+needed. In this case, we use the Sobol numbers to perform a simple
+$\pi$-estimation.
 
-We will only present a simple inductive formulation of the algorithm,
-and it should be noted that more efficient implementations exists
-\cite{bratley1988algorithm, hwy2011emerald}. We present a more
+We will only present a simple inductive formulation of the Sobol
+algorithm, and it should be noted that more efficient implementations
+exists \cite{bratley1988algorithm, hwy2011emerald}. We present a more
 detailed discussion in~\cite{dybdalcarlsen2013thesis}, taking these
 more efficient implementation strategies into account.
 
 The algorithm is seeded by a so-called \emph{direction vector}. To
 generate a Sobol sequence of $32$-bit numbers a direction vector of
-length $32$ is required\footnote{Lists of direction vectors are
+length $32$ is required\footnote{Lists of ``good'' direction vectors are
   available online \cite{homepage:sobol:directionvectors}}. Let $v$ be
 a direction vector of length $32$, the corresponding Sobol sequence is
 then defined by:
@@ -138,11 +145,13 @@ $i$. This sequence is then normalised to the $(0,1]$ interval.
 It is not hard to translate definition~(\ref{eq:sobol_inductive}) to a
 Haskell function working on lists:
 \begin{verbatim}
-sobol :: [Int32] -> Int32 -> Float
-sobol v = normalise . foldl xor 0 . zipWith (*) v . bitVector
-  where
-    bitVector e = map (\j -> signum $ e .&. bit j) [0..31]
-    normalise x = fromIntegral x / 2^32
+sobol :: [Word32] -> Word32 -> Float
+sobol v i = normalise xi
+ where
+  xi = foldl xor 0 $ zipWith (*) v (bitVector i)
+  testBit i j = signum $ i .&. bit j
+  bitVector i = map (testBit i) [0..31]
+  normalise x = fromIntegral x / 2^32
 \end{verbatim}
 The \verb|bitVector|-function converts the given index into its binary
 representation and \verb|normalise| maps the values to floating-point
@@ -150,31 +159,32 @@ numbers in the $(0,1]$ interval.
 
 To generate a complete sequence we can map over all indices:
 \begin{verbatim}
-sobol1D :: Int32 -> [Int32] -> [Float]
+sobol1D :: Word32 -> [Word32] -> [Float]
 sobol1D m v = map (sobol v) [1..m]
 \end{verbatim}
 Higher-dimensional sequences can be generated by an additional map:
 \begin{verbatim}
-sobolND :: Int32 -> [[Int32]] -> [[Float]]
+sobolND :: Word32 -> [[Word32]] -> [[Float]]
 sobolND m vs = map (sobol1D m) vs
 \end{verbatim}
 
-We show how to implement the same algorithm in Accelerate to
-illustrate some problems with the non-nested parallelism offered by
-Accelerate. It should be noted that the problems we will present are
-not unique for Accelerate. We have more or less the same troubles
-doing implementing the algorithm in Nikola. We use Accelerate for the
-presentation because the Array-types are simpler, as they do not
-include representation tags.
+We will now show how to implement the same algorithm in Accelerate,
+and during so uncover some problems with the non-nested parallelism
+offered by Accelerate. It should be noted that the problems we will
+present are not unique for Accelerate. We have more or less the same
+troubles implementing the algorithm in Nikola and Thrust. We use
+Accelerate for the presentation because the Array-types are simpler,
+as they do not include representation tags.
 
 The type of Accelerate arrays are indexed by their dimensionality,
-thus \verb|Array DIM2 Int32| is a two dimensional array (a matrix) with
-\verb|Int32| values. Accelerate arrays can not be irregular, and the
-two dimensional array will thus be rectangular.
+thus \verb|Array DIM2 Word32| is a two dimensional array (a matrix)
+with \verb|Word32| values of regular shape. 
+% Accelerate arrays can not be irregular, and the
+% two dimensional array will thus be rectangular.
 
-In the first step, there are only minor changes in the type:
+At first, we can translate \verb|sobol| more or less directly:
 \begin{verbatim}
-sobolA :: Acc (Array DIM1 Int32) -> Exp Int32 -> Acc (Array DIM0 Float)
+sobolA :: Acc (Array DIM1 Word32) -> Exp Word32 -> Acc (Array DIM0 Float)
 sobolA v = normalise . fold xor 0 . zipWith (*) v . bitVector
   where
     bitVector e = generate (constant $ Z :. 32)
@@ -187,7 +197,7 @@ nested maps. Thus, we cannot write \verb|map sobolA|.
 Instead we have to push this map inside the definition of
 \verb|sobolA|, a manual vectorisation of \verb|sobolA|:
 \begin{verbatim}
-sobol1DA :: Exp Int32 -> Array DIM1 Int32 -> Acc (Array DIM1 Float)
+sobol1DA :: Exp Word32 -> Array DIM1 Word32 -> Acc (Array DIM1 Float)
 sobol1DA m v = normalise $ fold xor 0 $ zipWith (*) rep bitVectors
   where
     Z :. i = arrayShape v
@@ -236,20 +246,6 @@ reside in an external library, making the transformation impossible.
 \emph{TODO evaluate benchmark results. Mention that both Nikola and
   Accelerate code is fused into a single kernel. CUDA uses several
   kernels, because no automatic fusion is performed}
-
-% Disposition for Case I: Sobol generation
-% \begin{itemize}
-% \item Introduce the simple inductive algorithm for computing
-%   Sobol-sequences. Note that more efficient algorithms exists, but
-%   we use this simple algorithm for illustrative purposes. See a more
-%   detailed explanation in our master's thesis.
-% \item Present how the algorithm would be written in a language
-%   allowing nesting and compare with the Accelerate version
-%   Write that the Nikola version is similar.
-% \item We should compare the generated CUDA code by Nikola and
-%   Accelerate and make a remark on that
-% \item Introduce the concept of "manual vectorisation".
-% \end{itemize}
 
 \section{Case II: Binomial option pricing}
 In this section we look at the problem of \emph{option pricing}. The
@@ -428,6 +424,9 @@ the parallelisation opportunities for:
 binomialPortfolio options = map binomial options
 \end{verbatim}
 
+An efficient implementation can be found in the CUDA SDK, and this is
+the implementation we want to compare against. In the algorithm
+present there, ...
 
 \begin{itemize}
 % \item Introduce binomial option pricing
@@ -444,30 +443,34 @@ binomialPortfolio options = map binomial options
   sequentially.
 \end{itemize}
 
-% \section{Related work}
-% \begin{itemize}
-% \item Mention NESL, Data-parallel Haskell and GPU-NESL
-% \item Mention some of the languages we haven't tested. See if can put
-%   them in categories where the above problems are present and aren't,
-%   even though we haven't tested them as much.
-% \end{itemize}
+\section{Related work}
+Disposition:
+\begin{itemize}
+\item Mention some of the languages we haven't tested. See if can put
+  them in categories where the above problems are present and aren't,
+  even though we haven't tested them as much.
+\end{itemize}
 
-% \section{Future work}
-% \begin{itemize}
-% \item Extend the survey to cover additional languages and problems
-% \item Create a larger performance benchmark of the different languages
-% \item Look closer at GPU-NESL and whether it performs
-% \end{itemize}
+\section{Future work}
+Disposition;
+\begin{itemize}
+\item Extend the survey to cover additional languages:
+  Modern GPU, Bohrium, Theano, CUB
+\item Extend the survey to cover additional problems:
+  LSM, 7 dwarfs
+\item Create a larger performance benchmark of the different
+  languages
+\item Comparison of GPU-NESL VCODE and Bohrium bytecode
+can Bohrium be used as a NESL backend?
+\end{itemize}
 
 \section{Conclusion}
 Summarise, mention GPU-NESL and other languages we haven't tested.
-
 
 \acks
 
 Acknowledgments, if needed.
 
-\section{Acknowledgments}
 
 \bibliographystyle{abbrvnat}
 \bibliography{../bibliography/bibliography}

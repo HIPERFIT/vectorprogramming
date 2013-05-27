@@ -36,11 +36,13 @@ dirvs = fromList (Z :. 2 :. bitcount)
 normalise :: Exp Word32 -> Exp Float
 normalise x = fromIntegral x / 2^bitcount
 
-bitVectors :: Exp Int -> Exp Int -> Acc (Array DIM3 Word32)
-bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
-  where
-    helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
-                in fromIntegral . boolToInt $ testBit e i
+bitVectors :: Exp Int -> Exp Int
+           -> Acc (Array DIM3 Word32)
+bitVectors n j = generate outSh gen
+ where
+  outSh = lift (Z :. n :. j :. constant bitcount)
+  gen ix = fromIntegral . boolToInt $ testBit e i
+   where Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
 
 sobolNDA :: Acc (Array DIM2 Word32) -> Acc (Scalar Int) -> Acc (Array DIM2 Float)
 sobolNDA dirvs n_arr = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
