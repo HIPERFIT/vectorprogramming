@@ -1,6 +1,7 @@
-\documentclass{llncs2e/llncs}
-
+\documentclass[preprint]{sigplanconf}
 \usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{url}
@@ -10,12 +11,40 @@
 %\title{Survey of a few data-parallel languages}
 \title{The need for nested data-parallelism} 
 
-\author{Philip L. Carlsen \and Martin Dybdal \and Ken Friis Larsen}
-\institute{University of Copenhagen \\ \email{plcplc@gmail.com,
-    dybber@dybber.dk, kflarsen@diku.dk}}
-
 \begin{document}
+\conferenceinfo{FHCP '13}{23 September 2013, City.} 
+\copyrightyear{2013} 
+\copyrightdata{[to be supplied]} 
+
+\titlebanner{Preprint, version 1.0}        % These are ignored unless
+%\preprintfooter{short description of paper}   % 'preprint' option specified.
+
+\title{Title Text}
+\subtitle{Subtitle Text, if any}
+
+\authorinfo{Philip L. Carlsen}
+           {DIKU, University of Copenhagen}
+           {plcplc@gmail.com}
+\authorinfo{Martin Dybdal}
+           {DIKU, University of Copenhagen}
+           {dybber@dybber.dk}
+\authorinfo{Ken Friis Larsen}
+           {DIKU, University of Copenhagen}
+           {kflarsen@diku.dk}
+
 \maketitle
+
+\begin{abstract}
+This is the text of the abstract.
+\end{abstract}
+
+% \category{CR-number}{subcategory}{third-level}
+
+% \terms
+% term1, term2
+
+% \keywords
+% keyword1, keyword2
 
 \section{Introduction}
 Graphics Processing Units (GPUs) is a cost-efficient choice for
@@ -433,10 +462,14 @@ binomialPortfolio options = map binomial options
 \section{Conclusion}
 Summarise, mention GPU-NESL and other languages we haven't tested.
 
+
+\acks
+
+Acknowledgments, if needed.
+
 \section{Acknowledgments}
 
-
-\bibliographystyle{plainnat} 
+\bibliographystyle{abbrvnat}
 \bibliography{../bibliography/bibliography}
 
 \end{document}
