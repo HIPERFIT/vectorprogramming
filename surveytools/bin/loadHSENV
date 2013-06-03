@@ -10,10 +10,10 @@ sourceit () {
 loadHSENV () {
   case $1 in
     accelerate-github-GHC7.6.1)
-      sourceit "accelerate-github-GHC7.6.1"
+      sourceit "accelerate-hackage-GHC7.6.3"
       ;;
     accelerate)
-      sourceit "accelerate-github-GHC7.6.1"
+      sourceit "accelerate-hackage-GHC7.6.3"
       ;;
     nikola-GHC7.4.2)
       sourceit "nikola-GHC7.4.2"
