@@ -43,6 +43,7 @@ logs/
 *.hi
 *.o
 bin/
+!surveytools/bin/
 build/
 .shake.database
 *.swp
