@@ -1,27 +1,22 @@
 module Options where
 
-data OptType = Call | Put
-     deriving Eq
+-- Options represented as 5-tuples. It would be nicer if we could use
+-- records, but neither Accelerate nor Nikola supports records on the
+-- GPU.
 
--- ^ European option
-data EurOpt = EurOpt
-       { opttype    :: OptType -- ^ Call or Put option?
-       , s0         :: Float   -- ^ Current price of underlying
-       , strike     :: Float   -- ^ Strike price
-       , expiry     :: Int     -- ^ Expiry in years
-       , riskless   :: Float   -- ^ Riskless interest rate
-       , volatility :: Float
-       }
+-- We standardize on European Call options in the benchmarks, and we
+-- thus leave out parameters for European/American and call/put.
+
+-- ^ Should always be interpreted as a European Call option
+type Option =
+         ( Float -- ^ Current price of underlying
+         , Float -- ^ Strike price               
+         , Int   -- ^ Expiry in years            
+         , Float -- ^ Riskless interest rate     
+         , Float -- ^ Volatility
+         )
 
 -- ^ A sample option for testing purposes
 -- Price: 5.349524 (with 2048 time steps)
-sampleOpt :: EurOpt
-sampleOpt = EurOpt
-       { opttype    = Call
-       , s0         = 60.0
-       , strike     = 65.0
-       , expiry     = 1
-       , riskless   = 0.1
-       , volatility = 0.2
-       }
-
+sampleOpt :: Option
+sampleOpt = (60.0, 65.0, 1, 0.1, 0.2)

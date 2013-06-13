@@ -1,20 +1,18 @@
-{-# LANGUAGE RecordWildCards #-}
 module Binomial where
 
 import Data.List (foldl')
 import Options
 
-binom :: EurOpt -> Float
-binom (EurOpt{..}) = head first
+binom :: Int -> Option -> Float
+binom numSteps (s0,strike,expiry,riskless,volatility) = head first
   where
     -- Leafs of binomial tree
     leafs = [s0 * exp(vsdt * fromIntegral (2 * i - numSteps))
             | i <- [0..numSteps :: Int]]
 
     -- Profits at the final stage
-    profit = case opttype of Put  -> map (strike -) leafs
-                             Call -> map (flip (-) strike) leafs
-    vFinal  = map (max 0) profit
+    profit = map (flip (-) strike) leafs
+    vFinal = map (max 0) profit
     
     -- Discounting backwards
     stepBack vPrev _ = zipWith back (tail vPrev) (init vPrev)
