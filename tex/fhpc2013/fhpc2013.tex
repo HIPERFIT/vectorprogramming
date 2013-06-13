@@ -19,12 +19,12 @@
 \title{A practical survey of functional GPU languages}
 %\subtitle{Subtitle Text, if any}
 
-\authorinfo{Philip L. Carlsen}
-           {DIKU, University of Copenhagen}
-           {plcplc@gmail.com}
 \authorinfo{Martin Dybdal}
            {DIKU, University of Copenhagen}
            {dybber@dybber.dk}
+\authorinfo{Philip L. Carlsen}
+           {DIKU, University of Copenhagen}
+           {plcplc@gmail.com}
 \authorinfo{Ken Friis Larsen}
            {DIKU, University of Copenhagen}
            {kflarsen@diku.dk}
@@ -32,7 +32,15 @@
 \maketitle
 
 \begin{abstract}
-This is the text of the abstract.
+  We present a practical survey of a handful of current GPU languages and
+  libraries and report on both qualitative and quantitative aspects.
+
+  The survey is practical in the sense that we have taken a few
+  algorithms from the domain of computation finance that are used in
+  the real world.
+
+  The aim is that the paper can be used to get an overview of the
+  current state of existing languages.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -47,8 +55,7 @@ This is the text of the abstract.
 Graphics Processing Units (GPUs) is a cost-efficient choice for
 problems with data-parallel solutions. Their massively data-parallel
 architecture can deliver a high-throughput for many problems in the
-sciences, engineering and finance, where problems often involve
-\todo{...}
+sciences, engineering and finance.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
 frameworks in both academia and industry. These two languages are
@@ -64,41 +71,63 @@ existing languages have been developed \cite{Catanzaro2011,
   chakravarty2011accelerating, mainland2010nikola,
   svensson2011obsidian, bergstra2010theano, homepage:rgpu,
   bergstrom2012nested, homepage:bohrium}, though none of them has
-gotten the same attention and popularity as programming directly in
+achieved the same popularity and attention as programming directly in
 OpenCL or CUDA.
 
 In this paper we present our experience of applying a few functional
-data-parallel languages to a couple of real world problems from the
-domain of computational finance. We report on the current state of GPU
-languages.
+data-parallel languages to a couple of problems from the domain of
+computational finance and report on the current state of GPU
+languages. Our scope is both qualitative in terms of the ease with
+which algorithms can be formulated and debugged, as well as
+quantitative in terms of execution performance.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
-which is an efficient choice for some applications of numerical
-integration and Monte Carlo simulation
-\cite{acworth1998comparison}. Our second experiment is the
+which is an efficient choice for numerical integration and Monte Carlo
+simulation \cite{acworth1998comparison}. Our second experiment is the
 implementation of an option-pricing algorithm, \emph{the binomial
   method}. Both of these algorithms have been implemented in
 Accelerate \cite{chakravarty2011accelerating}, Nikola
 \cite{mainland2010nikola}, Copperhead, NESL/GPU and are compared with
 efficient CUDA implementations.
 
-\todo{contributions section?} % 1) Demonstrate lack of composability and
+%\todo{contributions section?} % 1) Demonstrate lack of composability and
   % abstraction 2) Performance comparison of languages that have not
   % been previously been compared
 
 \section{Subject languages}
+\paragraph{NESL/GPU} is a GPU back-end for the parallel functional
+programming language NESL \cite{}. The back-end reuses the front-end
+of the CPU implementation of NESL, which compiles to an intermediate
+language called VCODE, which is a flattened version of the NESL
+program. VCODE is then transformed and finally interpreted by issuing
+corresponding CUDA kernels.
+
 \paragraph{Copperhead} is a functional DSL for GPU computing embedded
 in Python. It is statically typed and uses Hindley-Milner type
 inference, even though it is embedded inside a dynamically typed
-language.
-\paragraph{NESL/GPU} is a ...
+language. 
+
+* They promise nested data-parallelism, but the current implementation
+does not currently support it.
+
+* Nested data-parallelism without flattening
 
 \paragraph{Accelerate} is a parallel functional DSL for array
-computations embedded in Haskell
+computations embedded in Haskell. 
 
-\paragraph{Nikola} is a parallel functional DSL for array computations
-embedded in Haskell
+ * Clean partition between front-end and back-ends
+ * Skeleton-based
+ * Hard division between Exp and Acc -> flat data-parallel
+ * Single array type, no control over fusion
+
+\paragraph{Nikola} is a parallel functional DSL for array
+ computations embedded in Haskell
+
+ * Repa-like interface -> selection of array representation
+ * Manual control over fusion
+ * Flat data-parallel
+ * Only supports map-like higher-order operations (no scan, reduce, etc.)
 
 \section{Case I: Sobol sequence generation}
 The first problem that we have used to evaluate the languages is a
@@ -135,16 +164,14 @@ Figure~\ref{fig:discrepancyplot} illustrates that quasi-random numbers
 are generated in a systematic fashion to fill out the sample space
 evenly, without clusters nor holes. They are thus a poor choice for
 cryptography, but in applications such as numerical integration and
-Monte Carlo methods they can be efficient as fewer samples are
-needed. In this case study, we use the Sobol numbers to perform a
-simple $\pi$-estimation.
+Monte Carlo methods they can be efficient as they can reduce the
+number of needed samples. In this case study, we use the Sobol numbers
+to perform a simple $\pi$-estimation.
 
-We will only present an inductive formulation of the Sobol algorithm,
-and it should be noted that more efficient implementations exists
-\cite{bratley1988algorithm, hwy2011emerald}. \todo{``We present a more
-  detailed discussion in~\cite{dybdalcarlsen2013thesis}, taking these
-  more efficient implementation strategies into account.'' Or would we
-  rather include the results about the missing unfold?}
+We will first present the implementation of an inductive formulation
+of the Sobol algorithm \cite{bratley1988algorithm}, and we will later get
+back to a more efficient implementations optimized for GPUs
+\cite[Chapter~16]{hwy2011emerald}.
 
 The algorithm is seeded by a so-called \emph{direction vector}. To
 generate a Sobol sequence of $32$-bit numbers a direction vector of
@@ -184,13 +211,29 @@ sobolND :: Word32 -> [[Word32]] -> [[Float]]
 sobolND m vs = map (sobol1D m) vs
 \end{verbatim}
 
-We will now show how to implement the same algorithm in Accelerate,
-and during so uncover some problems with the non-nested parallelism
-offered by Accelerate. It should be noted that the problems we will
-present are not unique for Accelerate. We have more or less the same
-troubles implementing the algorithm in Nikola and Thrust. We use
-Accelerate for the presentation because the Array-types are simpler,
-as they do not include representation tags.
+Implementing this in NESL is a straight forward translation of the
+above Haskell code, which we will not include here. A single piece of
+the puzzle was missing though, as NESL does not provide a way to
+\emph{fold} using an exclusive-or operation. Instead we had to
+implement our own:
+
+\begin{verbatim}
+% assumes non-empty argument
+function xor_reduce(xs) = xor_scan(xs)[#xs-1] xor xs[#xs-1] $
+\end{verbatim}
+
+In the remaining languages, Accelerate, Nikola and Copperhead, the
+implementation did not turn out to be as easy, as they do not support
+nesting of parallel operations. In Copperhead it should in theory be
+possible, but as mentioned previously the current implementation does
+not support nesting as promised.
+
+To illustrate we will now show how to implement the inductive
+algorithm in Accelerate, which will uncover some problems with the
+flat data-parallelism offered by Accelerate, Nikola and Copperhead. We
+choose Accelerate for the presentation as it is typed in contrast with
+Copperhead and the Array-types are simpler than in Nikola, as they do
+not include representation tags.
 
 The type of Accelerate arrays are indexed by their dimensionality,
 thus \verb|Array DIM2 Word32| is a two dimensional array (a matrix)
@@ -263,26 +306,17 @@ In a larger setting, the mapped function could be arbitrarily complex,
 thus making the vectorisation hard to do by hand, or the function could
 reside in an external library, making the transformation impossible.
 
-\paragraph{Nikola} does not have to the same number of primitives as
-Accelerate does, and to compute $\pi$ from the 2-dimensional
-Sobol-sequence, we will have to use a parallel reduction to, but
-Nikola does only provide a few mapping operations and a iteration
-construct for sequential iteration inside a CUDA-kernel. Instead we
-have to use a divide-and-conquer algorithm which requires the
-scheduling of $O(lg n)$ kernels.
+Computing $\pi$ has not been covered in the above section,
+and the computation is straight forward in all languages except
+Nikola. To compute $\pi$ from the 2-dimensional Sobol-sequence we need
+a reduction operation, which is not included in Nikola. Nikola does
+only provide a few mapping operations and a iteration construct for
+sequential iteration inside a CUDA-kernel. Instead we have to use a
+divide-and-conquer algorithm which requires the scheduling of
+$O(lg~n)$ kernels or reduce on the CPU.
 
-\paragraph{NESL/GPU} does not provide a reduction with exclusive-or,
-and we thus again have to provide a divide-and-conquer algorithm. As
-NESL does have reductions, it should not be that hard to extend it to
-also support exclusive-or.
-
-\paragraph{Copperhead} gives a runtime error in this case, but
-implementation wise we could implement it as cleanly as the version
-using Haskell lists. \todo{I have emailed Bryan and he will hopefully
-  fix the problem in Copperhead before our deadline}
-
-\paragraph{Thrust} \todo{Perhaps some note on why I selected to use a
-  combination of raw CUDA and Thrust?}
+% \paragraph{Thrust} \todo{Perhaps some note on why I selected to use a
+%   combination of raw CUDA and Thrust?}
 
 \subsection{Alternative algorithm}
 The inductive algorithm presented above requires a linear amount of
@@ -311,6 +345,7 @@ unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
 Where the first argument defines the number of times to unfold, and
 the block size is defined from the size of the array argument.
 
+\subsection{Benchmark}
 \emph{TODO present benchmark of calculating $\pi$ using Sobol-sequences}
 
 \emph{TODO evaluate benchmark results. Mention that both Nikola and
@@ -334,12 +369,12 @@ whereas a \emph{put option} grants the right to sell.
 \begin{verbatim}
 data OptType = Call | Put
 data Option = Option
- { otype  :: OType -- ^ Call or Put option?
- , s0     :: Float -- ^ Current price of underlying
- , strike :: Float -- ^ Strike price
- , expiry :: Int   -- ^ Expiry in years
- , r      :: Float -- ^ Riskless rate
- , vol    :: Float -- ^ Volatility
+ { opttyp :: OptType -- Call or Put option?
+ , s0     :: Float   -- Current price of underlying
+ , strike :: Float   -- Strike price
+ , expiry :: Int     -- Expiry in years
+ , r      :: Float   -- Riskless rate
+ , vol    :: Float   -- Volatility
  }
 \end{verbatim}
 
@@ -517,6 +552,12 @@ present there, ...
   pricer rather than pricing each option in their own kernels
   sequentially.
 \end{itemize}
+
+\section{Qualitative language comparison}
+\todo{Section with remarks about level of maintenance/developer
+  activity, quality of compiler e.g. error messages, and how often you
+  encounter problems (e.g. CUDA unspecified launch failure). See list
+  on Google Drive, number of users}
 
 \section{Related work}
 Disposition:
