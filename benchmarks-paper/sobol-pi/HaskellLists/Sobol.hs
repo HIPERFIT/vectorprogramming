@@ -1,12 +1,14 @@
 module Sobol where
 
-import Data.Word
 import Data.Bits
+import Data.Word (Word32)
 
-bitcount :: Int
+bitcount :: Num a => a
 bitcount = 32
 
-dirvs :: [[Word32]]
+type Elem = Word32
+
+dirvs :: [[Elem]]
 dirvs = [[2147483648,1073741824,2684354560,1342177280,
           2281701376,603979776,301989888,754974720,
           1988100096,2654994432,136314880,1678770176,
@@ -25,28 +27,33 @@ dirvs = [[2147483648,1073741824,2684354560,1342177280,
           1610779008,4026976576,2016733344,605713840,
           305826616,3475687836,3113412898,2197780721]]
 
-sobol :: [Word32] -> Word32 -> Float
+normalise :: Elem -> Float
+normalise x = fromIntegral x / 2^(bitcount :: Elem)
+
+bitVector :: Elem -> [Elem]
+bitVector i = map (fromIntegral . fromEnum . testBit i)
+                  [0..bitcount - 1]
+
+sobol :: [Elem] -> Elem -> Float
 sobol v i = normalise xi
  where
-  testBit j = signum $ i .&. bit j
-  ivec = map testBit [0..bitcount - 1]
-  xi = foldl xor 0 $ zipWith (*) v ivec -- (Def. 1)
-  normalise x = fromIntegral x / 2^bitcount
+  xi = foldl xor 0 $ zipWith (*) v (bitVector i)
 
-
-sobol1D :: Word32 -> [Word32] -> [Float]
+sobol1D :: Elem -> [Elem] -> [Float]
 sobol1D m v = map (sobol v) [1..m]
 
-sobolND :: Word32 -> [[Word32]] -> [[Float]]
+sobolND :: Elem -> [[Elem]] -> [[Float]]
 sobolND m vs = map (sobol1D m) vs
 
 pi2d :: [(Float, Float)] -> Float
-pi2d nums = 4 * ((fromIntegral $ n - sum dists)/ (fromIntegral n))
+pi2d xs = 4 * (n - fromIntegral (sum dists)) / n
  where
-   n = length nums
-   dists = map (\(x,y) -> truncate $ sqrt (x^(2 :: Int) + y^(2 :: Int))) nums
+   n = fromIntegral $ length xs
+   dist (x,y) = sqrt $ x^(2 :: Elem) + y^(2 :: Elem)
+   dists :: [Elem]
+   dists = map (truncate . dist) xs
 
-computepi :: Word32 -> Float
+computepi :: Elem -> Float
 computepi n = pi2d $ zip xs ys
  where
   [xs, ys] = sobolND n dirvs

@@ -6,12 +6,11 @@ import Data.Array.Accelerate
 import qualified Prelude as P
 import Prelude hiding (zipWith, map, fromIntegral, replicate, fst, snd, truncate)
 import Data.Bits hiding (bit, testBit)
-import qualified Data.List as L
 
 bitcount :: Int
 bitcount = 32
 
-dirvs :: Array DIM2 Word32
+dirvs :: Array DIM2 Int
 dirvs = fromList (Z :. 2 :. bitcount)
               $ concat 
                [[2147483648,1073741824,2684354560,1342177280,
@@ -33,23 +32,67 @@ dirvs = fromList (Z :. 2 :. bitcount)
                  305826616,3475687836,3113412898,2197780721]
                  ]
 
-normalise :: Exp Word32 -> Exp Float
+
+normalise :: Exp Int -> Exp Float
 normalise x = fromIntegral x / 2^bitcount
 
+bitVector :: Exp Int -> Acc (Vector Int)
+bitVector e = generate (index1 $ constant bitcount) gen
+ where  gen = boolToInt . testBit e . unindex1
+
+sobol :: Acc (Vector Int) -> Exp Int -> Exp Float
+sobol v i = normalise (the xi)
+ where
+  xi = fold xor 0 $ zipWith (*) v (bitVector i)
+  
+-- sobol1D :: Exp Int -> Acc (Vector Int) -> Acc (Vector Float)
+-- sobol1D m v = generate (index1 m) gen
+--   where gen ix = sobol v (unindex1 ix + 1)
+
+bitVectors2D :: Exp Int -> Acc (Array DIM2 Int)
+bitVectors2D n = generate (index2 n $ constant bitcount) gen
+ where gen ix = let Z :. e :. i = unlift ix
+                in  boolToInt $ testBit e i
+
+sobol1D :: Exp Int -> Acc (Vector Int) -> Acc (Vector Float)
+sobol1D m vec = map normalise xi
+ where
+  xi = fold xor 0 $ zipWith (*) vecRep mat
+  mat = bitVectors2D m
+  vecRep = replicate (lift (Z :. m :. All)) vec
+
+
+-- -- We would hope to write:
+-- -- and it compiles, but results in:
+-- -- *** Exception: Cyclic definition of a value of type 'Exp' (sa = 1875)
+-- sobolND :: Acc (Scalar Int)
+--         -> Acc (Scalar Int)
+--         -> Acc (Array DIM2 Int)
+--         -> Acc (Array DIM2 Float)
+-- sobolND m n vs = generate (index2 (the m) (the n)) gen
+--  where
+--   gen :: Exp DIM2 -> Exp Float
+--   gen ix = sobol v i
+--     where
+--      i :: Exp Int
+--      j :: Exp Int
+--      Z :. i :. j = unlift ix
+--      v = slice vs (lift $ Z :. j :. All)
+
 bitVectors :: Exp Int -> Exp Int
-           -> Acc (Array DIM3 Word32)
+           -> Acc (Array DIM3 Int)
 bitVectors n j = generate outSh gen
  where
   outSh = lift (Z :. n :. j :. constant bitcount)
   gen ix = fromIntegral . boolToInt $ testBit e i
    where Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
 
-sobolNDA :: Acc (Array DIM2 Word32) -> Acc (Scalar Int) -> Acc (Array DIM2 Float)
-sobolNDA dirvs n_arr = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
+sobolNDA :: Acc (Array DIM2 Int) -> Acc (Scalar Int) -> Acc (Array DIM2 Float)
+sobolNDA vs n_arr = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
   where
-    j = fst . unindex2 . shape $ dirvs
+    j = fst . unindex2 . shape $ vs
     n = the n_arr
-    dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
+    dirvs_rep = replicate (lift $ Z :. n :. All :. All) vs
 
 pi2d :: Acc (Array DIM2 Float) -> Acc (Scalar Float)
 pi2d nums = unit $ 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromIntegral n))
@@ -58,8 +101,8 @@ pi2d nums = unit $ 4 * ((fromIntegral $ n - (the $ fold1All (+) dists)) / (fromI
    dists :: Acc (Array DIM1 Int)
    dists = generate (index1 n) 
               (\ix -> let ix' = unindex1 ix
-                      in truncate $ sqrt $ (nums ! (lift $ Z :. ix' :. (0 :: Exp Int))) ^ 2
-                                         + (nums ! (lift $ Z :. ix' :. (1 :: Exp Int))) ^ 2)
+                      in truncate $ sqrt $ (nums ! (lift $ Z :. ix' :. (0 :: Exp Int))) ^ (2 :: Int)
+                                         + (nums ! (lift $ Z :. ix' :. (1 :: Exp Int))) ^ (2 :: Int))
 
 runPi :: Acc (Scalar Int) -> Acc (Scalar Float)
 runPi n = pi2d $ sobolNDA (use dirvs) n
