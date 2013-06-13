@@ -1,33 +1,30 @@
-{-# LANGUAGE RecordWildCards #-}
 module Binom where
 
 import Options
 import Prelude                           as P
 import Data.Array.Accelerate             as A
-import Data.Array.Accelerate.Interpreter as A
+import Data.Array.Accelerate.CUDA        as A
 import Data.List(foldl1')
 
-type EurOption = (Bool, Float, Float, Int, Float, Float)
+run1binom :: Option -> Int -> Float
+run1binom opt numSteps = (run1 (binomAcc numSteps) tuparr) `indexArray` Z
+ where
+   tuparr :: Scalar (Option, Int)
+   tuparr = fromList Z [(opt, numSteps)]
 
-toTuple :: EurOpt -> EurOption
-toTuple (EurOpt{..}) = ( opttype == Call
-                       , s0
-                       , strike
-                       , expiry
-                       , riskless
-                       , volatility
-                       )
+runbinom :: Option -> Int -> Float
+runbinom opt numSteps = (run $ binomAcc numSteps (use tuparr)) `indexArray` Z
+ where
+   tuparr :: Scalar (Option, Int)
+   tuparr = fromList Z [(opt, numSteps)]
 
-binom :: EurOpt -> Int -> Float
-binom opt numSteps = (A.run $ binomAcc numSteps (unit (constant numSteps)) tup) `indexArray` Z
+-- Cdall option pricer
+binomAcc :: Int -> Acc (Scalar (Option, Int)) -> Acc (Scalar Float)
+binomAcc numSteps opt_numSteps = unit (first A.! (index1 0))
   where
-    tup :: Acc (Scalar EurOption)
-    tup = unit . constant . toTuple $ opt
-
-binomAcc :: Int -> Acc (Scalar Int) -> Acc (Scalar EurOption) -> Acc (Scalar Float)
-binomAcc numSteps numStepsArr opt = unit (first A.! (index1 0))
-  where
-    numStepsExp = the numStepsArr
+    opt :: Exp Option
+    numStepsExp :: Exp Int
+    (opt, numStepsExp) = unlift (the opt_numSteps)
     -- Leafs of the binomial tree
     leafs = generate (index1 $ numStepsExp + 1) helper
       where
@@ -35,7 +32,7 @@ binomAcc numSteps numStepsArr opt = unit (first A.! (index1 0))
                     in s0 * exp(vsdt * A.fromIntegral (2 * i - numStepsExp))
 
     -- Profits at exercise time
-    profit = A.map (\x -> iscall ? (x - strike, strike -x)) leafs
+    profit = A.map (\x -> x - strike) leafs
     vFinal  = A.map (A.max 0) profit
 
     -- Discounting backwards
@@ -44,9 +41,9 @@ binomAcc numSteps numStepsArr opt = unit (first A.! (index1 0))
     first = foldl1' (>->) (P.replicate numSteps stepBack) vFinal
 
     -- Model and option variables
-    iscall :: Exp Bool;  s0 :: Exp Float; strike :: Exp Float;
-    expiry :: Exp Int; riskless :: Exp Float; volatility :: Exp Float;
-    (iscall, s0, strike, expiry,riskless,volatility) = unlift $ opt A.! (constant Z)
+    s0 :: Exp Float; strike :: Exp Float; expiry :: Exp Int;
+    riskless :: Exp Float; volatility :: Exp Float;
+    (s0, strike, expiry,riskless,volatility) = unlift $ opt
 
     dt = A.fromIntegral expiry/A.fromIntegral numStepsExp
     vsdt = volatility * sqrt dt

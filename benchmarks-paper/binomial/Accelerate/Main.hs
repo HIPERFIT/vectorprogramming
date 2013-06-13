@@ -13,7 +13,7 @@ main = do
   hSetBuffering stderr LineBuffering
   putStrLn "OK" -- no preparation steps
   -- Wrap it properly:
-  execute $ binom sampleOpt
+  execute $ run1binom sampleOpt
 
 execute :: (Read a, Show b) => (a -> b) -> IO ()
 execute f = forever $ do
