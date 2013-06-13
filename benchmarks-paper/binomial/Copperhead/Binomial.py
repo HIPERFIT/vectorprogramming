@@ -13,9 +13,9 @@ def init(xs):
     n = len(xs)
     return gather(xs, range(n-1))
 
-@cutype("(Bool,Double,Double,Int,Int) -> [Double]")
+@cutype("(Double,Double,Int,Int) -> [Double]")
 @cu
-def final(isCall,s0,strike,expiry,numSteps):
+def final(s0,strike,expiry,numSteps):
     volatility = 0.2
     riskless = 0.1
     dt = float64(expiry)/float64(numSteps)
@@ -29,10 +29,7 @@ def final(isCall,s0,strike,expiry,numSteps):
         else:
             return b
 
-    if isCall:
-        return map(lambda x: maximum(x - strike, 0.0), leafs)
-    else:
-        return map(lambda x: maximum(strike - x, 0.0), leafs)
+    return map(lambda x: maximum(x - strike, 0.0), leafs)
 
 @cutype("([Double], Int, Int) -> [Double]")
 @cu
@@ -55,8 +52,8 @@ def stepBack(vPrev,expiry,numSteps):
         return puByr * x1 + pdByr * x2
     return map(back, tail(vPrev), init(vPrev))
 
-def binom(isCall,s0,strike,expiry,numSteps):
-    vFinal = final(isCall,s0,strike,expiry,numSteps)
+def binom(s0,strike,expiry,numSteps):
+    vFinal = final(s0,strike,expiry,numSteps)
     def stepBackClosure(vPrev,i):
         return stepBack(vPrev,expiry,numSteps)
     price = reduce(stepBackClosure, range(numSteps), vFinal)
