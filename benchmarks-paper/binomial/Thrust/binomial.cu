@@ -4,7 +4,6 @@
 #include <thrust/transform.h>
 
 struct Option {
-  bool iscall;
   float s0;
   float strike;
   int expiry;
@@ -29,25 +28,6 @@ public:
     return max(0.0, x - strike);
   }
 };
-
-struct computeFinalPut {
-private:
-  const float vsdt;
-  const float s0;
-  const float strike;
-  const int   numSteps;
-
-public:
-  computeFinalPut(float _vsdt, float _s0, float _strike, int _numSteps)
-    : vsdt(_vsdt), s0(_s0), strike(_strike), numSteps(_numSteps) {}
-
-  __host__ __device__
-  float operator()(const int& i) const {
-    float x = s0 * exp(vsdt * (float)(2 * i - numSteps));
-    return max(0.0, strike - x);
-  }
-};
-
 
 struct discount {
 private:
@@ -81,11 +61,7 @@ float binom(Option option, int numSteps) {
   thrust::counting_iterator<int> first(0);
   thrust::counting_iterator<int> last = first + numSteps + 1;
 
-  if(option.iscall) {
-    thrust::transform(first, last, stepA.begin(), computeFinalCall(vsdt, option.s0, option.strike, numSteps));
-  } else {
-    thrust::transform(first, last, stepA.begin(), computeFinalPut(vsdt, option.s0, option.strike, numSteps));
-  }
+  thrust::transform(first, last, stepA.begin(), computeFinalCall(vsdt, option.s0, option.strike, numSteps));
 
   for(int i = 0; i < numSteps/2; i++) {
     thrust::transform(stepA.begin() + 1, stepA.begin() + numSteps - i + 1, stepA.begin(), stepB.begin(), discount(puByr, pdByr));
@@ -98,7 +74,7 @@ float binom(Option option, int numSteps) {
 
 int main(int argc, char *argv[])
 {
-    Option a = {true, 60.0, 65.0, 1, 0.2, 0.1 };
+    Option a = {60.0, 65.0, 1, 0.2, 0.1 };
     // needed to work correctly with piped benchmarkrunner
     setlinebuf(stdout);
     setlinebuf(stdin);
