@@ -8,14 +8,13 @@ import Data.Array.Nikola.Backend.CUDA
 import Data.Int
 
 vFinal :: Exp Int32
-       -> Exp Bool
        -> Exp Float
        -> Exp Float
        -> Exp Int32
        -> Exp Float
        -> Exp Float
        -> Vector D (Exp Float)
-vFinal numSteps iscall s0 strike expiry _ volatility = map (max 0) profit
+vFinal numSteps s0 strike expiry _ volatility = map (max 0) profit
   where
     -- Leafs of the binomial tree
     leafs = fromFunction (Z :. (numSteps+1)) helper
@@ -23,13 +22,12 @@ vFinal numSteps iscall s0 strike expiry _ volatility = map (max 0) profit
         helper (Z :. i) = s0 * exp(vsdt * fromInt (2 * i - numSteps))
 
     -- Profits at exercise time
-    profit = map (\x -> iscall ? (x - strike, strike -x)) leafs
+    profit = map (\x -> x - strike) leafs
 
     dt = fromInt expiry/ fromInt numSteps
     vsdt = volatility * sqrt dt
 
 stepBack :: Exp Int32
-         -> Exp Bool
          -> Exp Float
          -> Exp Float
          -> Exp Int32
@@ -38,7 +36,7 @@ stepBack :: Exp Int32
          -> Vector G (Exp Float)
          -> Exp Int32
          -> Vector D (Exp Float)
-stepBack numSteps _ s0 strike expiry riskless volatility vPrev i =
+stepBack numSteps s0 strike expiry riskless volatility vPrev i =
          zipWith back (tail vPrev) (init vPrev)
   where
     back x1 x2 = puByr * x1 + pdByr * x2
