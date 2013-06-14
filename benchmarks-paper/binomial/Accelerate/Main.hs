@@ -3,7 +3,7 @@ module Main where
 import Control.Monad (when, forever)
 import System.Exit (exitSuccess)
 
-import Binom (binom)
+import Binom (run1binom)
 import Options
 import System.IO
 
