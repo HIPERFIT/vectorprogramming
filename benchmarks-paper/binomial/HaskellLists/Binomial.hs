@@ -1,33 +1,32 @@
 module Binomial where
 
-import Data.List (foldl')
 import Options
 
 binom :: Int -> Option -> Float
-binom numSteps (s0,strike,expiry,riskless,volatility) = head first
-  where
-    -- Leafs of binomial tree
-    leafs = [s0 * exp(vsdt * fromIntegral (2 * i - numSteps))
-            | i <- [0..numSteps :: Int]]
+binom n (s0,strike,expiry,riskless,volatility) = 
+   head $ foldl stepBack vFinal [1..n]
+ where
+  -- Model and option variables
+  dt = fromIntegral expiry/fromIntegral n
+  vsdt = volatility * sqrt dt
 
-    -- Profits at the final stage
-    profit = map (flip (-) strike) leafs
-    vFinal = map (max 0) profit
-    
-    -- Discounting backwards
-    stepBack vPrev _ = zipWith back (tail vPrev) (init vPrev)
-      where back x1 x2 = puByr * x1 + pdByr * x2
-    first = foldl' stepBack vFinal [1..numSteps :: Int]
+  -- Leafs of binomial tree
+  leafs = [s0 * exp(vsdt * fromIntegral (2*i-n))
+          | i <- [0..n]]
 
-    -- Model and option variables
-    u,d,dt,vsdt,rr,rrInv,pu,pd,puByr,pdByr :: Float
-    dt = fromIntegral expiry/fromIntegral (numSteps :: Int)
-    vsdt = volatility * sqrt dt
-    u = exp(vsdt) 
-    d = 1/u
-    rr = exp(riskless*dt)
-    rrInv = 1.0 / rr
-    pu = (rr - d)/(u - d)
-    pd = 1.0 - pu
-    puByr = pu * rrInv
-    pdByr = pd * rrInv
+  -- Profits at the final stage
+  vFinal :: [Float]
+  vFinal = map (\x -> max 0 $ x - strike) leafs
+
+  -- More model and option variables
+  rr = exp(riskless*dt)
+  rrInv = 1.0 / rr
+  u = exp(vsdt)         ; d = 1/u
+  pu = (rr - d)/(u - d) ; pd = 1.0 - pu
+  puByr = pu * rrInv    ; pdByr = pd * rrInv
+
+  -- Discounting one step backwards
+  stepBack :: [Float] -> a -> [Float]
+  stepBack vPrev _ = zipWith back (tail vPrev)
+                                  (init vPrev)
+    where back x1 x2 = puByr * x1 + pdByr * x2

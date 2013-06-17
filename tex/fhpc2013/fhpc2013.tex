@@ -88,48 +88,25 @@ simulation \cite{acworth1998comparison}. Our second experiment is the
 implementation of an option-pricing algorithm, \emph{the binomial
   method}. Both of these algorithms have been implemented in
 Accelerate \cite{chakravarty2011accelerating}, Nikola
-\cite{mainland2010nikola}, Copperhead, NESL/GPU and are compared with
-efficient CUDA implementations.
+\cite{mainland2010nikola}, Copperhead, NESL/GPU, Thrust and their
+performance is compared with efficient CUDA implementations.
+
+\paragraph{Outline} In the next section we will introduce our two
+cases with implementations in Haskell syntax, using the inefficient
+built-in lists as data-structure.
+
+Following that, we will have a section on the qualitative language
+aspects, with our findings from doing the implementation in each
+language.
+
+Lastly, we will present performance benchmarks.
 
 %\todo{contributions section?} % 1) Demonstrate lack of composability and
   % abstraction 2) Performance comparison of languages that have not
   % been previously been compared
 
-\section{Subject languages}
-\paragraph{NESL/GPU} is a GPU back-end for the parallel functional
-programming language NESL \cite{}. The back-end reuses the front-end
-of the CPU implementation of NESL, which compiles to an intermediate
-language called VCODE, which is a flattened version of the NESL
-program. VCODE is then transformed and finally interpreted by issuing
-corresponding CUDA kernels.
-
-\paragraph{Copperhead} is a functional DSL for GPU computing embedded
-in Python. It is statically typed and uses Hindley-Milner type
-inference, even though it is embedded inside a dynamically typed
-language. 
-
-* They promise nested data-parallelism, but the current implementation
-does not currently support it.
-
-* Nested data-parallelism without flattening
-
-\paragraph{Accelerate} is a parallel functional DSL for array
-computations embedded in Haskell. 
-
- * Clean partition between front-end and back-ends
- * Skeleton-based
- * Hard division between Exp and Acc -> flat data-parallel
- * Single array type, no control over fusion
-
-\paragraph{Nikola} is a parallel functional DSL for array
- computations embedded in Haskell
-
- * Repa-like interface -> selection of array representation
- * Manual control over fusion
- * Flat data-parallel
- * Only supports map-like higher-order operations (no scan, reduce, etc.)
-
-\section{Case I: Sobol sequence generation}
+\section{Cases}
+\subsection{Case 1: Sobol sequence generation}
 The first problem that we have used to evaluate the languages is a
 quasi-random number generator (QRNG), namely the \emph{Sobol sequence
   generator}. QRNGs is a category of random number generators that
@@ -188,17 +165,21 @@ $i$. This sequence is then normalised to the $(0,1]$ interval.
 It is not hard to translate definition~(\ref{eq:sobol_inductive}) to a
 Haskell function working on lists:
 \begin{verbatim}
+bitVector :: Int -> [Int]
 bitVector i = map (fromEnum . testBit i) [0..31]
+
+normalise :: Int -> Float
 normalise x = fromIntegral x / 2^32
 
 sobol :: [Int] -> Int -> Float
-sobol v i = normalise xi
+sobol v i = normalise x_i
  where
-  xi = foldl xor 0 $ zipWith (*) v (bitVector i)
+  x_i = foldl xor 0 $ zipWith (*) v (bitVector i)
 \end{verbatim}
 The \verb|bitVector|-function converts the given index into its binary
-representation and \verb|normalise| maps the values to floating-point
-numbers in the $(0,1]$ interval.
+representation and \verb|normalise| maps the $x_i$ integer values from
+(\ref{eq:sobol_inductive}) to floating-point numbers in the $(0,1]$
+interval.
 
 To generate a complete sequence we can map over all indices:
 \begin{verbatim}
@@ -211,114 +192,16 @@ sobolND :: Word32 -> [[Word32]] -> [[Float]]
 sobolND m vs = map (sobol1D m) vs
 \end{verbatim}
 
-Implementing this in NESL is a straight forward translation of the
-above Haskell code, which we will not include here. A single piece of
-the puzzle was missing though, as NESL does not provide a way to
-\emph{fold} using an exclusive-or operation. Instead we had to
-implement our own:
+In our case, where we want to compute $\pi$, we generate a
+two-dimensional sequence and count how many of the coordinate-pairs
+are inside and outside the unit circle. This can be done by a single
+reduction operation.
 
-\begin{verbatim}
-% assumes non-empty argument
-function xor_reduce(xs) = xor_scan(xs)[#xs-1] xor xs[#xs-1] $
-\end{verbatim}
-
-In the remaining languages, Accelerate, Nikola and Copperhead, the
-implementation did not turn out to be as easy, as they do not support
-nesting of parallel operations. In Copperhead it should in theory be
-possible, but as mentioned previously the current implementation does
-not support nesting as promised.
-
-To illustrate we will now show how to implement the inductive
-algorithm in Accelerate, which will uncover some problems with the
-flat data-parallelism offered by Accelerate, Nikola and Copperhead. We
-choose Accelerate for the presentation as it is typed in contrast with
-Copperhead and the Array-types are simpler than in Nikola, as they do
-not include representation tags.
-
-The type of Accelerate arrays are indexed by their dimensionality,
-thus \verb|Array DIM2 Word32| is a two dimensional array (a matrix)
-with \verb|Word32| values of regular shape. 
-% Accelerate arrays can not be irregular, and the
-% two dimensional array will thus be rectangular.
-
-At first, we can translate \verb|sobol| more or less directly:
-\begin{verbatim}
-normaliseA x = fromIntegral x / 2^bitcount
-bitVectorA e = generate (index1 32) gen
- where gen = boolToInt . testBit e . unindex1
-
-sobolA :: Acc (Vector Int) -> Exp Int -> Exp Float
-sobolA v i = normalise (the xi)
- where
-  xi = fold xor 0 $ zipWith (*) v (bitVector i)
-\end{verbatim}
-
-The next step becomes more complicated however, as Accelerate forbids
-nested maps. Thus, we cannot write \verb|map sobolA|.  Instead we have
-to push this map inside the definition of \verb|sobolA|, a manual
-vectorisation of both \verb|bitVectorA| and \verb|sobolA|:
-\begin{verbatim}
-bitVectors2D :: Exp Int -> Acc (Array DIM2 Int)
-bitVectors2D n = generate (index2 n 32) gen
- where gen ix = let Z :. e :. i = unlift ix
-                in  boolToInt $ testBit e i
-sobol1DA :: Exp Int
-         -> Acc (Vector Int)
-         -> Acc (Vector Float)
-sobol1DA m vec = map normalise xi
- where
-  xi = fold xor 0 $ zipWith (*) vecRep mat
-  mat = bitVectors2D m
-  vecRep = replicate (lift (Z :. m :. All)) vec
-\end{verbatim}
-What we have done is to vectorise every operation used in
-\verb|sobolA|, such that they operate on values of an additional
-dimension.
-
-If we wish to generate $n$-dimensional Sobol sequences, we will again
-face the same barrier and we have to do a vectorisation in the
-direction vector argument of \verb|sobol1DA|. Where we use
-two-dimensional arrays we have to use three-dimensional arrays. We
-will not present a \verb|sobolNDA|, but just mention that in all
-parts of the sobol1DA above we would have to take the additional
-dimension into account.
-
-% \begin{verbatim}
-% sobolNDA :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
-% sobolNDA dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
-%   where
-%     j = fst . unindex2 . shape $ dirvs
-%     dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
-%     normalise x = fromIntegral x / 2^bitcount
-%     bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
-%       where
-%         helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
-%                     in fromIntegral . boolToInt $ testBit e i
-% \end{verbatim}
-
-This example is a small scale illustration of a problem in languages
-that disallow nested array operations. That is, flat data-parallel
-languages. The fact that we could not apply \verb|sobolA| in the
-context that we wanted, but had to change its inner workings showcases
-a lack of composability and abstraction in such languages.
-
-In a larger setting, the mapped function could be arbitrarily complex,
-thus making the vectorisation hard to do by hand, or the function could
-reside in an external library, making the transformation impossible.
-
-Computing $\pi$ has not been covered in the above section,
-and the computation is straight forward in all languages except
-Nikola. To compute $\pi$ from the 2-dimensional Sobol-sequence we need
-a reduction operation, which is not included in Nikola. Nikola does
-only provide a few mapping operations and a iteration construct for
-sequential iteration inside a CUDA-kernel. Instead we have to use a
-divide-and-conquer algorithm which requires the scheduling of
-$O(lg~n)$ kernels or reduce on the CPU.
-
-% \paragraph{Thrust} \todo{Perhaps some note on why I selected to use a
-%   combination of raw CUDA and Thrust?}
+\todo{Perhaps some code that shows how to compute $\pi$, maybe it is
+  unnecessary?}
 
 \subsection{Alternative algorithm}
+\label{sec:gpusobol}
 The inductive algorithm presented above requires a linear amount of
 exclusive-or operations in the bit representation used. An alternative
 recursive algorithm have been shown that uses a single exclusive-or
@@ -327,32 +210,11 @@ optimized for GPUs by Thomas Bradley et
 al. \cite[Chapter~16]{hwy2011emerald}. An implementation of this
 GPU-optimized algorithm is included as an example in the CUDA SDK. The
 algorithm progresses by first filling a block of values using the
-inductive algorithm and then fill each subsequent block from a
-recursive formulation using the values from the preceding iteration.
+inductive algorithm and then fill each subsequent block using a
+recursive formulation from the values of the preceding iteration.
 
-In neither Accelerate, Nikola or Copperhead can we implement this
-GPU-optimized algorithm, as they lack a construct for iterative array
-construction. Such a construct is commonly known as \texttt{unfold}
-and would in Accelerate have a type similar to:
 
-\todo{Does NESL have such an operation?}
-
-\begin{verbatim}
-unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
-       -> Array sh a -> Array (sh :. Int) a
-\end{verbatim}
-
-Where the first argument defines the number of times to unfold, and
-the block size is defined from the size of the array argument.
-
-\subsection{Benchmark}
-\emph{TODO present benchmark of calculating $\pi$ using Sobol-sequences}
-
-\emph{TODO evaluate benchmark results. Mention that both Nikola and
-  Accelerate code is fused into a single kernel. CUDA uses several
-  kernels, because no automatic fusion is performed}
-
-\section{Case II: Binomial option pricing}
+\section{Case 2: Binomial option pricing}
 In this section we look at the problem of \emph{option pricing}. The
 name \emph{option} is used collectively for a range of different
 financial contracts which are time-limited opportunities to buy or
@@ -364,37 +226,44 @@ A particular type of options, \emph{American style options}, are
 characterised by having a pre-determined constant strike price $K$,
 and may be exercised in a time-interval up until the expiration time
 $T$. A \emph{call option} on asset $A$ grants the right to buy $A$,
-whereas a \emph{put option} grants the right to sell.
+whereas a \emph{put option} grants the right to sell. For simplicity
+and compatibility with the CUDA SDK implementation, we will only price
+call options. We can represent this in Haskell by\footnote{We would
+  normally use a record here, but records are not supported in
+  Accelerate or Nikola, so we use a tuple for compatibility}.
 
 \begin{verbatim}
-data OptType = Call | Put
-data Option = Option
- { opttyp :: OptType -- Call or Put option?
- , s0     :: Float   -- Current price of underlying
- , strike :: Float   -- Strike price
- , expiry :: Int     -- Expiry in years
- , r      :: Float   -- Riskless rate
- , vol    :: Float   -- Volatility
- }
+type CallOption =
+      ( Float -- s0   Current price of underlying
+      , Float -- K    Strike price               
+      , Int   -- T    Expiry in years            
+      , Float -- r    Riskless interest rate     
+      , Float -- vol  Volatility
+      )
 \end{verbatim}
 
 To estimate the price of an American option we have to simulate the
 price development of the underlying, as there is no known closed-form
 analytic solution. For the simpler case of \emph{European style
   option} pricing, a closed-form solution is available in the
-Black-Scholes formula \cite{black1973pricing}.
+Black-Scholes formula \cite{black1973pricing}. 
 
-A relatively simple discrete time model for computing the price of an
-American style option is the \emph{standard binomial
-  model}~\cite{cox1979option}.  The basic assumption is that the price
-of the underlying follows a binomial process over equally spaced time
-steps. This makes it possible to write out the possible future states
-of the underlying. Moving a single time step forward, the binomial
-process produces two possible future states of the underlying. The
-value of the underlying can go either up or down with probabilities
-$q$ and $(1 - q)$ respectively. We denote the rate of up and down
-movement as $u$ and $d$ respectively. The change over one period
-$\Delta t$ is thus given as:
+A relatively simple discrete time model for computing the price of
+\emph{American} and \emph{European style options} is the
+\emph{standard binomial model}~\cite{cox1979option}.  We will use it
+for pricing European options for compatibility with the CUDA SDK
+implementation. The performance characteristics should map directly to
+that of American option pricing.
+
+The basic assumption is that the price of the underlying follows a
+binomial process over equally spaced time steps. This makes it
+possible to write out the possible future states of the
+underlying. Moving a single time step forward, the binomial process
+produces two possible future states of the underlying. The value of
+the underlying can go either up or down with probabilities $q$ and $(1
+- q)$ respectively. We denote the rate of up and down movement as $u$
+and $d$ respectively. The change over one period $\Delta t$ is thus
+given as:
 
 \begin{equation}
 S(t+\Delta t) = \left\{
@@ -415,7 +284,7 @@ $u\cdot d = 1$.
   \centering
   \tikzstyle{nodestyle} = [text centered, minimum size=0.42cm, inner sep=0]
 
-\begin{tikzpicture}
+\begin{tikzpicture}[scale=0.95, every node/.style={transform shape}]
   \node at (0,0) [nodestyle] (S1) {$S(t_0)$};
 
   \node at (-1, -1) [nodestyle] (dS) {$dS(t_0)$};
@@ -470,46 +339,167 @@ data BinParams = BinParams
   }
 \end{verbatim}
 
+The main part of the program has the form:
+\begin{verbatim}
+binom :: Int -> Option -> Float
+binom n (s0,strike,expiry,riskless,volatility) = 
+   head $ foldl stepBack vFinal [1..n]
+ where
+   -- content of 'where'-clause is presented below
+\end{verbatim}
+
+Each step of the \verb|foldl| will discount one step backwards,
+through the function \verb|stepBack|, starting at the final
+$v$-values, \verb|vFinal|. \verb|vFinal| and \verb|stepBack| are
+defined in the \verb|where|-clause and will be explained now.
+
 The leaf nodes represents the possible values of the underlying at
 the expiration time. After $n$ time steps, we will have $n+1$ leafs, which
 values we can compute by:
 \begin{verbatim}
-leafs p s0 n = [s0 * exp(vsdt * fromIntegral (2*i-n))
-        | i <- [0..n :: Int]]
+  dt = fromIntegral expiry/fromIntegral n
+  vsdt = volatility * sqrt dt
+  leafs = [s0 * exp(vsdt * fromIntegral (2*i-n))
+          | i <- [0..n]]
 \end{verbatim}
 These leafs represents all the possible prices at expiration time, and
 for each possibility we can determine whether it would worthwhile to
-exercise our option right. Depending on whether we are pricing a
-\emph{put} or a \emph{call} option, the option values at expiration
-will be either of:
+exercise our option right:
 \begin{verbatim}
-finalPut  p (AOpt{..}) = map (\v -> max (strike - v) 0) $ leafs p s0 n
-finalCall p (AOpt{..}) = map (\v -> max (v - strike) 0) $ leafs p s0 n
+  vFinal :: [Float]
+  vFinal = map (\x -> max 0 $ x - strike) leafs
 \end{verbatim}
 From this point, we can discount backward one time-step at a time to
 calculate the option price at time zero, while taking into account the
 probabilities $q$ and $1-q$.
 \begin{verbatim}
-stepbackward p opt prev i =
-    zipWith3 (\up down st -> max (strike - st) 
-                                 (e^(-r*dt) * (q*up + (1-q)*down)))
-             prev
-             (tail prev)
-             (leafs i)
+  rr = exp(riskless*dt)
+  rrInv = 1.0 / rr
+  u = exp(vsdt)         ; d = 1/u
+  pu = (rr - d)/(u - d) ; pd = 1.0 - pu
+  puByr = pu * rrInv    ; pdByr = pd * rrInv
+
+  stepBack :: [Float] -> a -> [Float]
+  stepBack vPrev _ = zipWith back (tail vPrev)
+                                  (init vPrev)
+    where back x1 x2 = puByr * x1 + pdByr * x2
 \end{verbatim}
-Everything can then be combined:
+
+Often, we are not only interested in pricing a single option, but a
+whole collection of options, a portfolio. This also enables new
+opportunities for parallelisation, as we can price each option
+independently. We are thus also going to examine the program:
+
 \begin{verbatim}
-binomial p opt@(AOpt{..}) =
-    head $ foldl (stepbackward p opt) (finalPut opt) [n, n-1 .. 1]
+binomPortfolio n options = map (binom n) options
 \end{verbatim}
 
-In our benchmarks we will price European style options, such that we
-can use Black Scholes to evaluate the correctness of our
-implementation. The performance characteristics should map directly to
-that of American option pricing.
+\section{Qualitative aspects}
+In this section we will look at each of the languages we have tested,
+and present some of the difficulties we encountered while implementing
+the above two programs.
 
-We now implement this pricing algorithm as a parallel program in
-Accelerate. We cannot parallelize the outer \verb|foldl| operation,
+\subsection{Accelerate}
+Accelerate is a flat data-parallel functional DSL for array
+computations embedded in Haskell. Flat meaning that nested uses of its
+data-parallel operations is disallowed. This limitation is present in
+the type system, by having a two-layered language. \todo{write about
+  Exp/Acc division}
+
+\begin{itemize}
+\item Skeleton-based
+\item Clean partition between front-end and back-ends, allowing for
+  multiple backends. One could imagine MPI, FPGA or OpenCL backends.
+\end{itemize}
+
+Accelerate provides no control over how operations are fused
+\todo{write something about their fusion implementation, see
+  acc-optim.pdf}
+
+\subsubsection{Case 1: Sobol sequence generation}
+The type of Accelerate arrays are indexed by their dimensionality,
+thus \verb|Array DIM2 Int| is a two dimensional array (a matrix),
+of regular shape, containing \verb|Int| values. 
+
+At first, we can translate \verb|sobol| more or less directly:
+\begin{verbatim}
+normaliseA :: Exp Int -> Exp Float
+normaliseA x = fromIntegral x / 2.0^32
+
+bitVectorA :: Exp Int -> Acc (Vector Int)
+bitVectorA e = generate (index1 32) gen
+ where gen = boolToInt . testBit e . unindex1
+
+sobolA :: Acc (Vector Int) -> Exp Int -> Exp Float
+sobolA v i = normalise (the x_i)
+ where
+  x_i :: Acc (Array DIM0 Int)
+  x_i = fold xor 0 $ zipWith (*) v (bitVector i)
+\end{verbatim}
+Only changes are that we use the built-in \verb|generate| instead of
+the \verb|map f [0..31]| pattern in \verb|bitVector|, and we have to
+use \verb|the :: Array DIM0 a -> Exp a| to extract the value of the
+zero-dimensional array returned by the fold.
+
+The next step becomes more complicated however, as Accelerate forbids
+nested maps. Thus, we cannot write \verb|map sobolA|.  Instead we have
+to push this map inside the definition of \verb|sobolA|, requiring a
+manual vectorisation of both \verb|bitVectorA| and \verb|sobolA|:
+\begin{verbatim}
+bitVectors2D :: Exp Int -> Acc (Array DIM2 Int)
+bitVectors2D n = generate (index2 n 32) gen
+ where gen ix = let Z :. e :. i = unlift ix
+                in  boolToInt $ testBit e i
+sobol1DA :: Exp Int
+         -> Acc (Vector Int)
+         -> Acc (Vector Float)
+sobol1DA m vec = map normalise xi
+ where
+  xi = fold xor 0 $ zipWith (*) vecRep mat
+  mat = bitVectors2D m
+  vecRep = replicate (lift (Z :. m :. All)) vec
+\end{verbatim}
+What we have done is to vectorise every operation used in
+\verb|sobolA|, such that they operate on values of an additional
+dimension.
+
+If we wish to generate $n$-dimensional Sobol sequences, we will again
+face the same barrier and we have to do a vectorisation in the
+direction vector argument of \verb|sobol1DA|. Where we use
+two-dimensional arrays we have to use three-dimensional arrays. We
+will not present a \verb|sobolNDA|, but just mention that in most
+parts of the sobol1DA above we would have to take the additional
+dimension into account.
+
+% \begin{verbatim}
+% sobolNDA :: Acc (Array DIM2 Word32) -> Exp Int -> Acc (Array DIM2 Float)
+% sobolNDA dirvs n = map normalise $ fold xor 0 $ zipWith (*) dirvs_rep (bitVectors n j)
+%   where
+%     j = fst . unindex2 . shape $ dirvs
+%     dirvs_rep = replicate (lift $ Z :. n :. All :. All) dirvs
+%     normalise x = fromIntegral x / 2^bitcount
+%     bitVectors n j = generate (lift $ Z :. n :. j :. constant bitcount) helper
+%       where
+%         helper ix = let Z :. e :. _ :. i = unlift ix :: Z :. Exp Int :. Exp Int :. Exp Int
+%                     in fromIntegral . boolToInt $ testBit e i
+% \end{verbatim}
+
+This example is a small scale illustration of a problem in languages
+that disallow nested array operations. That is, flat data-parallel
+languages. The fact that we could not apply \verb|sobolA| in the
+context that we wanted, but had to change its inner workings showcases
+a lack of composability and abstraction in such languages. You are
+also much more often handling indexing manually, which is a common
+source of errors.
+
+In a larger setting, the mapped function could be arbitrarily complex,
+thus making the vectorisation hard to do by hand, or the function could
+reside in an external library, making the transformation impossible.
+
+It was straight forward to do the rest of the $\pi$ calculation.
+
+\subsubsection{Case 2: Binomial option pricing}
+We cannot parallelize the outer \verb|foldl| operation,
 because of the dependencies between each iteration. Thus, the
 parallelisation of \verb|binomial| must be found in the calls to
 \verb|map| and \verb|zipWith3|. Thus our implementation use an
@@ -525,39 +515,129 @@ processors. Becase CUDA does not provide a way to synchronize between
 work-groups other than adding a synchronization barrier between
 individual kernel calls.
 
-In Figure \emph{TODO} we present the actual execution times.
-
 An alternative parallelisation strategy is to price several
 options simultaneously, a portfolio pricer. Thus, we investigate
 the parallelisation opportunities for:
 \begin{verbatim}
-binomialPortfolio options = map binomial options
+binomialPortfolio n options = map (binomA n) options
 \end{verbatim}
 
-An efficient implementation can be found in the CUDA SDK, and this is
-the implementation we want to compare against. In the algorithm
-present there, ...
+\subsubsection{Additional remarks} Accelerate is an active project
+with regular releases and a good online documentation. \todo{Anything
+  else?}
 
-\begin{itemize}
-% \item Introduce binomial option pricing
-% \item Show how that would lead to host synchronisation in each iteration
-% \item See if we can find some paper about the overhead incurred by
-%   extraneous kernel launches
-% \item Say that an alternative parallelisation scheme prices several
-%   options simultaneously: portfolio pricing.
-\item Show that we have a hard time expressing such a portfolio
-  pricer, because of irregularity when performing the manual
-  vectorisation
-\item Present a benchmark showing the benefit of having portfolio
-  pricer rather than pricing each option in their own kernels
-  sequentially.
-\end{itemize}
+\subsection{Nikola}
+Nikola is like Accelerate a flat data-parallel functional DSL for
+array computations embedded in Haskell.
 
-\section{Qualitative language comparison}
-\todo{Section with remarks about level of maintenance/developer
-  activity, quality of compiler e.g. error messages, and how often you
-  encounter problems (e.g. CUDA unspecified launch failure). See list
-  on Google Drive, number of users}
+In contrast with Accelerate, Nikola support numerous Array types, and
+it is through careful selection of these array types that fusion is
+achieved.
+
+ \begin{itemize}
+ \item Only supports map-like higher-order operations (no scan,
+   reduce, etc.)
+ \item No skeletons like Accelerate
+ \end{itemize}
+
+\subsubsection{Case 1: Sobol sequence generation}
+Accelerate and Nikola turned out to have quite similar restrictions,
+as they both require a flat data-parallel approach, with the manual
+vectorisations as presented in the section on Accelerate above.
+We will thus not show a complete Nikola implementation of the
+Sobol-sequence generator.
+
+To compute $\pi$ from the 2-dimensional Sobol-sequence we need
+a reduction operation, which is not included in Nikola. Nikola does
+only provide a few mapping operations and a iteration construct for
+sequential iteration inside a CUDA-kernel. Instead we have to use a
+divide-and-conquer algorithm which requires the scheduling of
+$O(lg~n)$ kernels or perform the reduction on the CPU.
+
+\subsubsection{Case 2: Binomial option pricing}
+
+\subsubsection{Additional remarks} Nikola does not come with much
+documentation, and you are often left to study the code, to discover
+new functionality. A tutorial is available. The project is very
+irregularly updated and is handled by a single maintainer. The
+existing research paper does not reflect the current Nikola, very much
+has changed.
+
+\subsection{Copperhead}
+Copperhead is a nested data-parallel functional DSL for GPU computing
+embedded in Python. It is statically typed and uses Hindley-Milner
+type inference, even though it is embedded inside a dynamically typed
+language. Their idea for implementing nesting is different than
+flattening, as they observe the overhead incurred by the flattening
+transformation. Instead, they want to schedule the different layers of
+the program to the different layers of the parallel architecture of a
+GPU.
+
+\subsubsection{Case 1: Sobol-sequence generation}
+Copperhead does in theory support everything we need to do a direct
+translation from the above Haskell code for Sobol sequence generation,
+but the current implementation does not support nesting as promised in
+their research paper.
+
+We thus have to follow a flat data-parallel approach, but this turned
+out to be quite difficult, as the language is designed with nesting in
+mind. For instance, when processing a two-dimensional array of type
+\texttt{[[Int]]}, there is no way to \texttt{map} over the
+\texttt{Int}'s of the inner arrays, as is necessary if we want to
+scale all values as done in \texttt{normalise} above.
+
+\subsubsection{Case 2: Binomial option pricing}
+
+\subsection{Thrust}
+\subsection{NESL/GPU}
+NESL/GPU is a GPU back-end for the parallel functional programming
+language NESL \cite{}. The back-end reuses the front-end of the CPU
+implementation of NESL, which compiles to an intermediate language
+called VCODE, which is a flattened version of the NESL program. VCODE
+is then transformed and optimized (fusion) and finally interpreted by
+issuing corresponding CUDA kernels.
+
+\subsubsection{Case 1: Sobol-sequence generation}
+NESL/GPU was the most straight forward target language for our
+translation of the Sobol-sequence generator. We will not include the
+code here, as it is almost in one-to-one correspondence with the
+Haskell code.  A single piece of the puzzle was missing though, as
+NESL does not provide a way to \emph{fold} using an exclusive-or
+operation. Instead we had to implement our own (somewhat
+inefficiently) using the existing exclusive-or scan:
+
+\begin{verbatim}
+% assumes non-empty argument
+function xor_reduce(xs) = 
+  xor_scan(xs)[#xs-1] xor xs[#xs-1] $
+\end{verbatim}
+
+\subsubsection{Case 2: Binomial option pricing}
+
+\subsubsection{Additional remarks} Heavy system to use, as you have to
+first compile to VCODE in a Common Lisp interpreter and then optimize
+the VCODE in an SML environment, with no automatization provided.
+
+
+\subsection{Remarks for all languages}
+\todo{Find better heading}
+
+In neither of the languages we have found a way to implement the
+GPU-optimized algorithm for Sobol-sequence construction we mentioned
+in Section \ref{sec:gpusobol}. They all lack a construct for iterative
+array construction. Such a construct is commonly known as
+\texttt{unfold} and would in Accelerate have a type similar to:
+
+\begin{verbatim}
+unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
+       -> Array sh a -> Array (sh :. Int) a
+\end{verbatim}
+Where the first argument defines the number of times to unfold, and
+the block size is defined from the size of the array argument.
+
+\todo{Does Thrust and NESL have such an operation?}
+
+\section{Bencmarks}
 
 \section{Related work}
 Disposition:
@@ -565,6 +645,7 @@ Disposition:
 \item Mention some of the languages we haven't tested. See if can put
   them in categories where the above problems are present and aren't,
   even though we haven't tested them as much.
+\item Any similar efforts int
 \end{itemize}
 
 \section{Future work}

@@ -1,6 +1,6 @@
 module Sobol where
 
-import Data.Bits
+import Data.Bits (xor, testBit)
 import Data.Word (Word32)
 
 bitcount :: Num a => a
