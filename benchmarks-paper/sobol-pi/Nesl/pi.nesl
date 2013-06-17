@@ -21,7 +21,8 @@ dirvs = [[2147483648,1073741824,2684354560,1342177280,
 
 
 % normalise : int -> float %
-function normalise(x) = float(x) / 2.0^bitcount $
+% function normalise(x) = float(x) / 2.0^bitcount $ %
+function normalise(x) = float(x) / 4294967296.0 $
 
 % not really signum, as we never return -1, 
   but in this program we never use signum on negative numbers %
