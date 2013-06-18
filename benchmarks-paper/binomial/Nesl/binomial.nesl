@@ -42,10 +42,10 @@ function binom (numSteps, (s0,strike,expiry,riskless,volatility)) =
        leafs = { s0 * exp(vsdt * float(2 * i - numSteps)) : i in [0:numSteps] };
 
        % Profits at the final stage %
-       profit = { l - strike : l in leafs };
+       profit = { x - strike : x in leafs };
        vFinal = { max(0.0, p) : p in profit };
 
        first = iter(puByr, pdByr, numSteps, vFinal);
    in  first[0] $
 
-bench_binom(n) = time(binom(n, sampleOpt)) $
+function bench_binom(n) = time(binom(n, sampleOpt)) $
