@@ -31,8 +31,10 @@ function signum(x) = btoi(x == 0) $
 % bitVector : int -> [int] %
 function bitVector (e) = { signum(e and lshift(1, j)) : j in [0:bitcount] } $
 
+function xor_reduce(xs) = parity(xs) $
+
 % assumes non-empty argument %
-function xor_reduce(xs) = xor_scan(xs)[#xs-1] xor xs[#xs-1] $
+function xor_reduce_by_scan(xs) = xor_scan(xs)[#xs-1] xor xs[#xs-1] $
 
 % This version of xor-reduce is three times slower (using the serial
   interpreter) than the one based on xor_scan.
