@@ -3,6 +3,9 @@
 
 #include <thrust/device_vector.h>
 
-extern "C" float computepi(thrust::device_vector<float> *d_sobol, unsigned int n_vectors);
+extern "C"
+float computepi(thrust::device_vector<unsigned int> *d_directions,
+                unsigned int n,
+                unsigned int dimensions);
 
 #endif

@@ -1,19 +1,16 @@
 all: computepi
 
-sobol.o: sobol.cu
-	nvcc -arch=sm_20 -I/usr/local/cuda-5.0/include -o $@ -c $<
-
 computepi.o: computepi.cu
 	nvcc -arch=sm_20 -I/usr/local/cuda-5.0/include -o $@ -c $<
 
 main.o: main.cu
 	nvcc -arch=sm_20 -I/usr/local/cuda-5.0/include -o $@ -c $<
 
-computepi: sobol.o computepi.o main.o
-	g++ -m64 -o $@ sobol.o computepi.o main.o -L/usr/local/cuda-5.0/lib64 -lcudart
+computepi: computepi.o main.o
+	g++ -m64 -o $@ computepi.o main.o -L/usr/local/cuda-5.0/lib64 -lcudart
 
 run: all
 	./computepi
 
 clean:
-	rm -f computepi sobol.o computepi.o main.o
+	rm -f computepi computepi.o main.o

@@ -1,0 +1,51 @@
+% type Option = %
+%          ( Float -- ^ Current price of underlying %
+%          , Float -- ^ Strike price                %
+%          , Int   -- ^ Expiry in years             %
+%          , Float -- ^ Riskless interest rate      %
+%          , Float -- ^ Volatility %
+%          ) %
+
+% -- ^ A sample option for testing purposes %
+% -- Price: 5.349524 (with 2048 time steps) %
+% sampleOpt :: Option %
+sampleOpt = (60.0, 65.0, 1, 0.1, 0.2) $
+
+function back(puByr, pdByr, x1, x2) = puByr * x1 + pdByr * x2 $
+
+function tail(xs) = let (_, rest) = head_rest(xs) in rest $
+function init(xs) = let (rest, _) = rest_tail(xs) in rest $
+
+% Discounting backwards %
+function stepBack(puByr, pdByr, vPrev) = { puByr * x1 + pdByr * x2 : x1 in tail(vPrev); x2 in init(vPrev) } $
+
+function iter(puByr, pdByr, n, acc) =
+   if n == 0 then acc
+   else iter(puByr, pdByr, n-1, stepBack(puByr, pdByr, acc)) $
+
+
+% binom : int * Option -> float %
+function binom (numSteps, (s0,strike,expiry,riskless,volatility)) =
+   let
+       % Model and option variables %
+       dt = float (expiry)/float(numSteps);
+       vsdt = volatility * sqrt(dt);
+       u = exp(vsdt);
+       d = 1.0/u;
+       rr = exp(riskless*dt);
+       rrInv = 1.0 / rr;
+       pu = (rr - d)/(u - d);
+       pd = 1.0 - pu;
+       puByr = pu * rrInv;
+       pdByr = pd * rrInv;
+
+       leafs = { s0 * exp(vsdt * float(2 * i - numSteps)) : i in [0:numSteps] };
+
+       % Profits at the final stage %
+       profit = { x - strike : x in leafs };
+       vFinal = { max(0.0, p) : p in profit };
+
+       first = iter(puByr, pdByr, numSteps, vFinal);
+   in  first[0] $
+
+function bench_binom(n) = time(binom(n, sampleOpt)) $
