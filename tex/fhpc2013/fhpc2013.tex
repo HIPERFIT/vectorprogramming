@@ -32,15 +32,22 @@
 \maketitle
 
 \begin{abstract}
-  We present a practical survey of a handful of current GPU languages and
-  libraries and report on both qualitative and quantitative aspects.
+  We present a survey of a handful of current GPU languages and
+  libraries and report on both qualitative and quantitative findings
+  from using them in practice.
 
-  The survey is practical in the sense that we have taken a few
-  algorithms from the domain of computation finance that are used in
-  the real world.
+  We investigate Accelerate \cite{chakravarty2011accelerating}, Nikola
+  \cite{mainland2010nikola}, Copperhead \cite{Catanzaro2011}, NESL/GPU
+  \cite{bergstrom2012nested}, Thrust \cite{Thrust} and their
+  performance is compared with efficient CUDA implementations.
+
+  We have taken two cases from the domain of computational finance and
+  ported them to each of the languages, discovering limitations in the
+  mean time.
 
   The aim is that the paper can be used to get an overview of the
-  current state of existing languages.
+  current state of existing GPU languages and as a ``do's and don'ts''
+  for future research in this area.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -58,55 +65,48 @@ architecture can deliver a high-throughput for many problems in the
 sciences, engineering and finance.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
-frameworks in both academia and industry. These two languages are
-extension of C and C++ respectively. Both OpenCL and CUDA require
-manual memory management, does not provide any means for automatic
-deforestation, and offers little abstraction from the underlying
-hardware, such that, for example memory coalescing must be on your
-mind during implementation.
+frameworks in both academia and industry. They both extend require
+manual memory management, neither provides any means for automatic
+deforestation (fusion), and only offers little abstraction from the
+underlying hardware, such that for instance, memory coalescing must be
+on your mind during implementation.
 
 To make GPU programming more accessible, quite a number of new
 high-level data-parallel languages as well as GPU libraries for
 existing languages have been developed \cite{Catanzaro2011,
   chakravarty2011accelerating, mainland2010nikola,
   svensson2011obsidian, bergstra2010theano, homepage:rgpu,
-  bergstrom2012nested, homepage:bohrium}, though none of them has
+  bergstrom2012nested, homepage:bohrium}, though none of them have
 achieved the same popularity and attention as programming directly in
 OpenCL or CUDA.
 
 In this paper we present our experience of applying a few functional
 data-parallel languages to a couple of problems from the domain of
-computational finance and report on the current state of GPU
-languages. Our scope is both qualitative in terms of the ease with
-which algorithms can be formulated and debugged, as well as
-quantitative in terms of execution performance.
+computational finance and report on their current state. Our scope is
+both qualitative in terms of the ease with which algorithms can be
+formulated, optimised and debugged, as well as quantitative in terms
+of execution performance.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
 which is an efficient choice for numerical integration and Monte Carlo
 simulation \cite{acworth1998comparison}. Our second experiment is the
 implementation of an option-pricing algorithm, \emph{the binomial
-  method}. Both of these algorithms have been implemented in
-Accelerate \cite{chakravarty2011accelerating}, Nikola
-\cite{mainland2010nikola}, Copperhead, NESL/GPU, Thrust and their
-performance is compared with efficient CUDA implementations.
+  method} \cite{cox1979option}. Both of these algorithms have been
+implemented in Accelerate \cite{chakravarty2011accelerating}, Nikola
+\cite{mainland2010nikola}, Copperhead \cite{Catanzaro2011}, NESL/GPU
+\cite{bergstrom2012nested}, Thrust \cite{Thrust} and their performance
+is compared with efficient CUDA implementations.
 
-\paragraph{Outline} In the next section we will introduce our two
-cases with implementations in Haskell syntax, using the inefficient
-built-in lists as data-structure.
+\paragraph{Outline} In the next two sections we will introduce the two
+example programs that we will use to evaluate the languages. We will
+follow that up with detailing our findings from implementing the two
+cases in each of the languages. After discussing the implementation
+efforts, we will look at more quantitative data, in the form of
+performance benchmarks.
 
-Following that, we will have a section on the qualitative language
-aspects, with our findings from doing the implementation in each
-language.
-
-Lastly, we will present performance benchmarks.
-
-%\todo{contributions section?} % 1) Demonstrate lack of composability and
-  % abstraction 2) Performance comparison of languages that have not
-  % been previously been compared
-
-\section{Cases}
-\subsection{Case 1: Sobol sequence generation}
+\section{Case I: Sobol sequence generation}
+\label{sec:sobol}
 The first problem that we have used to evaluate the languages is a
 quasi-random number generator (QRNG), namely the \emph{Sobol sequence
   generator}. QRNGs is a category of random number generators that
@@ -146,8 +146,8 @@ number of needed samples. In this case study, we use the Sobol numbers
 to perform a simple $\pi$-estimation.
 
 We will first present the implementation of an inductive formulation
-of the Sobol algorithm \cite{bratley1988algorithm}, and we will later get
-back to a more efficient implementations optimized for GPUs
+of the Sobol algorithm \cite{bratley1988algorithm}, and we will later
+get back to a more efficient implementation optimised for GPUs
 \cite[Chapter~16]{hwy2011emerald}.
 
 The algorithm is seeded by a so-called \emph{direction vector}. To
@@ -197,24 +197,32 @@ two-dimensional sequence and count how many of the coordinate-pairs
 are inside and outside the unit circle. This can be done by a single
 reduction operation.
 
-\todo{Perhaps some code that shows how to compute $\pi$, maybe it is
-  unnecessary?}
+% \todo{TODO: add some code that shows how to compute $\pi$, or maybe
+%   it is unnecessary?}
 
-\subsection{Alternative algorithm}
+\subsection{GPU parallelisation}
 \label{sec:gpusobol}
+The inductive algorithm for Sobol sequence generation is
+embarrassingly parallel and can be written as a single GPU
+kernel. Computing $\pi$ from a two-dimensional Sobol sequence can be
+done with a parallel reduction with (+) and a post-processing
+step. These two kernels can be fused together, such that the complete
+computation can be executed in a single kernel without ever storing
+the Sobol-sequences in GPU memory.
+
 The inductive algorithm presented above requires a linear amount of
-exclusive-or operations in the bit representation used. An alternative
-recursive algorithm have been shown that uses a single exclusive-or
-operation for each number. This recursive algorithm have been
-optimized for GPUs by Thomas Bradley et
+exclusive-or operations in the bit representation used for each
+element of the sequence. An alternative recursive algorithm have been
+shown that uses a single exclusive-or operation for each number. This
+recursive algorithm have been optimised for GPUs by Thomas Bradley et
 al. \cite[Chapter~16]{hwy2011emerald}. An implementation of this
-GPU-optimized algorithm is included as an example in the CUDA SDK. The
+GPU-optimised algorithm is included as an example in the CUDA SDK. The
 algorithm progresses by first filling a block of values using the
 inductive algorithm and then fill each subsequent block using a
-recursive formulation from the values of the preceding iteration.
+recursive formulation from the values of the preceding iteration,
+which is done by a single exclusive-or operation.
 
-
-\section{Case 2: Binomial option pricing}
+\section{Case II: Binomial option pricing}
 In this section we look at the problem of \emph{option pricing}. The
 name \emph{option} is used collectively for a range of different
 financial contracts which are time-limited opportunities to buy or
@@ -394,52 +402,110 @@ independently. We are thus also going to examine the program:
 binomPortfolio n options = map (binom n) options
 \end{verbatim}
 
-\section{Qualitative aspects}
-In this section we will look at each of the languages we have tested,
-and present some of the difficulties we encountered while implementing
-the above two programs.
+\subsection{GPU Parallelisation}
+\label{sec:gpubinom}
+We consider two simple parallelisation strategies for the binomial
+option pricing algorithm. As mentioned, we are either interested in
+pricing a single option, or pricing a portfolio of options.
 
-\subsection{Accelerate}
-Accelerate is a flat data-parallel functional DSL for array
-computations embedded in Haskell. Flat meaning that nested uses of its
-data-parallel operations is disallowed. This limitation is present in
-the type system, by having a two-layered language. \todo{write about
-  Exp/Acc division}
+From code of \verb|binom| above, we see that we have to synchronise
+between each iteration of \verb|foldl| and the real opportunity for
+parallelism in the call to \verb|zipWith| inside
+\verb|stepBack|. 
 
-\begin{itemize}
-\item Skeleton-based
-\item Clean partition between front-end and back-ends, allowing for
-  multiple backends. One could imagine MPI, FPGA or OpenCL backends.
-\end{itemize}
+Modern GPUs provides two possibilities for synchronisation. All
+threads in a block/work group of threads can be synchronised by
+issuing \verb|__syncthreads()| in CUDA or \verb|barrier()| in
+OpenCL. Secondly, a synchronisation between all threads can happen
+between each kernel invocation \footnote{In addition -- and as usually
+  -- a thread synchronises with itself after each statement in its
+  kernel code}.
 
-Accelerate provides no control over how operations are fused
-\todo{write something about their fusion implementation, see
-  acc-optim.pdf}
+We thus have a selection: intra-block synchronisation or inter-block
+synchronisation. If we are to compute or problem in a single block, we
+will be limited in the number of available threads and a single block
+is expected to be mapped to a single streaming multiprocessor (NVIDIA
+does not seem to define this formally).
 
-\subsubsection{Case 1: Sobol sequence generation}
+For pricing a single option our best attempt to utilise the complete
+GPU is thus to synchronise by scheduling each \verb|zipWith| as a
+separate GPU kernel. For the portfolio pricer this is not a problem,
+we can launch a block for each of the options to.
+
+Other more efficient and elaborate parallelisation schemes for
+binomial option pricing exists. We refer to \cite{CUDAbinomial} and
+\cite{ganesan2009acceleration}.
+
+In the next sections we will look at implementations of the above two
+programs in each of the languages we have tested, and present some of
+the difficulties we encountered.
+
+\section{Accelerate}
+Accelerate is a statically typed, flat data-parallel functional DSL
+for array computations embedded in Haskell. Flat meaning that nested
+uses of collective operations is disallowed. This limitation is
+enforced by the type system.
+
+% Accelerate is based on a set of CUDA skeletons. For each of its
+% collective array operations there exist an optimised CUDA skeleton
+% with a variable body,
+
+% The parallel map in Accelerate has type:
+% \begin{verbatim}
+%   map :: (Shape sh, Elt a, Elt b)
+%       => (Exp a -> Exp b)
+%       -> Acc (Array sh a)
+%       -> Acc (Array sh b)
+% \end{verbatim}
+% The first-order function in the first argument is written in a small
+% expression language (embedded with higher-order abstract syntax),
+% which is compiled into CUDA C code and inserted into the body of the
+% \texttt{map}-skeleton.
+
+% The \texttt{Exp} and \texttt{Acc} types limits how we can combine the
+% different collective operations, as no \texttt{Acc} computation is
+% allowed inside 
+
+Accelerate is cleanly partitioned into front-end and back-end,
+allowing for multiple backends to be developed independently. One
+could imagine MPI, FPGA or OpenCL backends.
+
+Accelerate provides no control over how operations are fused or when
+data are moved between the host and device. The only way to access an
+array generated by Accelerate is through a copy to host memory.
+
+It can of course be seen as an advantage that you do not have to
+manually handle data movement, but in some cases it could be desirable
+to keep the data on the device and expose a raw CUDA device pointer
+for further processing in another environment (e.g. an external CUDA
+library).
+
+\subsection{Case I: Sobol sequence generation}
 The type of Accelerate arrays are indexed by their dimensionality,
-thus \verb|Array DIM2 Int| is a two dimensional array (a matrix),
-of regular shape, containing \verb|Int| values. 
+thus \verb|Array DIM2 Int| is a regular two dimensional array (a
+matrix) of \verb|Int| values.  \verb|Vector a| is a shorthand for
+\verb|Array DIM1 a|.
 
-At first, we can translate \verb|sobol| more or less directly:
+At first, we can translate \verb|bitVector|, \verb|normalise| and
+\verb|sobol| from Section \ref{sec:sobol} more or less directly:
 \begin{verbatim}
-normaliseA :: Exp Int -> Exp Float
-normaliseA x = fromIntegral x / 2.0^32
-
 bitVectorA :: Exp Int -> Acc (Vector Int)
 bitVectorA e = generate (index1 32) gen
  where gen = boolToInt . testBit e . unindex1
 
+normaliseA :: Exp Int -> Exp Float
+normaliseA x = fromIntegral x / 2.0^32
+
 sobolA :: Acc (Vector Int) -> Exp Int -> Exp Float
-sobolA v i = normalise (the x_i)
+sobolA v i = normaliseA (the x_i)
  where
   x_i :: Acc (Array DIM0 Int)
-  x_i = fold xor 0 $ zipWith (*) v (bitVector i)
+  x_i = fold xor 0 $ zipWith (*) v (bitVectorA i)
 \end{verbatim}
-Only changes are that we use the built-in \verb|generate| instead of
-the \verb|map f [0..31]| pattern in \verb|bitVector|, and we have to
-use \verb|the :: Array DIM0 a -> Exp a| to extract the value of the
-zero-dimensional array returned by the fold.
+The only changes is that we replace the \verb|map f [0..31]| pattern
+with an application of the built-in \verb|generate|, and that we have
+to use \verb|the :: Elt a => Array DIM0 a -> Exp a| to extract the
+value of the singleton array returned by the \verb|fold|.
 
 The next step becomes more complicated however, as Accelerate forbids
 nested maps. Thus, we cannot write \verb|map sobolA|.  Instead we have
@@ -453,9 +519,9 @@ bitVectors2D n = generate (index2 n 32) gen
 sobol1DA :: Exp Int
          -> Acc (Vector Int)
          -> Acc (Vector Float)
-sobol1DA m vec = map normalise xi
+sobol1DA m vec = map normalise x_i
  where
-  xi = fold xor 0 $ zipWith (*) vecRep mat
+  x_i = fold xor 0 $ zipWith (*) vecRep mat
   mat = bitVectors2D m
   vecRep = replicate (lift (Z :. m :. All)) vec
 \end{verbatim}
@@ -488,64 +554,71 @@ This example is a small scale illustration of a problem in languages
 that disallow nested array operations. That is, flat data-parallel
 languages. The fact that we could not apply \verb|sobolA| in the
 context that we wanted, but had to change its inner workings showcases
-a lack of composability and abstraction in such languages. You are
-also much more often handling indexing manually, which is a common
-source of errors.
+a lack of composability and abstraction in such languages. When doing
+the transformation, you are often forced to handle indexes manually,
+re-introducing a common source of errors.
 
 In a larger setting, the mapped function could be arbitrarily complex,
 thus making the vectorisation hard to do by hand, or the function could
 reside in an external library, making the transformation impossible.
 
-It was straight forward to do the rest of the $\pi$ calculation.
+It was straight forward to do the rest of the $\pi$ calculation in
+Accelerate.
 
-\subsubsection{Case 2: Binomial option pricing}
-We cannot parallelize the outer \verb|foldl| operation,
-because of the dependencies between each iteration. Thus, the
-parallelisation of \verb|binomial| must be found in the calls to
-\verb|map| and \verb|zipWith3|. Thus our implementation use an
-ordinary Haskell fold running on the CPU and each call to
-\verb|stepbackward| will be executed on the GPU.
+\subsection{Case II: Binomial option pricing}
+We cannot parallelise the outer \verb|foldl| operation in
+\verb|binom|, because of the dependencies between each
+iteration. Thus, as previously mentioned, the parallelisation must be
+found in the calls to \verb|map| and \verb|zipWith|. To do that we use
+an ordinary Haskell \verb|foldl| to build up a large Accelerate
+expression of repeated calls to \verb|stepBack| which will be executed
+on the GPU.
+
+If we want to use all the scalar processors, we will have the same
+problem with dependencies between iterations when writing the program
+in CUDA.
+
+An alternative parallelisation strategy is to price several options
+simultaneously, a portfolio pricer, as explained in Section
+\ref{sec:gpubinom}. In that case we would like to schedule the pricing
+of each option as a separate thread block (work group).
+
 \begin{verbatim}
-Accelerate implementation of binomial pricer
+binomPortfolio n options = map (binomA n) options
 \end{verbatim}
 
-We have the same problem with dependencies between iteration when
-writing the program in CUDA, if we want to use all the scalar
-processors. Becase CUDA does not provide a way to synchronize between
-work-groups other than adding a synchronization barrier between
-individual kernel calls.
+Again, we will face the exact same problem as in Case I: we will have
+to push the \verb|map| inside the \verb|binomA| function and thus
+vectorise every operation inside \verb|binomA|.
 
-An alternative parallelisation strategy is to price several
-options simultaneously, a portfolio pricer. Thus, we investigate
-the parallelisation opportunities for:
-\begin{verbatim}
-binomialPortfolio n options = map (binomA n) options
-\end{verbatim}
+% \subsection{Additional remarks} Accelerate is an active project
+% with regular releases and a good online documentation. \todo{Anything
+%   else?}
 
-\subsubsection{Additional remarks} Accelerate is an active project
-with regular releases and a good online documentation. \todo{Anything
-  else?}
-
-\subsection{Nikola}
-Nikola is like Accelerate a flat data-parallel functional DSL for
+\section{Nikola}
+Like Accelerate, Nikola is a flat data-parallel functional DSL for
 array computations embedded in Haskell.
 
 In contrast with Accelerate, Nikola support numerous Array types, and
 it is through careful selection of these array types that fusion is
-achieved.
+achieved. In that sense Nikola is a bit more low-level than
+Accelerate. Nikola also allows for much more control of when memory
+transaction occur, but can also move the arrays back and forth
+automatically as necessary, if that is desired.
 
- \begin{itemize}
- \item Only supports map-like higher-order operations (no scan,
-   reduce, etc.)
- \item No skeletons like Accelerate
- \end{itemize}
+Nikola is very much a prototype implementation and only comes with a
+few map-like higher-order operations such as: \verb|map|,
+\verb|zipWith|, \verb|reshape|, \verb|generate| and \verb|replicate|,
+but in contrast to Accelerate, it has a loop constructs that generates
+sequential kernel code, namely \verb|iterate| and \verb|iterateWhile|.
 
-\subsubsection{Case 1: Sobol sequence generation}
+Where Accelerate was based on skeletons, Nikola is based on a small
+AST from which an efficient CUDA kernel can be generated.
+
+\subsection{Case I: Sobol sequence generation}
 Accelerate and Nikola turned out to have quite similar restrictions,
-as they both require a flat data-parallel approach, with the manual
-vectorisations as presented in the section on Accelerate above.
-We will thus not show a complete Nikola implementation of the
-Sobol-sequence generator.
+as they both require a flat data-parallel approach, but as mentioned,
+Nikola has sequential iteration constructs, which we can use. \todo{...}
 
 To compute $\pi$ from the 2-dimensional Sobol-sequence we need
 a reduction operation, which is not included in Nikola. Nikola does
@@ -554,79 +627,120 @@ sequential iteration inside a CUDA-kernel. Instead we have to use a
 divide-and-conquer algorithm which requires the scheduling of
 $O(lg~n)$ kernels or perform the reduction on the CPU.
 
-\subsubsection{Case 2: Binomial option pricing}
+During the implementation of the divide-and-conquer algorithm we got
+the compiler into an infinite loop. \todo{..}
 
-\subsubsection{Additional remarks} Nikola does not come with much
-documentation, and you are often left to study the code, to discover
-new functionality. A tutorial is available. The project is very
-irregularly updated and is handled by a single maintainer. The
-existing research paper does not reflect the current Nikola, very much
-has changed.
+\subsection{Case II: Binomial option pricing}
 
-\subsection{Copperhead}
+% \subsection{Additional remarks} Nikola does not come with much
+% documentation, and you are often left to study the code, to discover
+% new functionality. A tutorial is available. The project is very
+% irregularly updated and is handled by a single maintainer. The
+% existing research paper does not reflect the current Nikola, very much
+% has changed.
+
+\section{Copperhead}
 Copperhead is a nested data-parallel functional DSL for GPU computing
 embedded in Python. It is statically typed and uses Hindley-Milner
 type inference, even though it is embedded inside a dynamically typed
-language. Their idea for implementing nesting is different than
-flattening, as they observe the overhead incurred by the flattening
-transformation. Instead, they want to schedule the different layers of
-the program to the different layers of the parallel architecture of a
-GPU.
+language. Their method for mapping nested operations to GPUs is
+different than flattening, as they observe the overhead incurred by
+the flattening transformation. Instead, they schedule the different
+layers of the program to the different layers of the parallel
+architecture of a GPU (sequential code on the device, thread blocks,
+grid of blocks, sequence of kernel executions).
 
-\subsubsection{Case 1: Sobol-sequence generation}
+\subsection{Case I: Sobol-sequence generation}
 Copperhead does in theory support everything we need to do a direct
 translation from the above Haskell code for Sobol sequence generation,
 but the current implementation does not support nesting as promised in
-their research paper.
+their research paper. The interpreter returns an error if you attempt
+to nest any of the collective operations.
 
-We thus have to follow a flat data-parallel approach, but this turned
-out to be quite difficult, as the language is designed with nesting in
-mind. For instance, when processing a two-dimensional array of type
-\texttt{[[Int]]}, there is no way to \texttt{map} over the
-\texttt{Int}'s of the inner arrays, as is necessary if we want to
-scale all values as done in \texttt{normalise} above.
+We thus have to follow a flat data-parallel approach like we did in
+Accelerate, but this turned out to be quite difficult, as the language
+was designed with nesting in mind. For example, if we want to process
+a two-dimensional array of type \verb|[[Int]]|, there is no way to
+\verb|map| over the \verb|Int|'s of the inner arrays, as is
+necessary if we want to scale all values as done in \verb|normalise|
+above.
 
-\subsubsection{Case 2: Binomial option pricing}
+We did only complete an implementation using nested calls, which we
+thus are not able to run. Writing a flat version seemed too tedious to
+be worth the effort. We can thus only provide information about
+Copperheads performance on Case II.
 
-\subsection{Thrust}
-\subsection{NESL/GPU}
+\subsection{Case II: Binomial option pricing}
+In this case, no nesting was necessary, and we could thus implement
+the binomial pricer without troubles:
+\begin{verbatim}
+@cu
+def final(s0,strike,expiry,r,vol,n):
+  ...
+@cu
+def stepBack(vPrev,expiry,r,vol,n):
+  ...
+
+def binom(s0,strike,expiry,r,vol,n):
+  vFinal = final(s0,strike,expiry,r,vol,n)
+  def closure(vPrev,i):
+    return stepBack(vPrev,expiry,r,vol,n)
+  price = reduce(closure, range(n), vFinal)
+  return price[0]
+\end{verbatim}
+
+The \verb|reduce| used here is equivalent to the sequential
+\verb|foldl| in Haskell. We cannot partially apply a function in
+Python, therefore the named closure.
+
+Nesting is necessary for writing the portfolio pricer, and we are thus
+again unable to provide any benchmarks.
+
+\section{Thrust}
+\todo{}
+
+\section{NESL/GPU}
 NESL/GPU is a GPU back-end for the parallel functional programming
-language NESL \cite{}. The back-end reuses the front-end of the CPU
-implementation of NESL, which compiles to an intermediate language
-called VCODE, which is a flattened version of the NESL program. VCODE
-is then transformed and optimized (fusion) and finally interpreted by
-issuing corresponding CUDA kernels.
+language NESL \cite{nesl}. The back-end reuses the front-end of the
+CPU implementation of NESL, which compiles to an intermediate language
+called VCODE, which is a flattened version of the NESL
+program. NESL/GPU optimises this VCODE by performing fusion where
+possible and finally interpret the optimised VCODE by issuing
+corresponding CUDA kernels generated during fusion.
 
-\subsubsection{Case 1: Sobol-sequence generation}
+\subsection{Case I: Sobol-sequence generation}
 NESL/GPU was the most straight forward target language for our
 translation of the Sobol-sequence generator. We will not include the
 code here, as it is almost in one-to-one correspondence with the
-Haskell code.  A single piece of the puzzle was missing though, as
-NESL does not provide a way to \emph{fold} using an exclusive-or
-operation. Instead we had to implement our own (somewhat
-inefficiently) using the existing exclusive-or scan:
+Haskell code. 
 
+A single detail is that NESL does not ship with a higher-order
+reduction operation, but instead ships with a number of built-in
+reductions like \verb|sum|, \verb|and|, \verb|all| and for our needs,
+\verb|parity| which reduces with exclusive-or.
+
+\subsection{Case II: Binomial option pricing}
+Again, the translation was pretty straight forward. We needed a
+sequential fold of \verb|stepBack| function, which we in this case was
+done in a simple tail-recursive function:
 \begin{verbatim}
-% assumes non-empty argument
-function xor_reduce(xs) = 
-  xor_scan(xs)[#xs-1] xor xs[#xs-1] $
+function iter(puByr, pdByr, n, acc) =
+   if n == 0 then acc
+   else iter(puByr, pdByr, n-1, 
+             stepBack(puByr, pdByr, acc)) $
 \end{verbatim}
 
-\subsubsection{Case 2: Binomial option pricing}
-
-\subsubsection{Additional remarks} Heavy system to use, as you have to
-first compile to VCODE in a Common Lisp interpreter and then optimize
-the VCODE in an SML environment, with no automatization provided.
+% \subsection{Additional remarks} Heavy system to use, as you have to
+% first compile to VCODE in a Common Lisp interpreter and then optimise
+% the VCODE in an SML environment, with no automatisation provided.
 
 
-\subsection{Remarks for all languages}
-\todo{Find better heading}
-
+\section{Additional remarks}
 In neither of the languages we have found a way to implement the
-GPU-optimized algorithm for Sobol-sequence construction we mentioned
+GPU-optimised algorithm for Sobol-sequence construction we mentioned
 in Section \ref{sec:gpusobol}. They all lack a construct for iterative
 array construction. Such a construct is commonly known as
-\texttt{unfold} and would in Accelerate have a type similar to:
+\verb|unfold| and would in Accelerate have a type similar to:
 
 \begin{verbatim}
 unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
@@ -637,7 +751,101 @@ the block size is defined from the size of the array argument.
 
 \todo{Does Thrust and NESL have such an operation?}
 
-\section{Bencmarks}
+\section{Benchmarks}
+
+\subsection{Case I: Sobol sequence generation}
+In this benchmark we have results for:
+* NESL/GPU
+* Accelerate
+* CUDA SDK + Thrust
+* Thrust
+
+The CUDA SDK includes an optimised algorithm for computing
+Sobol-sequences which we have extended with calls to Thrust for
+computing $\pi$. Even though CUDA SDK algorithm is heavily optimised
+for GPU execution, and our Thrust implementation uses the naive
+inductive algorithm, we still see that Thrust outperforms it in some
+cases. The problem is that we can achieve full fusion when writing
+everything in Thrust, but when some parts are written in CUDA, we must
+write the intermediate results to memory between kernel launches.
+
+In the case where $n=10^5$ we see on the graph that Thrust outperforms
+the CUDA SDK solution, but when inspecting with \verb|nvprof|, we
+see that on raw computation CUDA SDK is still faster ($62.40 \mu s$
+against $203.37\mu s$).
+
+% CUDA, n=10^5:
+%   28.417 + 16.065 + 13.089 + 4.833 = 62.404 us
+
+% Thrust, n=10^5:
+%   199.1150 + 4.25600 = 203.371 us
+
+% CUDA, n=10^6:
+%   111.05+82.12+65.25+4.54 = 262.96 us
+
+% Thrust, n=10^6: 
+%   1690 + 4.32 = 1694.32 us
+
+% CUDA SDK, n = 100000
+% ======== Profiling result:
+%  Time(%)      Time   Calls       Avg       Min       Max  Name
+%    41.59  111.05us       1  111.05us  111.05us  111.05us  [CUDA memcpy DtoD]
+%    30.76   82.12us       1   82.12us   82.12us   82.12us  sobolGPU_kernel(unsigned int, unsigned int, unsigned int*, float*)
+%    24.44   65.25us       1   65.25us   65.25us   65.25us  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::transform_iterator<dist_to_origo, thrust::zip_iterator<thrust::tuple<thrust::detail::normal_iterator<thrust::device_ptr<flo
+%     1.70    4.54us       1    4.54us    4.54us    4.54us  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::detail::normal_iterator<thrust::device_ptr<float>>, long, float, thrust::detail::normal_iterator<thrust::device_ptr<float>>
+%     0.98    2.62us       1    2.62us    2.62us    2.62us  [CUDA memcpy DtoH]
+%     0.53    1.41us       1    1.41us    1.41us    1.41us  [CUDA memcpy HtoD]
+
+% Thrust, n = 100000
+% ======== Profiling result:
+%  Time(%)      Time   Calls       Avg       Min       Max  Name
+%                 us                us        us        us  
+%    99.50  1.69e+03       1  1.69e+03  1.69e+03  1.69e+03  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::transform_iterator<dist_to_origo, thrust::zip_iterator<thrust::tuple<thrust::transform_iterator<sobolInductiveFunctor, thru
+%     0.25   4.32000       1   4.32000   4.32000   4.32000  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::detail::normal_iterator<thrust::device_ptr<float>>, long, float, thrust::detail::normal_iterator<thrust::device_ptr<float>>
+%     0.16   2.72000       1   2.72000   2.72000   2.72000  [CUDA memcpy DtoH]
+%     0.08   1.40800       1   1.40800   1.40800   1.40800  [CUDA memcpy HtoD]
+
+% CUDA, n = 10000
+% ======== Profiling result:
+%  Time(%)      Time   Calls       Avg       Min       Max  Name
+%                 us                us        us        us  
+%    42.86  28.41700       1  28.41700  28.41700  28.41700  sobolGPU_kernel(unsigned int, unsigned int, unsigned int*, float*)
+%    24.23  16.06500       1  16.06500  16.06500  16.06500  [CUDA memcpy DtoD]
+%    19.74  13.08900       1  13.08900  13.08900  13.08900  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::transform_iterator<dist_to_origo, thrust::zip_iterator<thrust::tuple<thrust::detail::normal_iterator<thrust::device_ptr<flo
+%     7.29   4.83300       1   4.83300   4.83300   4.83300  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::detail::normal_iterator<thrust::device_ptr<float>>, long, float, thrust::detail::normal_iterator<thrust::device_ptr<float>>
+%     3.81   2.52800       1   2.52800   2.52800   2.52800  [CUDA memcpy DtoH]
+%     2.08   1.37700       1   1.37700   1.37700   1.37700  [CUDA memcpy HtoD]
+
+
+% Thrust, n = 10000
+% ======== Profiling result:
+%  Time(%)      Time   Calls       Avg       Min       Max  Name
+%                 us                us        us        us  
+%    96.05  199.1150       1  199.1150  199.1150  199.1150  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::transform_iterator<dist_to_origo, thrust::zip_iterator<thrust::tuple<thrust::transform_iterator<sobolInductiveFunctor, thru
+%     2.05   4.25600       1   4.25600   4.25600   4.25600  void thrust::detail::backend::cuda::detail::launch_closure_by_value<thrust::detail::backend::cuda::unordered_reduce_closure<thrust::detail::normal_iterator<thrust::device_ptr<float>>, long, float, thrust::detail::normal_iterator<thrust::device_ptr<float>>
+%     1.20   2.49600       1   2.49600   2.49600   2.49600  [CUDA memcpy DtoH]
+%     0.69   1.44000       1   1.44000   1.44000   1.44000  [CUDA memcpy HtoD]
+
+Accelerate is very slow on this example, the bottleneck is the Sobol
+sequence generator. The part of the programming that has to do with
+computing $\pi$ is just as fast as the Thrust implementation. 
+
+In Accelerate the complete computation of \verb|sobolNDA| is fused
+into a single kernel, a reduction kernel that reduces a
+multidimensional array (originating from the exclusive-or
+reduction). In Thrust, this is a \verb|map|-kernel, as we are able to
+do the reduction sequentially (Accelerate does not provide any
+primitives for sequential iteration). In the case where $n=10^5$ this
+reduction takes 44.23ms, two orders of magnitude more than in
+Thrust. Furthermore, because we end up with a reduction, this
+computation can not be fused into the computation of $\pi$ as happened
+in Thrust, so we also get a penalty for extraneous memory
+transactions.
+
+A solution would be to write the Sobol sequence generator with
+completely unrolled loops, we have not attempted this, but it should
+be possible in our case, as the number iterations is fixed.
+
 
 \section{Related work}
 Disposition:
