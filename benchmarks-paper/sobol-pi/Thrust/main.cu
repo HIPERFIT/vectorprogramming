@@ -55,11 +55,7 @@ int main(int argc, char *argv[])
       }
 
       thrust::device_vector<unsigned int> d_directions(h_directions, h_directions + n_directions*n_dimensions);
-      thrust::device_vector<float> d_sobol(n_vectors * n_dimensions);
-
-      generate_sobol(&d_directions, &d_sobol, n_vectors, n_dimensions);
-
-      float pi = computepi(&d_sobol, n_vectors);
+      float pi = computepi(&d_directions, n_vectors, n_dimensions);
 
       printf("RESULT %f\n", pi);
     }
