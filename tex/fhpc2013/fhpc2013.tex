@@ -784,8 +784,8 @@ function iter(puByr, pdByr, n, acc) =
 In neither of the languages we have found a way to implement the
 GPU-optimised algorithm for Sobol-sequence construction we mentioned
 in Section \ref{sec:gpusobol}. They all lack a construct for iterative
-array construction. Such a construct is commonly known as
-\verb|unfold| and would in Accelerate have a type similar to:
+array construction. Such a construct is in Haskell known as
+an \verb|unfold| function and would in Accelerate have a type similar to:
 
 \begin{verbatim}
 unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
