@@ -794,7 +794,8 @@ unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
 Where the first argument defines the number of times to unfold, and
 the block size is defined from the size of the array argument.
 
-\todo{Does Thrust and NESL have such an operation?}
+\todo{Does Thrust and NESL have such an operation? \textbf{Ken:} Can't it be defined in terms of a map+scan?}
+
 
 \section{Benchmarks}
 
