@@ -32,18 +32,19 @@
 \maketitle
 
 \begin{abstract}
-  We present a survey of a handful of current GPU languages and
-  libraries and report on both qualitative and quantitative findings
-  from using them in practice.
-
-  We investigate Accelerate \cite{chakravarty2011accelerating}, Nikola
+  We present a survey of the GPU languages Accelerate
+  \cite{chakravarty2011accelerating}, Nikola
   \cite{mainland2010nikola}, Copperhead \cite{Catanzaro2011}, NESL/GPU
-  \cite{bergstrom2012nested}, Thrust \cite{Thrust} and their
-  performance is compared with efficient CUDA implementations.
+  \cite{bergstrom2012nested} and Thrust \cite{Thrust}. We report on
+  both qualitative and quantitative findings from using them in
+  practice.
 
   We have taken two cases from the domain of computational finance and
   ported them to each of the languages, discovering limitations in the
-  mean time.
+  mean time. 
+
+  Their performance on the two cases is compared with efficient CUDA
+  implementations from the CUDA SDK.
 
   The aim is that the paper can be used to get an overview of the
   current state of existing GPU languages and as a ``do's and don'ts''
@@ -65,11 +66,11 @@ architecture can deliver a high-throughput for many problems in the
 sciences, engineering and finance.
 
 Currently, OpenCL and CUDA are the most popular GPU programming
-frameworks in both academia and industry. They both extend require
-manual memory management, neither provides any means for automatic
-deforestation (fusion), and only offers little abstraction from the
-underlying hardware, such that for instance, memory coalescing must be
-on your mind during implementation.
+frameworks in both academia and industry. They both require manual
+memory management, neither provides any means for automatic
+deforestation (fusion), and they only offer little abstraction from
+the underlying hardware, such that for instance, memory coalescing
+must be on your mind during implementation.
 
 To make GPU programming more accessible, quite a number of new
 high-level data-parallel languages as well as GPU libraries for
@@ -81,11 +82,11 @@ achieved the same popularity and attention as programming directly in
 OpenCL or CUDA.
 
 In this paper we present our experience of applying a few functional
-data-parallel languages to a couple of problems from the domain of
-computational finance and report on their current state. Our scope is
-both qualitative in terms of the ease with which algorithms can be
-formulated, optimised and debugged, as well as quantitative in terms
-of execution performance.
+data-parallel languages to two problems from the domain of
+computational finance and report on the current state of the
+languages. Our scope is both qualitative in terms of the ease with
+which algorithms can be formulated, optimised and debugged, as well as
+quantitative in terms of execution performance.
 
 Our first experiment involves the implementation of a
 \emph{quasi-random number generator}, the Sobol sequence generator,
@@ -205,10 +206,10 @@ reduction operation.
 The inductive algorithm for Sobol sequence generation is
 embarrassingly parallel and can be written as a single GPU
 kernel. Computing $\pi$ from a two-dimensional Sobol sequence can be
-done with a parallel reduction with (+) and a post-processing
-step. These two kernels can be fused together, such that the complete
-computation can be executed in a single kernel without ever storing
-the Sobol-sequences in GPU memory.
+done with a parallel reduction and a post-processing step. These two
+kernels can be fused together, such that the complete computation can
+be executed in a single kernel without ever storing the
+Sobol-sequences in GPU memory. This is what we want to achieve.
 
 The inductive algorithm presented above requires a linear amount of
 exclusive-or operations in the bit representation used for each
@@ -221,6 +222,11 @@ algorithm progresses by first filling a block of values using the
 inductive algorithm and then fill each subsequent block using a
 recursive formulation from the values of the preceding iteration,
 which is done by a single exclusive-or operation.
+
+We have found it impossible to write this optimised algorithm in all
+but raw CUDA, as the language lack a collective operation for building
+up arrays block by block in this fashion. See Section
+\ref{sec:itercons}.
 
 \section{Case II: Binomial option pricing}
 In this section we look at the problem of \emph{option pricing}. The
@@ -480,6 +486,10 @@ to keep the data on the device and expose a raw CUDA device pointer
 for further processing in another environment (e.g. an external CUDA
 library).
 
+You are not allowed to write recursive algorithms in Accelerate, if
+you do, the compiler will go into an infinite loop, as it will
+interpreted as an infinite program.
+
 \subsection{Case I: Sobol sequence generation}
 The type of Accelerate arrays are indexed by their dimensionality,
 thus \verb|Array DIM2 Int| is a regular two dimensional array (a
@@ -574,22 +584,27 @@ an ordinary Haskell \verb|foldl| to build up a large Accelerate
 expression of repeated calls to \verb|stepBack| which will be executed
 on the GPU.
 
-If we want to use all the scalar processors, we will have the same
-problem with dependencies between iterations when writing the program
-in CUDA.
-
 An alternative parallelisation strategy is to price several options
 simultaneously, a portfolio pricer, as explained in Section
 \ref{sec:gpubinom}. In that case we would like to schedule the pricing
 of each option as a separate thread block (work group).
 
+\todo{explain that \texttt{syncthreads} will never be inserted, except in
+  the existing skeletons, the only supported synchronization is
+  by separation into independent kernels}
+
 \begin{verbatim}
 binomPortfolio n options = map (binomA n) options
 \end{verbatim}
 
-Again, we will face the exact same problem as in Case I: we will have
-to push the \verb|map| inside the \verb|binomA| function and thus
-vectorise every operation inside \verb|binomA|.
+We face the same problem as in Case I: we will have to push the
+\verb|map| inside the \verb|binomA| function and thus vectorise every
+operation inside \verb|binomA|.
+
+\todo{Explain that because Accelerate arrays are regular, $n$ has to
+  be equal for all options, and thus $\Delta t$ will vary depending on
+  the expiry time. It would be nicer if we could have constant $\Delta
+  t$ and varying number of time steps for different expiry times}
 
 % \subsection{Additional remarks} Accelerate is an active project
 % with regular releases and a good online documentation. \todo{Anything
@@ -597,7 +612,9 @@ vectorise every operation inside \verb|binomA|.
 
 \section{Nikola}
 Like Accelerate, Nikola is a flat data-parallel functional DSL for
-array computations embedded in Haskell.
+array computations embedded in Haskell. Where Accelerate was based on
+skeletons, Nikola is based on a small AST from which an efficient CUDA
+kernel can be generated.
 
 In contrast with Accelerate, Nikola support numerous Array types, and
 it is through careful selection of these array types that fusion is
@@ -612,23 +629,21 @@ few map-like higher-order operations such as: \verb|map|,
 but in contrast to Accelerate, it has a loop constructs that generates
 sequential kernel code, namely \verb|iterate| and \verb|iterateWhile|.
 
-Where Accelerate was based on skeletons, Nikola is based on a small
-AST from which an efficient CUDA kernel can be generated.
+Like Accelerate, writing a recursive program in Nikola will get the
+compiler to loop infinitely.
 
 \subsection{Case I: Sobol sequence generation}
 Accelerate and Nikola turned out to have quite similar restrictions,
 as they both require a flat data-parallel approach, but as mentioned,
-Nikola has sequential iteration constructs, which we can use. \todo{...}
+Nikola has sequential iteration constructs, which makes this less of a
+problem, as we can nest a sequential iteration inside a parallel map.
 
 To compute $\pi$ from the 2-dimensional Sobol-sequence we need
 a reduction operation, which is not included in Nikola. Nikola does
 only provide a few mapping operations and a iteration construct for
 sequential iteration inside a CUDA-kernel. Instead we have to use a
 divide-and-conquer algorithm which requires the scheduling of
-$O(lg~n)$ kernels or perform the reduction on the CPU.
-
-During the implementation of the divide-and-conquer algorithm we got
-the compiler into an infinite loop. \todo{..}
+$O(lg~n)$ kernels.
 
 \subsection{Case II: Binomial option pricing}
 
@@ -697,7 +712,36 @@ Nesting is necessary for writing the portfolio pricer, and we are thus
 again unable to provide any benchmarks.
 
 \section{Thrust}
-\todo{}
+Thrust is a C++ template library for parallel computing on GPUs (using
+CUDA). The interface resembles the C++ Standard Template
+Library. Thrust consist of a set of highly optimised CUDA skeletons
+for parallel reduction, prefix sum, mapping, index space
+transformations, sorting and searching.
+
+Memory management is manual, but it is simplified compared to using
+CUDA directly. There are two vector types, \verb|device_vector| and
+\verb|host_vector|, that specifies where the data is
+located. Assigning a \verb|device_vector| to a \verb|host_vector|
+variable will initiate a device to host memory copy.
+
+Fusion is partially manual. If you use a \verb|transform| or
+\verb|zip| directly, fusion will not occur. Instead, you have to use
+iterator versions of the collective operations that you want to fuse
+together. This is made difficult by the lengthy types that you have to
+use for these iterators, but the clutter can be limited by using
+\verb|typedef|s and template type variables.
+
+\subsection{Case I: Sobol-sequence generation}
+In the Sobol sequence generator we had to use four different iterators
+to achieve all the fusion that we wanted:
+\begin{verbatim}
+typedef counting_iterator<int>            Iter0;
+typedef transform_iterator<sobol, Iter0>  Iter1;
+typedef zip_iterator<tuple<Iter1, Iter1>> IterZip;
+typedef transform_iterator<dist, IterZip> IterDist;
+\end{verbatim}
+
+\subsection{Case II: Binomial option pricing}
 
 \section{NESL/GPU}
 NESL/GPU is a GPU back-end for the parallel functional programming
@@ -734,8 +778,9 @@ function iter(puByr, pdByr, n, acc) =
 % first compile to VCODE in a Common Lisp interpreter and then optimise
 % the VCODE in an SML environment, with no automatisation provided.
 
-
 \section{Additional remarks}
+\subsection{Iterative array construction}
+\label{sec:itercons}
 In neither of the languages we have found a way to implement the
 GPU-optimised algorithm for Sobol-sequence construction we mentioned
 in Section \ref{sec:gpusobol}. They all lack a construct for iterative
@@ -754,11 +799,12 @@ the block size is defined from the size of the array argument.
 \section{Benchmarks}
 
 \subsection{Case I: Sobol sequence generation}
-In this benchmark we have results for:
-* NESL/GPU
-* Accelerate
-* CUDA SDK + Thrust
-* Thrust
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{time-graph.pdf}
+  \caption{Benchmark of $\pi$ calculation using Sobol sequences}
+  \label{fig:bench_sobol}
+\end{figure}
 
 The CUDA SDK includes an optimised algorithm for computing
 Sobol-sequences which we have extended with calls to Thrust for
@@ -847,34 +893,60 @@ completely unrolled loops, we have not attempted this, but it should
 be possible in our case, as the number iterations is fixed.
 
 
-\section{Related work}
-Disposition:
-\begin{itemize}
-\item Mention some of the languages we haven't tested. See if can put
-  them in categories where the above problems are present and aren't,
-  even though we haven't tested them as much.
-\item Any similar efforts int
-\end{itemize}
+% \section{Related work}
+% Disposition:
+% \begin{itemize}
+% \item Mention some of the languages we haven't tested. See if can put
+%   them in categories where the above problems are present and aren't,
+%   even though we haven't tested them as much.
+% \item Any similar efforts int
+% \end{itemize}
 
 \section{Future work}
-Disposition;
-\begin{itemize}
-\item Extend the survey to cover additional languages:
-  Modern GPU, Bohrium, Theano, CUB
-\item Extend the survey to cover additional problems:
-  LSM, 7 dwarfs
-\item Create a larger performance benchmark of the different
-  languages
-\item Comparison of GPU-NESL VCODE and Bohrium bytecode
-can Bohrium be used as a NESL backend?
-\end{itemize}
+We had to restrict ourselves to a few languages and only two example
+cases, because of time considerations, but there are many more GPU
+languages that should be considered and with the two problems we have
+implemented, we only touch on a few parts of what a GPU language
+should support. It would therefore be nice to extend the comparison to
+cover more languages and add additional languages.
+
+Additional languages we would have liked to include: Obsidian, Bohrium
+\cite{homepage:bohrium}, Theano \cite{bergstra2010theano}, R+GPU
+\cite{homepage:rgpu}, MATLAB GPU, CUB and Modern GPU.
+
+The parallel computing group Berkeley partition problems into
+equivalence classes depending on the type of computation and data
+movement involved \cite{homepage:dwarfmine}, a good approach for
+selecting a set of covering benchmarks would thus be to select a
+problem from each of these equivalence classes. The classes include:
+Dense linear algebra, sparse linear algebra, spectral methods, n-body
+methods, MapReduce, graph traversal, finite state machines,
+combinatorial logic, dynamic programming among others.
+
+% Disposition;
+% \begin{itemize}
+% \item Extend the survey to cover additional languages:
+%   Modern GPU, Bohrium, Theano, CUB
+% \item Extend the survey to cover additional problems:
+%   LSM, 7 dwarfs
+% \item Create a larger performance benchmark of the different
+%   languages
+% \item Comparison of GPU-NESL VCODE and Bohrium bytecode
+% can Bohrium be used as a NESL backend?
+% \end{itemize}
 
 \section{Conclusion}
+* No reuse of memory in binomial option pricer
+
 Summarise, mention GPU-NESL and other languages we haven't tested.
 
-\acks
+\acks 
 
-Acknowledgments, if needed.
+We would like to thank Trevor McDonell, Lars Bergstrom, Geoffrey
+Mainland, Manual Chakravary, Bryan Catanzaro and John Reppy.
+
+ \todo{for .. something about quick bugfixes, help email
+  conversations, hints and help}
 
 
 \bibliographystyle{abbrvnat}
