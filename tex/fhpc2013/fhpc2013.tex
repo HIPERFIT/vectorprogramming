@@ -414,18 +414,18 @@ We consider two simple parallelisation strategies for the binomial
 option pricing algorithm. As mentioned, we are either interested in
 pricing a single option, or pricing a portfolio of options.
 
-From code of \verb|binom| above, we see that we have to synchronise
-between each iteration of \verb|foldl| and the real opportunity for
-parallelism in the call to \verb|zipWith| inside
-\verb|stepBack|. 
+From code of \verb|binom| above, we see that we have to synchronise in
+some amount between each iteration of \verb|foldl|, as iteration $i$
+depends on two different results from iteration $i-1$, three different
+results from iteration $i-2$ and so forth. The real opportunity for
+parallelism in the call to \verb|zipWith| inside \verb|stepBack|.
 
-Modern GPUs provides two possibilities for synchronisation. All
+Modern GPUs provides three possibilities for synchronisation. All
 threads in a block/work group of threads can be synchronised by
 issuing \verb|__syncthreads()| in CUDA or \verb|barrier()| in
 OpenCL. Secondly, a synchronisation between all threads can happen
-between each kernel invocation \footnote{In addition -- and as usually
-  -- a thread synchronises with itself after each statement in its
-  kernel code}.
+between each kernel invocation. Finally -- and as usually -- a thread
+synchronises with itself after each statement in its kernel code.
 
 We thus have a selection: intra-block synchronisation or inter-block
 synchronisation. If we are to compute or problem in a single block, we
@@ -439,12 +439,13 @@ separate GPU kernel. For the portfolio pricer this is not a problem,
 we can launch a block for each of the options to.
 
 Other more efficient and elaborate parallelisation schemes for
-binomial option pricing exists. We refer to \cite{CUDAbinomial} and
-\cite{ganesan2009acceleration}.
+binomial option pricing exists, which allows for fusion of several
+layers iterations of \verb|stepBack| into a single kernel call. We
+refer to \cite{CUDAbinomial} and \cite{ganesan2009acceleration}.
 
-In the next sections we will look at implementations of the above two
-programs in each of the languages we have tested, and present some of
-the difficulties we encountered.
+In the next sections we will look at implementations of the two cases
+in each of the languages we have tested, and present some of the
+difficulties we encountered.
 
 \section{Accelerate}
 Accelerate is a statically typed, flat data-parallel functional DSL
@@ -632,11 +633,24 @@ sequential kernel code, namely \verb|iterate| and \verb|iterateWhile|.
 Like Accelerate, writing a recursive program in Nikola will get the
 compiler to loop infinitely.
 
+In Nikola it is possible to compile your Nikola programs into CUDA at
+Haskell compile time, through Template Haskell, and not as in
+Accelerate, where compilation is done at runtime. This introduces the
+restriction that the Nikola program must reside in a Haskell module
+different from the one where it is called.
+
 \subsection{Case I: Sobol sequence generation}
 Accelerate and Nikola turned out to have quite similar restrictions,
 as they both require a flat data-parallel approach, but as mentioned,
 Nikola has sequential iteration constructs, which makes this less of a
-problem, as we can nest a sequential iteration inside a parallel map.
+problem, as we can nest a sequential iteration inside a parallel
+map. We can thus perform the work of the \verb|sobol|-function in
+sequential code and we can write a Nikola version of \verb|sobol1D|
+without having the problem we encountered in Accelerate.
+
+Still, when we go for N-dimensional Sobol-sequences, we will have to
+do a transformation like in Accelerate to avoid nested
+data-parallelism.
 
 To compute $\pi$ from the 2-dimensional Sobol-sequence we need
 a reduction operation, which is not included in Nikola. Nikola does
@@ -646,6 +660,15 @@ divide-and-conquer algorithm which requires the scheduling of
 $O(lg~n)$ kernels.
 
 \subsection{Case II: Binomial option pricing}
+In this case we see the problem of having Nikola kernel-programs
+reside in different modules than where they are called. In this case
+the \verb|foldl| has to be in one module while the \verb|stepBack| and
+\verb|vFinal| functions has to be written in another.
+
+Other than that, we only had the same problems as in
+Accelerate. Especially the problem of not being able to write an
+efficient portfolio pricer, where each thread block is responsible for
+pricing a single option.
 
 % \subsection{Additional remarks} Nikola does not come with much
 % documentation, and you are often left to study the code, to discover
@@ -706,7 +729,7 @@ def binom(s0,strike,expiry,r,vol,n):
 
 The \verb|reduce| used here is equivalent to the sequential
 \verb|foldl| in Haskell. We cannot partially apply a function in
-Python, therefore the named closure.
+Python, and therefore we have the named closure.
 
 Nesting is necessary for writing the portfolio pricer, and we are thus
 again unable to provide any benchmarks.
@@ -740,8 +763,16 @@ typedef transform_iterator<sobol, Iter0>  Iter1;
 typedef zip_iterator<tuple<Iter1, Iter1>> IterZip;
 typedef transform_iterator<dist, IterZip> IterDist;
 \end{verbatim}
+Thrust required a large amount of extra code to achieve fusion -- the
+above is just definitions of the types involved. At least you have
+the possibility, this was the only language where we obtained the goal
+of having a single kernel for the complete program.
+
+If Nikola had a parallel reduction, we would image the architecture
+would also allow it there.
 
 \subsection{Case II: Binomial option pricing}
+
 
 \section{NESL/GPU}
 NESL/GPU is a GPU back-end for the parallel functional programming
@@ -778,14 +809,14 @@ function iter(puByr, pdByr, n, acc) =
 % first compile to VCODE in a Common Lisp interpreter and then optimise
 % the VCODE in an SML environment, with no automatisation provided.
 
-\section{Additional remarks}
-\subsection{Iterative array construction}
+\section{Iterative array construction}
 \label{sec:itercons}
-In neither of the languages we have found a way to implement the
-GPU-optimised algorithm for Sobol-sequence construction we mentioned
-in Section \ref{sec:gpusobol}. They all lack a construct for iterative
-array construction. Such a construct is commonly known as
-\verb|unfold| and would in Accelerate have a type similar to:
+We now turn back to the optimised GPU-algorithm for Sobol-sequence
+construction we mentioned in Section \ref{sec:gpusobol}. In neither of
+the languages we have found a way to implement the algorithm. They all
+lack a construct for iterative array construction. Such a construct is
+commonly known as \verb|unfold| and would in Accelerate have a type
+similar to:
 
 \begin{verbatim}
 unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
@@ -794,7 +825,9 @@ unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
 Where the first argument defines the number of times to unfold, and
 the block size is defined from the size of the array argument.
 
-\todo{Does Thrust and NESL have such an operation?}
+We believe that such an operation is fairly general and would also be
+useful in other similar cases (e.g. other PRNGs and QRNGs), to make it
+a worthy addition.
 
 \section{Benchmarks}
 
@@ -901,6 +934,15 @@ be possible in our case, as the number iterations is fixed.
 %   even though we haven't tested them as much.
 % \item Any similar efforts int
 % \end{itemize}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figures/binomial-time-graph.pdf}
+  \caption{Benchmark of binomial option pricing for varying number of
+    time steps}
+  \label{fig:bench_binomial}
+\end{figure}
+
 
 \section{Future work}
 We had to restrict ourselves to a few languages and only two example
