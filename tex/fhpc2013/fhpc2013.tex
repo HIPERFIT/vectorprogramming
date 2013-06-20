@@ -409,7 +409,7 @@ independently. We are thus also going to examine the program:
 binomPortfolio n options = map (binom n) options
 \end{verbatim}
 
-\subsection{GPU Parallelisation}
+\subsection{GPU parallelisation}
 \label{sec:gpubinom}
 We consider two simple parallelisation strategies for the binomial
 option pricing algorithm. As mentioned, we are either interested in
@@ -429,15 +429,16 @@ between each kernel invocation. Finally -- and as usually -- a thread
 synchronises with itself after each statement in its kernel code.
 
 We thus have a selection: intra-block synchronisation or inter-block
-synchronisation. If we are to compute or problem in a single block, we
-will be limited in the number of available threads and a single block
-is expected to be mapped to a single streaming multiprocessor (NVIDIA
-does not seem to define this formally).
+synchronisation. If we are to compute our problem in a single block,
+we will be limited by the number of available threads, as a single
+block is expected to be mapped to a single streaming multiprocessor
+(NVIDIA does not seem to define this formally).
 
 For pricing a single option our best attempt to utilise the complete
 GPU is thus to synchronise by scheduling each \verb|zipWith| as a
-separate GPU kernel. For the portfolio pricer this is not a problem,
-we can launch a block for each of the options to.
+separate GPU kernel. For the portfolio pricer this is not necessary,
+we can launch a block for each of the options and synchronise
+internally in the blocks.
 
 Other more efficient and elaborate parallelisation schemes for
 binomial option pricing exists, which allows for fusion of several
@@ -581,32 +582,45 @@ Accelerate.
 We cannot parallelise the outer \verb|foldl| operation in
 \verb|binom|, because of the dependencies between each
 iteration. Thus, as previously mentioned, the parallelisation must be
-found in the calls to \verb|map| and \verb|zipWith|. To do that we use
-an ordinary Haskell \verb|foldl| to build up a large Accelerate
+found in the calls to \verb|map| and \verb|zipWith|. To do that, we
+use an ordinary Haskell \verb|foldl| to build up a large Accelerate
 expression of repeated calls to \verb|stepBack| which will be executed
 on the GPU.
+
+For very large $n$, the Accelerate program gets large and the
+compilation phase takes very long time. In languages where such a
+\verb|foldl| was not a meta-construct, but part of the language, the
+program would not explode in size in this way.
+
+We are not sure what part of the Accelerate CUDA compiler that uses
+all this time, but we guess that it could be the fusion algorithm.
 
 An alternative parallelisation strategy is to price several options
 simultaneously, a portfolio pricer, as explained in Section
 \ref{sec:gpubinom}. In that case we would like to schedule the pricing
 of each option as a separate thread block (work group).
 
-\todo{explain that \texttt{syncthreads} will never be inserted, except in
-  the existing skeletons, the only supported synchronisation is
-  by separation into independent kernels}
+When implementing \verb|binomPortfolio|, we face the same problem as
+in Case I: we will have to push the \verb|map| inside the \verb|binom|
+function and thus vectorise every operation inside \verb|binom|. 
 
-\begin{verbatim}
-binomPortfolio n options = map (binomA n) options
-\end{verbatim}
+What we end up with is not what we intended: instead of grouping
+threads in blocks, where each block works on a single option
+(intra-block synchronization), we end up with all
 
-We face the same problem as in Case I: we will have to push the
-\verb|map| inside the \verb|binomA| function and thus vectorise every
-operation inside \verb|binomA|.
+Accelerate does not support using intra-block synchronisation in user
+specified code, except for those already inserted in their CUDA skeletons.
 
-\todo{Explain that because Accelerate arrays are regular, $n$ has to
-  be equal for all options, and thus $\Delta t$ will vary depending on
-  the expiry time. It would be nicer if we could have constant $\Delta
-  t$ and varying number of time steps for different expiry times}
+Allowing us to price a single option per block, would also give us
+another benefit. In the current implementation, we are forced to use
+the same number of steps for all options, and the step-size, $\Delta
+t$, will differ depending on the expiry of the option. It would be
+more desirable if we could have constant $\Delta t$ and varying number
+of time steps for different expiry times.
+
+This is forced upon us as Accelerate only accepts regular arrays
+\emph{and} because we are forced to push our \texttt{map} inside of
+\verb|binom|.
 
 % \subsection{Additional remarks} Accelerate is an active project
 % with regular releases and a good online documentation. \todo{Anything
@@ -774,7 +788,17 @@ If Nikola had a parallel reduction, we would image the architecture
 would also allow it there.
 
 \subsection{Case II: Binomial option pricing}
-
+In Thrust we have full control over memory usage, and we can thus
+reuse the same memory between each execution of \verb|stepBack|. 
+\begin{verbatim}
+device_vector<float> stepA(n+1);
+device_vector<float> stepB(n+1);
+for(int i = 0; i < n/2; i++) {
+  transform(... stepA ..., stepBack(puByr, pdByr));
+  transform(... stepB ..., stepBack(puByr, pdByr));
+}
+\end{verbatim}
+Other than that, there is nothing noteworthy in the Thrust code.
 
 \section{NESL/GPU}
 NESL/GPU is a GPU back-end for the parallel functional programming
@@ -835,6 +859,15 @@ a worthy addition.
 % \todo{Does Thrust and NESL have such an operation? \textbf{Ken:} Can't it be defined in terms of a map+scan?}
 
 \section{Benchmarks}
+\emph{\textbf{Note to reviewers:} The benchmarks in this version of
+  the paper are not as we had hoped. Our GPU machine was down at a
+  critical time for us, and we only had some old benchmark results
+  lying around which we have added as placeholders.} 
+
+\emph{Also, the numbers
+  for NESL/GPU are suspicious and we have contacted the authors (Lars
+  Bergstrom and John Reppy) about better ways to measure the execution
+  times.}
 
 \subsection{Case I: Sobol sequence generation}
 \begin{figure}
@@ -940,6 +973,7 @@ be possible in our case, as the number iterations is fixed.
 % \item Any similar efforts int
 % \end{itemize}
 
+\subsection{Case Ia: Binomial option pricing (single option)}
 \begin{figure}
   \centering
   \includegraphics[width=\columnwidth]{figures/binomial-time-graph.pdf}
@@ -947,6 +981,8 @@ be possible in our case, as the number iterations is fixed.
     time steps}
   \label{fig:bench_binomial}
 \end{figure}
+
+\subsection{Case Ib: Binomial option pricing (portfolio)}
 
 
 \section{Future work}
@@ -985,9 +1021,41 @@ combinatorial logic, dynamic programming among others.
 % \end{itemize}
 
 \section{Conclusion}
-* No reuse of memory in binomial option pricer
+We have found Accelerate and Thrust to be the most robust and well
+documented of the tested languages/libraries, though there are still
+problems.
 
-Summarise, mention GPU-NESL and other languages we haven't tested.
+NESL/GPU, Copperhead and Nikola are currently in a prototype stage,
+and are not as well documented.
+
+We have shown how the flat data-parallelism of Accelerate limits the
+possible programs you can write and how entangled in complex indexing
+you can get, when trying to map an algorithm to this model. Writing
+programs in Accelerate will often involve unrolling loops, which can
+generate huge programs, that Accelerate's runtime system does not
+handle well.
+
+Nikola shows some of the same problems as Accelerate, and also forces
+the user to make decisions about fusion manually. Manual handling of
+fusion is also necessary in Thrust.
+
+Copperhead's strategy for nested data-parallelism sounds promising, as
+they avoid the overhead of the vectorisation performed in NESL/GPU,
+while taking advantage of the full potential of the GPU. When
+Copperhead gets to a stage where programs with nesting can be
+executed, it will be interesting to see how Copperhead will behave
+when executed on the binomial portfolio pricer, with irregular problem
+sizes for each option.
+
+NESL/GPU seems promising, as both problems was easy to express and get
+executed, without the performance being too bad. The biggest problem
+here is the large memory overhead. For the problem of
+Sobol-sequence generation, we could only go up to $10^5$ samples and
+it uses 128 \emph{times} the amount of memory necessary for storing
+the samples. In this very same problem, we got Thrust to fuse all
+memory allocations away, and only generate a reduction kernel. In that
+case, the limit is thus only on the size of integer representation for
+the number of samples.
 
 \acks 
 
