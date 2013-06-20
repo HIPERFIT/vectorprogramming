@@ -40,8 +40,9 @@
   practice.
 
   We have taken two cases from the domain of computational finance and
-  ported them to each of the languages, discovering limitations in the
-  mean time. 
+  ported them to each of the languages. And while non of the case are
+  particularly involved they have still helped us uncover limitations
+  using the systems in their current form.
 
   Their performance on the two cases is compared with efficient CUDA
   implementations from the CUDA SDK.
@@ -215,8 +216,8 @@ The inductive algorithm presented above requires a linear amount of
 exclusive-or operations in the bit representation used for each
 element of the sequence. An alternative recursive algorithm have been
 shown that uses a single exclusive-or operation for each number. This
-recursive algorithm have been optimised for GPUs by Thomas Bradley et
-al. \cite[Chapter~16]{hwy2011emerald}. An implementation of this
+recursive algorithm have been optimised for GPUs by Thomas Bradley
+et~al\@. \cite[Chapter~16]{hwy2011emerald}. An implementation of this
 GPU-optimised algorithm is included as an example in the CUDA SDK. The
 algorithm progresses by first filling a block of values using the
 inductive algorithm and then fill each subsequent block using a
@@ -474,8 +475,8 @@ enforced by the type system.
 % allowed inside 
 
 Accelerate is cleanly partitioned into front-end and back-end,
-allowing for multiple backends to be developed independently. One
-could imagine MPI, FPGA or OpenCL backends.
+allowing for multiple back-ends to be developed independently. One
+could imagine MPI, FPGA or OpenCL back-ends.
 
 Accelerate provides no control over how operations are fused or when
 data are moved between the host and device. The only way to access an
@@ -591,7 +592,7 @@ simultaneously, a portfolio pricer, as explained in Section
 of each option as a separate thread block (work group).
 
 \todo{explain that \texttt{syncthreads} will never be inserted, except in
-  the existing skeletons, the only supported synchronization is
+  the existing skeletons, the only supported synchronisation is
   by separation into independent kernels}
 
 \begin{verbatim}
@@ -614,21 +615,22 @@ operation inside \verb|binomA|.
 \section{Nikola}
 Like Accelerate, Nikola is a flat data-parallel functional DSL for
 array computations embedded in Haskell. Where Accelerate was based on
-skeletons, Nikola is based on a small AST from which an efficient CUDA
-kernel can be generated.
+skeletons, Nikola is based on a small abstract syntax tree (AST) type
+from which efficient CUDA kernels can be generated.
 
-In contrast with Accelerate, Nikola support numerous Array types, and
+In contrast with Accelerate, Nikola support numerous array types, and
 it is through careful selection of these array types that fusion is
 achieved. In that sense Nikola is a bit more low-level than
-Accelerate. Nikola also allows for much more control of when memory
+Accelerate. Nikola allows for much more control of when memory
 transaction occur, but can also move the arrays back and forth
-automatically as necessary, if that is desired.
+automatically as necessary, if that is desired by the programmer.
 
 Nikola is very much a prototype implementation and only comes with a
 few map-like higher-order operations such as: \verb|map|,
-\verb|zipWith|, \verb|reshape|, \verb|generate| and \verb|replicate|,
-but in contrast to Accelerate, it has a loop constructs that generates
-sequential kernel code, namely \verb|iterate| and \verb|iterateWhile|.
+\verb|zipWith|, \verb|reshape|, \verb|generate| and \verb|replicate|.
+But, in contrast to Accelerate, it has two functions for loop
+constructs that generates sequential kernel code, namely
+\verb|iterate| and \verb|iterateWhile|.
 
 Like Accelerate, writing a recursive program in Nikola will get the
 compiler to loop infinitely.
@@ -784,20 +786,20 @@ possible and finally interpret the optimised VCODE by issuing
 corresponding CUDA kernels generated during fusion.
 
 \subsection{Case I: Sobol-sequence generation}
-NESL/GPU was the most straight forward target language for our
+NESL/GPU was the most straight-forward target language for our
 translation of the Sobol-sequence generator. We will not include the
 code here, as it is almost in one-to-one correspondence with the
 Haskell code. 
 
 A single detail is that NESL does not ship with a higher-order
 reduction operation, but instead ships with a number of built-in
-reductions like \verb|sum|, \verb|and|, \verb|all| and for our needs,
-\verb|parity| which reduces with exclusive-or.
+reductions like \verb|sum|, \verb|and|, \verb|all|, and, for our needs,
+(the undocumented) \verb|parity| which reduces with exclusive-or.
 
 \subsection{Case II: Binomial option pricing}
 Again, the translation was pretty straight forward. We needed a
 sequential fold of \verb|stepBack| function, which we in this case was
-done in a simple tail-recursive function:
+done using a simple tail-recursive function:
 \begin{verbatim}
 function iter(puByr, pdByr, n, acc) =
    if n == 0 then acc
@@ -815,7 +817,7 @@ We now turn back to the optimised GPU-algorithm for Sobol-sequence
 construction we mentioned in Section \ref{sec:gpusobol}. In neither of
 the languages we have found a way to implement the algorithm. They all
 lack a construct for iterative array construction. Such a construct is
-commonly known as \verb|unfold| and would in Accelerate have a type
+in Haskell known as an \verb|unfold| and would in Accelerate have a type
 similar to:
 
 \begin{verbatim}
@@ -825,9 +827,12 @@ unfold :: Elt a => Exp Int -> (Exp Int -> a -> a)
 Where the first argument defines the number of times to unfold, and
 the block size is defined from the size of the array argument.
 
+
 We believe that such an operation is fairly general and would also be
 useful in other similar cases (e.g. other PRNGs and QRNGs), to make it
 a worthy addition.
+
+% \todo{Does Thrust and NESL have such an operation? \textbf{Ken:} Can't it be defined in terms of a map+scan?}
 
 \section{Benchmarks}
 
@@ -905,7 +910,7 @@ against $203.37\mu s$).
 %     1.20   2.49600       1   2.49600   2.49600   2.49600  [CUDA memcpy DtoH]
 %     0.69   1.44000       1   1.44000   1.44000   1.44000  [CUDA memcpy HtoD]
 
-Accelerate is very slow on this example, the bottleneck is the Sobol
+Accelerate is slow on this example, the bottleneck is the Sobol
 sequence generator. The part of the programming that has to do with
 computing $\pi$ is just as fast as the Thrust implementation. 
 
@@ -947,10 +952,12 @@ be possible in our case, as the number iterations is fixed.
 \section{Future work}
 We had to restrict ourselves to a few languages and only two example
 cases, because of time considerations, but there are many more GPU
-languages that should be considered and with the two problems we have
-implemented, we only touch on a few parts of what a GPU language
-should support. It would therefore be nice to extend the comparison to
-cover more languages and add additional languages.
+languages that should be considered. The two cases we have implemented
+only touch on a few parts of what a GPU language should support, we
+have other cases planed but the two simple cases proved to be
+surpricingly difficult to implement in the current selection of
+systems. We thus plan to extend the comparison to cover more languages
+and systems and add additional cases from the financial domain.
 
 Additional languages we would have liked to include: Obsidian, Bohrium
 \cite{homepage:bohrium}, Theano \cite{bergstra2010theano}, R+GPU
@@ -985,10 +992,13 @@ Summarise, mention GPU-NESL and other languages we haven't tested.
 \acks 
 
 We would like to thank Trevor McDonell, Lars Bergstrom, Geoffrey
-Mainland, Manual Chakravary, Bryan Catanzaro and John Reppy.
+Mainland, Manual Chakravary, Bryan Catanzaro and John Reppy, for first
+of all making their systems readily available for all to download, and
+secondly for being really quick to provide help, hints and feedback
+via email, and in many cases providing quick bug-fixes or workarounds.
 
- \todo{for .. something about quick bugfixes, help email
-  conversations, hints and help}
+ % \todo{for .. something about quick bugfixes, help email
+ %  conversations, hints and help}
 
 
 \bibliographystyle{abbrvnat}
@@ -997,5 +1007,6 @@ Mainland, Manual Chakravary, Bryan Catanzaro and John Reppy.
 \end{document}
 
 % LocalWords:  OpenCL CUDA GPU Carlsen Dybdal Sobol Nikola QRNG QRNGs
-% LocalWords:  PRNGs Mersenne PRNG dimensionality composability
-% LocalWords:  vectorisation Scholes
+% LocalWords:  PRNGs Mersenne PRNG dimensionality composability SDK
+% LocalWords:  vectorisation Scholes Haskell tuple parallelisation
+%  LocalWords:  DSL pricer Milner Hindley NESL VCODE
